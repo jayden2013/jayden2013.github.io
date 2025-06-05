@@ -28,6 +28,7 @@
     <div class="mb-3">
       <button class="btn btn-success" onclick="exportTableToCSV()">Export Table to CSV</button>
     </div>
+    <div class="mb-3" id="statistics"></div>
     <div class="table-responsive">
       <table class="table table-striped table-bordered" id="inventoryTable">
         <thead class="table-dark">
@@ -93,6 +94,7 @@
         complete: function (results) {
           currentData = results.data;
           renderTable(currentData);
+          showStatistics(currentData);
         },
       });
     }
@@ -149,6 +151,7 @@
         return 0;
       });
       renderTable(currentData);
+      showStatistics(currentData);
     }
 
     document.getElementById('saveNote').addEventListener('click', () => {
@@ -176,12 +179,22 @@
       document.body.removeChild(link);
     }
 
+    function showStatistics(data) {
+      const statsDiv = document.getElementById('statistics');
+      const validYears = data.map(row => parseInt(row.Year)).filter(y => !isNaN(y));
+      const currentYear = new Date().getFullYear();
+      const avgAge = validYears.length ? (validYears.reduce((a, b) => a + (currentYear - b), 0) / validYears.length).toFixed(1) : 'N/A';
+      const uniqueModels = new Set(data.map(row => `${row.Make} ${row.Model}`));
+      statsDiv.innerHTML = `<strong>Average Vehicle Age:</strong> ${avgAge} years<br/><strong>Number of Different Models:</strong> ${uniqueModels.size}`;
+    }
+
     document.getElementById('searchInput').addEventListener('input', function () {
       const query = this.value.toLowerCase();
       const filtered = currentData.filter(row =>
         Object.values(row).some(val => val.toLowerCase().includes(query))
       );
       renderTable(filtered);
+      showStatistics(filtered);
     });
 
     listCSVFiles();
