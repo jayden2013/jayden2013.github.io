@@ -4,6 +4,7 @@ import json
 import csv
 import time
 from html.parser import HTMLParser
+from datetime import datetime
 
 # ========= VEHICLE INTEREST LIST =========
 # Format: ("MAKE", "MODEL", START_YEAR, END_YEAR or None)
@@ -27,6 +28,9 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0",
     "X-Requested-With": "XMLHttpRequest"
 }
+
+# ========= Timestamp for filenames =========
+timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 def is_vehicle_of_interest(year_str, make, model):
     try:
@@ -116,12 +120,13 @@ def post_inventory(yard_id, make, model):
     return html
 
 def main():
-    with open("vehicles_of_interest.csv", "w", newline="", encoding="utf-8") as summary_file:
+    summary_filename = f"vehicles_of_interest_{timestamp}.csv"
+    with open(summary_filename, "w", newline="", encoding="utf-8") as summary_file:
         summary_writer = csv.writer(summary_file)
         summary_writer.writerow(["Location", "Year", "Make", "Model", "Row"])
 
         for yard_id, location_name in YARDS.items():
-            filename = f"inventory_{location_name.lower().replace(' ', '_')}.csv"
+            filename = f"inventory_{location_name.lower().replace(' ', '_')}_{timestamp}.csv"
             print(f"Processing inventory for {location_name}...")
 
             try:
