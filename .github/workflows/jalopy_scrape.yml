@@ -20,7 +20,7 @@ jobs:
 
       - name: Run scraping script
         run: |
-          python jalopy-jungle/scripts/inventory_scraper.py
+          python jalopy-jungle/scripts/jalopy_scraper.py
 
       - name: Generate index.json
         run: |
