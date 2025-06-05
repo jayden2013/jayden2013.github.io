@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jalopy Jungle Inventory Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <h1 class="mb-4">Jalopy Jungle Inventory Dashboard</h1>
+    <div class="mb-3">
+      <label for="csvSelector" class="form-label">Select Inventory CSV</label>
+      <select class="form-select" id="csvSelector"></select>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered" id="inventoryTable">
+        <thead class="table-dark">
+          <tr id="tableHeader"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function listCSVFiles() {
+      try {
+        const response = await fetch('./inventory-csvs/');
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        const links = Array.from(doc.querySelectorAll('a'));
+        const csvLinks = links.map(link => link.getAttribute('href')).filter(href => href && href.endsWith('.csv')).map(path => 'inventory-csvs/' + path);
+        populateSelector(csvLinks);
+      } catch (e) {
+        console.error("Error listing CSV files:", e);
+      }
+    }
+
+    function populateSelector(csvFiles) {
+      const selector = document.getElementById('csvSelector');
+      csvFiles.reverse().forEach(file => {
+        const option = document.createElement('option');
+        option.value = file;
+        option.textContent = file.split('/').pop();
+        selector.appendChild(option);
+      });
+      if (csvFiles.length) loadCSV(selector.value);
+      selector.addEventListener('change', e => loadCSV(e.target.value));
+    }
+
+    function loadCSV(url) {
+      Papa.parse(url, {
+        download: true,
+        header: true,
+        complete: function (results) {
+          renderTable(results.data);
+        },
+      });
+    }
+
+    function renderTable(data) {
+      const headerRow = document.getElementById('tableHeader');
+      const body = document.getElementById('tableBody');
+      headerRow.innerHTML = '';
+      body.innerHTML = '';
+      if (!data.length) return;
+
+      Object.keys(data[0]).forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        headerRow.appendChild(th);
+      });
+
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        Object.values(row).forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+    }
+
+    listCSVFiles();
+  </script>
+</body>
+</html>
