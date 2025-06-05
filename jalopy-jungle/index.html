@@ -27,15 +27,11 @@
   <script>
     async function listCSVFiles() {
       try {
-        const response = await fetch('./inventory-csvs/');
-        const text = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(text, 'text/html');
-        const links = Array.from(doc.querySelectorAll('a'));
-        const csvLinks = links.map(link => link.getAttribute('href')).filter(href => href && href.endsWith('.csv')).map(path => 'inventory-csvs/' + path);
-        populateSelector(csvLinks);
+        const response = await fetch('./inventory-csvs/index.json');
+        const csvFiles = await response.json();
+        populateSelector(csvFiles);
       } catch (e) {
-        console.error("Error listing CSV files:", e);
+        console.error("Error loading CSV list:", e);
       }
     }
 
@@ -43,11 +39,11 @@
       const selector = document.getElementById('csvSelector');
       csvFiles.reverse().forEach(file => {
         const option = document.createElement('option');
-        option.value = file;
-        option.textContent = file.split('/').pop();
+        option.value = 'inventory-csvs/' + file;
+        option.textContent = file;
         selector.appendChild(option);
       });
-      if (csvFiles.length) loadCSV(selector.value);
+      if (csvFiles.length) loadCSV('inventory-csvs/' + csvFiles[0]);
       selector.addEventListener('change', e => loadCSV(e.target.value));
     }
 

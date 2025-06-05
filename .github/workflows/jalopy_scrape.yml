@@ -1,41 +1,36 @@
-name: Update Jalopy Inventory CSVs
+name: Jalopy Jungle Inventory Scraper
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # 1:00 AM Mountain Time (Daylight Saving Time)
-  workflow_dispatch:       # Allow manual trigger from GitHub UI
+    - cron: '0 7 * * *' # 1:00 AM MT = 7:00 AM UTC
+  workflow_dispatch:
 
 jobs:
-  update-inventory:
+  scrape-and-update:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.x'
 
-      - name: Install dependencies
+      - name: Run scraping script
         run: |
-          python -m pip install --upgrade pip
-          pip install requests
+          python jalopy-jungle/scripts/inventory_scraper.py
 
-      - name: Run inventory script
+      - name: Generate index.json
         run: |
-          python "jalopy-jungle/scripts/jalopy_scraper.py"
+          cd jalopy-jungle/inventory-csvs
+          ls *.csv | jq -R -s -c 'split("\n")[:-1]' > index.json
 
-      - name: Move CSVs into inventory-csvs folder
-        run: |
-          mkdir -p "jalopy-jungle/inventory-csvs"
-          mv *.csv "jalopy-jungle/inventory-csvs/"
-
-      - name: Commit and push updated CSVs
+      - name: Commit and push CSVs and index
         run: |
           git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add "jalopy-jungle/inventory-csvs/*.csv"
-          git commit -m "Update all CSVs from GitHub Actions" || echo "No changes to commit"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add jalopy-jungle/inventory-csvs/*.csv jalopy-jungle/inventory-csvs/index.json
+          git commit -m "Update inventory CSVs and index"
           git push
