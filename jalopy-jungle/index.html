@@ -84,6 +84,7 @@
           <textarea class="form-control" id="noteInput" rows="4" placeholder="Enter your note here..."></textarea>
         </div>
         <div class="modal-footer">
+          <button type="button" class="btn btn-danger" id="clearNote">Clear Note</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary" id="saveNote">Save Note</button>
         </div>
@@ -104,6 +105,7 @@
       if (darkPref) {
         document.body.classList.add('dark-mode');
       }
+      listCSVFiles();
     });
   </script>
   <script>
@@ -176,7 +178,7 @@
 
         const noteTd = document.createElement('td');
         noteTd.textContent = notes[rowKey] || '';
-        // Only open modal when clicking this notes cell
+        // Only open modal when this notes cell is clicked
         noteTd.style.cursor = 'pointer';
         noteTd.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -220,6 +222,15 @@
       }
       bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
     });
++  
++    document.getElementById('clearNote').addEventListener('click', () => {
++      if (selectedRowKey && notes[selectedRowKey]) {
++        delete notes[selectedRowKey];
++        localStorage.setItem('jalopyNotes', JSON.stringify(notes));
++        renderTable(currentData);
++      }
++      document.getElementById('noteInput').value = '';
++    });
 
     function exportTableToCSV() {
       const headers = Array.from(document.querySelectorAll('#tableHeader th')).map(th => th.textContent);
