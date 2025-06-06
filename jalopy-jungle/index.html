@@ -176,17 +176,27 @@
 
         const noteTd = document.createElement('td');
         noteTd.textContent = notes[rowKey] || '';
-        tr.appendChild(noteTd);
-
-        tr.addEventListener('click', () => {
+        // Only open modal when clicking this notes cell
+        noteTd.style.cursor = 'pointer';
+        noteTd.addEventListener('click', (e) => {
+          e.stopPropagation();
           selectedRowKey = rowKey;
           document.getElementById('noteInput').value = notes[rowKey] || '';
-          const modal = new bootstrap.Modal(document.getElementById('noteModal'));
-          modal.show();
+          new bootstrap.Modal(document.getElementById('noteModal')).show();
         });
+        tr.appendChild(noteTd);
 
         body.appendChild(tr);
       });
+
+      document.getElementById("searchInput").oninput = function () {
+        const query = this.value.toLowerCase();
+        const filtered = currentData.filter(row =>
+          Object.values(row).some(val => val.toLowerCase().includes(query))
+        );
+        renderTable(filtered);
+        showStatistics(filtered);
+      };
     }
 
     function sortTableByColumn(col) {
