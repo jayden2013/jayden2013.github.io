@@ -128,22 +128,32 @@
 
     function populateSelector(csvFiles) {
       const selector = document.getElementById('csvSelector');
+      selector.innerHTML = '';
       csvFiles.reverse().forEach(file => {
         const option = document.createElement('option');
         option.value = 'inventory-csvs/' + file;
         option.textContent = file;
         selector.appendChild(option);
       });
-      if (csvFiles.length) loadCSV('inventory-csvs/' + csvFiles[0]);
-      selector.addEventListener('change', e => loadCSV('inventory-csvs/' + e.target.value));
+      if (csvFiles.length) {
+        // Load first CSV by default
+        loadCSV('inventory-csvs/' + csvFiles[0]);
+      }
+      selector.addEventListener('change', e => {
+        loadCSV(e.target.value);
+      });
     }
 
     function loadCSV(url) {
+      // Clear search input when switching CSV
+      document.getElementById('searchInput').value = '';
       Papa.parse(url, {
         download: true,
         header: true,
         complete: function (results) {
-          currentData = results.data.filter(row => row.Year && row.Make && row.Model && row.Row);
+          currentData = results.data.filter(row =>
+            row.Year && row.Make && row.Model && row.Row
+          );
           renderTable(currentData);
           showStatistics(currentData);
         },
@@ -157,31 +167,32 @@
       body.innerHTML = '';
       if (!data.length) return;
 
-      Object.keys(data[0]).forEach(col => {
+      // Create column headers (all keys plus "Note")
+      const columns = Object.keys(data[0]);
+      columns.push('Note');
+      columns.forEach(col => {
         const th = document.createElement('th');
         th.textContent = col;
         th.addEventListener('click', () => sortTableByColumn(col));
         headerRow.appendChild(th);
       });
-      const noteTh = document.createElement('th');
-      noteTh.textContent = 'Note';
-      headerRow.appendChild(noteTh);
 
-      data.forEach((row) => {
+      data.forEach(row => {
         const tr = document.createElement('tr');
-        tr.style.cursor = "pointer";
         const rowKey = Object.values(row).join('|');
 
+        // Populate each cell
         Object.values(row).forEach(val => {
           const td = document.createElement('td');
           td.textContent = val;
           tr.appendChild(td);
         });
 
+        // "Note" cell
         const noteTd = document.createElement('td');
         noteTd.textContent = notes[rowKey] || '';
         noteTd.style.cursor = 'pointer';
-        noteTd.addEventListener('click', (e) => {
+        noteTd.addEventListener('click', e => {
           e.stopPropagation();
           selectedRowKey = rowKey;
           document.getElementById('noteInput').value = notes[rowKey] || '';
@@ -192,7 +203,8 @@
         body.appendChild(tr);
       });
 
-      document.getElementById("searchInput").oninput = function () {
+      // Re-apply search filter listener
+      document.getElementById('searchInput').oninput = function () {
         const query = this.value.toLowerCase();
         const filtered = currentData.filter(row =>
           Object.values(row).some(val => val.toLowerCase().includes(query))
@@ -235,9 +247,9 @@
 
     function exportTableToCSV() {
       const headers = Array.from(document.querySelectorAll('#tableHeader th')).map(th => th.textContent);
-      const rows = Array.from(document.querySelectorAll('#tableBody tr')).map(tr => {
-        return Array.from(tr.querySelectorAll('td')).map(td => td.textContent);
-      });
+      const rows = Array.from(document.querySelectorAll('#tableBody tr')).map(tr =>
+        Array.from(tr.querySelectorAll('td')).map(td => td.textContent)
+      );
       const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -250,8 +262,18 @@
 
     function showStatistics(data) {
       const statsDiv = document.getElementById('statistics');
-      const validYears = data.map(row => parseInt(row.Year)).filter(y => !isNaN(y));
-      if (!validYears.length) {
+      const validRows = data
+        .map(row => {
+          const yearNum = parseInt(row.Year);
+          const rowNum = parseInt(row.Row);
+          if (!isNaN(yearNum) && !isNaN(rowNum)) {
+            return { row: rowNum, age: new Date().getFullYear() - yearNum };
+          }
+          return null;
+        })
+        .filter(x => x !== null);
+
+      if (!validRows.length) {
         statsDiv.innerHTML = `<strong>Average Vehicle Age:</strong> N/A<br/>
                               <strong>Number of Different Models:</strong> 0<br/>
                               <strong>Number of Makes:</strong> 0<br/>
@@ -263,40 +285,34 @@
         }
         return;
       }
-      const currentYear = new Date().getFullYear();
-      // Build a map from Row (numeric) to age
-      const rowAgeMap = {};
-      data.forEach(row => {
-        const rowNum = parseInt(row.Row);
-        const yearNum = parseInt(row.Year);
-        if (!isNaN(rowNum) && !isNaN(yearNum)) {
-          rowAgeMap[rowNum] = currentYear - yearNum;
-        }
+
+      // Sort by row number ascending
+      validRows.sort((a, b) => a.row - b.row);
+
+      // Compute average age up to each row index
+      const cumAges = [];
+      validRows.forEach((item, idx) => {
+        const slice = validRows.slice(0, idx + 1).map(x => x.age);
+        const avg = slice.reduce((sum, v) => sum + v, 0) / slice.length;
+        cumAges.push(parseFloat(avg.toFixed(1)));
       });
-      const sortedRowNums = Object.keys(rowAgeMap)
-                               .map(k => parseInt(k))
-                               .sort((a, b) => a - b);
-      const ages = sortedRowNums.map(rn => rowAgeMap[rn]);
-      // Compute cumulative averages for each row in sorted order
-      const cumAvg = ages.map((_, i) => {
-        const sum = ages.slice(0, i + 1).reduce((a, b) => a + b, 0);
-        return (sum / (i + 1)).toFixed(1);
-      });
-      const avgAge = cumAvg[cumAvg.length - 1];
-      const newestAge = Math.min(...ages).toFixed(1);
-      const oldestAge = Math.max(...ages).toFixed(1);
+
+      // Overall stats
+      const ages = validRows.map(x => x.age);
       const uniqueModels = new Set(data.filter(r => r.Make && r.Model).map(row => `${row.Make.toUpperCase()} ${row.Model.toUpperCase()}`));
       const uniqueMakes = new Set(data.filter(r => r.Make).map(row => row.Make.toUpperCase()));
+      const newestAge = Math.min(...ages).toFixed(1);
+      const oldestAge = Math.max(...ages).toFixed(1);
 
       statsDiv.innerHTML = `
-        <strong>Average Vehicle Age:</strong> ${avgAge} years<br/>
+        <strong>Average Vehicle Age:</strong> ${cumAges[cumAges.length - 1]} years<br/>
         <strong>Number of Different Models:</strong> ${uniqueModels.size}<br/>
         <strong>Number of Makes:</strong> ${uniqueMakes.size}<br/>
         <strong>Newest Vehicle Age:</strong> ${newestAge} years<br/>
         <strong>Oldest Vehicle Age:</strong> ${oldestAge} years
       `;
 
-      // Render chart with cumulative average age per row
+      // Chart: x-axis is sorted validRows[].row (no duplicates, ascending), y-axis is cumAges
       const ctx = document.getElementById('ageChart').getContext('2d');
       if (ageChart) {
         ageChart.destroy();
@@ -304,10 +320,10 @@
       ageChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: sortedRowNums.map(rn => String(rn)),
+          labels: validRows.map(item => String(item.row)),
           datasets: [{
-            label: 'Cumulative Average Age (years)',
-            data: cumAvg,
+            label: 'Cumulative Average Age',
+            data: cumAges,
             backgroundColor: 'rgba(52, 152, 219, 0.7)',
             borderColor: 'rgba(41, 128, 185, 1)',
             borderWidth: 1
@@ -316,8 +332,19 @@
         options: {
           responsive: true,
           scales: {
-            x: { title: { display: true, text: 'Row' } },
-            y: { title: { display: true, text: 'Avg Age (years)' }, beginAtZero: true }
+            x: {
+              title: {
+                display: true,
+                text: 'Row'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Avg Age (years)'
+              },
+              beginAtZero: true
+            }
           },
           plugins: {
             legend: { display: false }
