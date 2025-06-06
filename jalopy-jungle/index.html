@@ -11,15 +11,18 @@
     body.dark-mode { background-color: #121212; color: #f1f1f1; }
     body.dark-mode .table { color: #f1f1f1; }
     body.dark-mode .table-dark { background-color: #2c2c2c; }
+
     /* orange hover on rows */
     #inventoryTable tbody tr:hover td,
     #myInventoryTable tbody tr:hover td {
       background-color: orange !important;
       color: #000;
     }
+
     th { cursor: pointer; }
     .display-1:hover { color: orange; cursor: pointer; }
     .btn.disabled-look { opacity: 0.5; cursor: not-allowed; }
+
     /* Dark-mode styling for modals */
     .dark-mode .modal-content,
     .dark-mode .modal-content .modal-header,
@@ -89,7 +92,6 @@
       <div class="tab-pane fade" id="myInventoryTab">
         <div class="mb-3">
           <button class="btn btn-outline-primary disabled-look" id="addInventoryRow">Add Row</button>
-          <button class="btn btn-outline-success disabled-look" id="exportMyInventory">Export My Inventory to CSV</button>
         </div>
         <div class="table-responsive">
           <table class="table table-striped table-bordered" id="myInventoryTable">
@@ -100,9 +102,7 @@
                 <th>My Cost</th>
                 <th>Shipping Cost</th>
                 <th>Listing</th>
-                <th>Quantity</th>
                 <th>Profit</th>
-                <th>Notes</th>
               </tr>
             </thead>
             <tbody id="myInventoryBody"></tbody>
@@ -114,66 +114,76 @@
 
   <!-- Serial Key Modal -->
   <div class="modal fade" id="serialModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Enter Serial Key</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Enter Serial Key</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input id="serialInput" class="form-control" placeholder="Serial Key">
+          <div id="serialFeedback" class="text-danger mt-2" style="display:none;">Invalid serial key.</div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" id="submitSerial">Submit</button>
+        </div>
       </div>
-      <div class="modal-body">
-        <input id="serialInput" class="form-control" placeholder="Serial Key">
-        <div id="serialFeedback" class="text-danger mt-2" style="display:none;">Invalid serial key.</div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" id="submitSerial">Submit</button>
-      </div>
-    </div></div>
+    </div>
   </div>
 
   <!-- Settings Modal -->
   <div class="modal fade" id="settingsModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Settings</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label for="homeYardSelect" class="form-label">Home Yard</label>
-          <select id="homeYardSelect" class="form-select">
-            <option value="">-- select yard --</option>
-            <option>Boise</option><option>Caldwell</option><option>Garden City</option><option>Nampa</option><option>Twin Falls</option>
-          </select>
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Settings</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <button class="btn btn-outline-secondary w-100 mb-2" id="modalToggleDark">Toggle Dark Mode</button>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="homeYardSelect" class="form-label">Home Yard</label>
+            <select id="homeYardSelect" class="form-select">
+              <option value="">-- select yard --</option>
+              <option>Boise</option>
+              <option>Caldwell</option>
+              <option>Garden City</option>
+              <option>Nampa</option>
+              <option>Twin Falls</option>
+            </select>
+          </div>
+          <button class="btn btn-outline-secondary w-100 mb-2" id="modalToggleDark">Toggle Dark Mode</button>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-primary" id="saveSettings">Save Settings</button>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button class="btn btn-primary" id="saveSettings">Save Settings</button>
-      </div>
-    </div></div>
+    </div>
   </div>
 
   <!-- Notes Modal -->
   <div class="modal fade" id="noteModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add Note</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="noteInput" class="form-control" rows="4" placeholder="Enter your note here..."></textarea>
-        <div id="noteLimitInfo" class="text-muted mt-2" style="display:none;">
-          Notes are limited to 20 characters. Upgrade to premium for unlimited characters.
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Note</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div id="noteLengthFeedback" class="text-danger mt-2" style="display:none;">Max 20 characters for non-premium users.</div>
+        <div class="modal-body">
+          <textarea id="noteInput" class="form-control" rows="4" placeholder="Enter your note here..."></textarea>
+          <div id="noteLimitInfo" class="text-muted mt-2" style="display:none;">
+            Notes are limited to 20 characters. Upgrade to premium for unlimited characters.
+          </div>
+          <div id="noteLengthFeedback" class="text-danger mt-2" style="display:none;">Max 20 characters for non-premium users.</div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-danger" id="clearNote">Clear Note</button>
+          <button class="btn btn-primary" id="saveNote">Save Note</button>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button class="btn btn-danger" id="clearNote">Clear Note</button>
-        <button class="btn btn-primary" id="saveNote">Save Note</button>
-      </div>
-    </div></div>
+    </div>
   </div>
 
   <!-- Scripts -->
@@ -186,8 +196,7 @@
     const settingsBtn = document.getElementById('settingsBtn');
     const modalToggleDark = document.getElementById('modalToggleDark');
     const exportBtn = document.getElementById('exportBtn');
-    const addInventoryRowBtn = document.getElementById('addInventoryRow');
-    const exportMyInvBtn = document.getElementById('exportMyInventory');
+    const addInventoryRow = document.getElementById('addInventoryRow');
     const serialModal = new bootstrap.Modal(document.getElementById('serialModal'));
     const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
 
@@ -225,12 +234,10 @@
     function enablePremium() {
       settingsBtn.classList.remove('disabled-look');
       exportBtn.classList.remove('disabled-look');
-      addInventoryRowBtn.classList.remove('disabled-look');
-      exportMyInvBtn.classList.remove('disabled-look');
+      addInventoryRow.classList.remove('disabled-look');
       unlockBtn.disabled = true;
       unlockBtn.textContent = `Premium: ${premiumName}`;
       applyHomeYardDefault();
-      loadMyInventory(); // load saved data
     }
 
     // Dark mode toggle in modal
@@ -246,7 +253,8 @@
       settingsModal.show();
     };
     document.getElementById('saveSettings').onclick = () => {
-      localStorage.setItem('homeYard', document.getElementById('homeYardSelect').value);
+      const yard = document.getElementById('homeYardSelect').value;
+      localStorage.setItem('homeYard', yard);
       settingsModal.hide();
       applyHomeYardDefault();
     };
@@ -256,109 +264,206 @@
       if (!isPremium) { alert('Exporting is only available to premium users.'); return; }
       exportTableToCSV();
     };
-    exportMyInvBtn.onclick = () => {
-      if (!isPremium) { alert('Exporting is only available to premium users.'); return; }
-      exportMyInventoryCSV();
-    };
 
-    // My Inventory logic
-    function saveMyInventory() {
-      const rows = Array.from(document.querySelectorAll('#myInventoryBody tr'))
-        .map(tr => {
-          const cells = tr.querySelectorAll('td, input, textarea');
-          if (!cells[0].querySelector) return null; // skip blank
-          const part = cells[0].querySelector('input').value.trim();
-          if (!part) return null; // skip empty row
-          return {
-            part,
-            listPrice: parseFloat(cells[1].querySelector('input').value) || 0,
-            myCost: parseFloat(cells[2].querySelector('input').value) || 0,
-            shipCost: parseFloat(cells[3].querySelector('input').value) || 0,
-            listing: cells[4].querySelector('input').value.trim(),
-            quantity: parseInt(cells[5].querySelector('input').value) || 0,
-            profit: parseFloat(cells[6].textContent) || 0,
-            notes: cells[7].querySelector('textarea').value.trim()
-          };
-        })
-        .filter(r => r);
-      localStorage.setItem('myInventoryData', JSON.stringify(rows));
-    }
-
-    function loadMyInventory() {
-      const data = JSON.parse(localStorage.getItem('myInventoryData')||'[]');
-      const tbody = document.getElementById('myInventoryBody');
-      tbody.innerHTML = '';
-      data.forEach(item => addMyInvRow(item));
-      addMyInvRow(); // blank row
-    }
-
-    function addMyInvRow(item={}) {
+    // My Inventory: dynamic rows + profit calc
+    function addRow() {
       const tbody = document.getElementById('myInventoryBody');
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><input class="form-control part-input" value="${item.part||''}"/></td>
-        <td><input type="number" step="0.01" class="form-control list-price" value="${item.listPrice||''}"/></td>
-        <td><input type="number" step="0.01" class="form-control my-cost" value="${item.myCost||''}"/></td>
-        <td><input type="number" step="0.01" class="form-control ship-cost" value="${item.shipCost||''}"/></td>
-        <td><input class="form-control listing-input" value="${item.listing||''}"/></td>
-        <td><input type="number" class="form-control quantity-input" value="${item.quantity||''}"/></td>
+        <td><input class="form-control part-input" /></td>
+        <td><input type="number" step="0.01" class="form-control list-price" /></td>
+        <td><input type="number" step="0.01" class="form-control my-cost" /></td>
+        <td><input type="number" step="0.01" class="form-control ship-cost" /></td>
+        <td><input class="form-control listing-input" /></td>
         <td class="profit-cell">0.00</td>
-        <td><textarea class="form-control notes-input">${item.notes||''}</textarea></td>
       `;
       tbody.append(tr);
-      ['list-price','my-cost','ship-cost','quantity-input','part-input'].forEach(cls=>{
-        tr.querySelector(`.${cls}`).addEventListener('input',()=>{
-          calcProfit(tr);
-          saveMyInventory();
-          // auto-add if last row filled
-          const last = tbody.lastElementChild;
-          if (last.querySelector('.part-input').value.trim()) {
-            addMyInvRow();
-          }
-        });
+      ['list-price','my-cost','ship-cost'].forEach(cls => {
+        tr.querySelector(`.${cls}`).addEventListener('input', () => calcProfit(tr));
       });
-      tr.querySelector('.listing-input').addEventListener('input',saveMyInventory);
-      tr.querySelector('.notes-input').addEventListener('input',saveMyInventory);
-      calcProfit(tr);
     }
-
     function calcProfit(tr) {
       const lp = parseFloat(tr.querySelector('.list-price').value) || 0;
       const mc = parseFloat(tr.querySelector('.my-cost').value) || 0;
       const sc = parseFloat(tr.querySelector('.ship-cost').value) || 0;
-      const q  = parseInt(tr.querySelector('.quantity-input').value) || 0;
-      const profit = ((lp - mc - sc) * q).toFixed(2);
-      tr.querySelector('.profit-cell').textContent = profit;
+      tr.querySelector('.profit-cell').textContent = (lp - mc - sc).toFixed(2);
     }
+    addInventoryRow.onclick = () => {
+      if (!isPremium) { alert('Adding rows is only for premium users.'); return; }
+      addRow();
+    };
 
-    function exportMyInventoryCSV() {
-      const data = JSON.parse(localStorage.getItem('myInventoryData')||'[]');
-      if (!data.length) { alert('No data to export'); return; }
-      const headers = ['Part','List Price','My Cost','Shipping Cost','Listing','Quantity','Profit','Notes'];
-      const rows = data.map(r=>[
-        r.part,r.listPrice,r.myCost,r.shipCost,r.listing,r.quantity,r.profit,r.notes
-      ]);
-      const csv = [headers, ...rows].map(r=>r.join(',')).join('\n');
+    // Dashboard logic (Inventory table, notes, stats)
+    let notes = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
+    let selectedRowKey = null, currentData = [], sortDirection = {}, ageChart = null;
+
+    async function listCSVFiles() {
+      const res = await fetch('./inventory-csvs/index.json');
+      const files = await res.json();
+      populateSelector(files);
+    }
+    function populateSelector(files) {
+      const sel = document.getElementById('csvSelector');
+      sel.innerHTML = '';
+      files.slice().reverse().forEach(f => sel.add(new Option(f, f)));
+      sel.onchange = () => loadCSV('inventory-csvs/' + sel.value);
+      applyHomeYardDefault();
+    }
+    function applyHomeYardDefault() {
+      const sel = document.getElementById('csvSelector');
+      const opts = Array.from(sel.options).map(o => o.value);
+      let choice = opts[0];
+      if (isPremium) {
+        const home = localStorage.getItem('homeYard');
+        if (home) {
+          const prefix = 'inventory_' + home.toLowerCase().replace(/ /g,'_') + '_';
+          const found = opts.find(f => f.startsWith(prefix));
+          if (found) choice = found;
+        }
+      }
+      sel.value = choice;
+      loadCSV('inventory-csvs/' + choice);
+    }
+    function loadCSV(path) {
+      document.getElementById('searchInput').value = '';
+      Papa.parse(path, { download: true, header: true, complete(r) {
+        currentData = r.data.filter(row => row.Year && row.Make && row.Model && row.Row);
+        renderTable(currentData);
+        showStatistics(currentData);
+      }});
+    }
+    function renderTable(data) {
+      const hdr = document.getElementById('tableHeader'), bd = document.getElementById('tableBody');
+      hdr.innerHTML = ''; bd.innerHTML = '';
+      if (!data.length) return;
+      const cols = Object.keys(data[0]).concat('Note');
+      cols.forEach(c => {
+        const th = document.createElement('th');
+        th.textContent = c;
+        th.onclick = () => sortTableByColumn(c);
+        hdr.append(th);
+      });
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        const key = Object.values(row).join('|');
+        Object.values(row).forEach(v => {
+          const td = document.createElement('td');
+          td.textContent = v; tr.append(td);
+        });
+        const nt = document.createElement('td');
+        nt.textContent = notes[key] || '';
+        nt.style.cursor = 'pointer';
+        nt.onclick = e => {
+          e.stopPropagation();
+          selectedRowKey = key;
+          const ni = document.getElementById('noteInput');
+          ni.value = notes[key] || '';
+          document.getElementById('noteLengthFeedback').style.display = 'none';
+          if (isPremium) {
+            ni.removeAttribute('maxlength');
+            document.getElementById('noteLimitInfo').style.display = 'none';
+          } else {
+            ni.setAttribute('maxlength','20'); document.getElementById('noteLimitInfo').style.display='block';
+          }
+          new bootstrap.Modal(document.getElementById('noteModal')).show();
+        };
+        tr.append(nt);
+        bd.append(tr);
+      });
+      document.getElementById('searchInput').oninput = function() {
+        const q = this.value.toLowerCase();
+        const fil = currentData.filter(r =>
+          Object.values(r).some(v => v.toLowerCase().includes(q))
+        );
+        renderTable(fil); showStatistics(fil);
+      };
+    }
+    function sortTableByColumn(col) {
+      const dir = sortDirection[col]==='asc'?'desc':'asc';
+      sortDirection[col] = dir;
+      currentData.sort((a,b)=> a[col]<b[col] ? (dir==='asc'? -1:1) : a[col]>b[col] ? (dir==='asc'?1:-1) : 0);
+      renderTable(currentData); showStatistics(currentData);
+    }
+    document.getElementById('saveNote').onclick = () => {
+      const ni = document.getElementById('noteInput'), val = ni.value;
+      if (!isPremium && val.length>20) {
+        document.getElementById('noteLengthFeedback').style.display = 'block'; return;
+      }
+      document.getElementById('noteLengthFeedback').style.display = 'none';
+      if (selectedRowKey) {
+        notes[selectedRowKey] = val;
+        localStorage.setItem('jalopyNotes', JSON.stringify(notes));
+        renderTable(currentData);
+      }
+      bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+    };
+    document.getElementById('clearNote').onclick = () => {
+      if (selectedRowKey) {
+        delete notes[selectedRowKey];
+        localStorage.setItem('jalopyNotes', JSON.stringify(notes));
+        renderTable(currentData);
+        document.getElementById('noteInput').value='';
+        document.getElementById('noteLengthFeedback').style.display='none';
+      }
+    };
+    function exportTableToCSV() {
+      const hdrs = Array.from(document.querySelectorAll('#tableHeader th')).map(th=>th.textContent);
+      const rows = Array.from(document.querySelectorAll('#tableBody tr')).map(tr=>
+        Array.from(tr.cells).map(td=>td.textContent)
+      );
+      const csv = [hdrs, ...rows].map(r=>r.join(',')).join('\n');
       const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'my_inventory.csv';
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='inventory_with_notes.csv';
       document.body.append(a); a.click(); a.remove();
     }
+    function showStatistics(data) {
+      const s = document.getElementById('statistics');
+      const valid = data.map(r=>{
+        const y=parseInt(r.Year), rn=parseInt(r.Row);
+        return !isNaN(y)&&!isNaN(rn)?{row:rn,age:new Date().getFullYear()-y}:null;
+      }).filter(x=>x);
+      if (!valid.length) {
+        s.innerHTML = `<strong>Average Age:</strong> N/A<br/>
+                       <strong># Models:</strong> 0<br/>
+                       <strong># Makes:</strong> 0<br/>
+                       <strong>Newest Age:</strong> N/A<br/>
+                       <strong>Oldest Age:</strong> N/A`;
+        if (ageChart){ ageChart.destroy(); ageChart=null; }
+        return;
+      }
+      valid.sort((a,b)=>a.row-b.row);
+      const cum=[]; valid.forEach((it,i)=>{
+        const slice=valid.slice(0,i+1).map(x=>x.age);
+        cum.push(+(slice.reduce((s,v)=>s+v,0)/slice.length).toFixed(1));
+      });
+      const ages = valid.map(x=>x.age);
+      const models=new Set(data.map(r=>`${r.Make}|${r.Model}`));
+      const makes=new Set(data.map(r=>r.Make));
+      s.innerHTML = `<strong>Average Age:</strong> ${cum[cum.length-1]}<br/>
+                     <strong># Models:</strong> ${models.size}<br/>
+                     <strong># Makes:</strong> ${makes.size}<br/>
+                     <strong>Newest Age:</strong> ${Math.min(...ages)}<br/>
+                     <strong>Oldest Age:</strong> ${Math.max(...ages)}`;
+      const ctx = document.getElementById('ageChart').getContext('2d');
+      if (ageChart) ageChart.destroy();
+      ageChart=new Chart(ctx,{
+        type:'bar',
+        data:{labels:valid.map(x=>x.row),datasets:[{
+          label:'Cumulative Avg Age',
+          data:cum,
+          backgroundColor:'rgba(52,152,219,0.7)',
+          borderColor:'rgba(41,128,185,1)',borderWidth:1
+        }]},
+        options:{responsive:true,scales:{
+          x:{title:{display:true,text:'Row'}},
+          y:{title:{display:true,text:'Age'},beginAtZero:true}
+        },plugins:{legend:{display:false}}}
+      });
+    }
 
-    // Initialize dashboard...
-    let notes = JSON.parse(localStorage.getItem('jalopyNotes')||'{}'),
-        selectedRowKey=null, currentData=[], sortDirection={}, ageChart=null;
-    async function listCSVFiles(){ /* ... existing logic ... */ }
-    function applyHomeYardDefault(){ /* ... existing logic ... */ }
-    function loadCSV(path){ /* ... existing logic ... */ }
-    function renderTable(data){ /* ... existing logic ... */ }
-    function sortTableByColumn(c){ /* ... existing logic ... */ }
-    document.getElementById('saveNote').onclick = ()=>{ /* ... */ };
-    document.getElementById('clearNote').onclick = ()=>{ /* ... */ };
-    function exportTableToCSV(){ /* ... existing logic ... */ }
-    function showStatistics(data){ /* ... existing logic ... */ }
-    // Kick off
+    // Initialize
     listCSVFiles();
   </script>
 </body>
