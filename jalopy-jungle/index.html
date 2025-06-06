@@ -6,6 +6,7 @@
   <title>Jalopy Jungle Inventory Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body.dark-mode {
       background-color: #121212;
@@ -68,6 +69,7 @@
 
       <div class="tab-pane fade pt-3" id="statsTab" role="tabpanel">
         <div id="statistics"></div>
+        <canvas id="ageChart" style="max-width:100%; margin-top: 1em;"></canvas>
       </div>
     </div>
   </div>
@@ -112,6 +114,7 @@
     let selectedRowKey = null;
     let currentData = [];
     let sortDirection = {};
+    let ageChart = null;
 
     async function listCSVFiles() {
       try {
@@ -254,6 +257,10 @@
                               <strong>Number of Makes:</strong> 0<br/>
                               <strong>Newest Vehicle Age:</strong> N/A<br/>
                               <strong>Oldest Vehicle Age:</strong> N/A`;
+        if (ageChart) {
+          ageChart.destroy();
+          ageChart = null;
+        }
         return;
       }
       const currentYear = new Date().getFullYear();
@@ -271,6 +278,36 @@
         <strong>Newest Vehicle Age:</strong> ${newestAge} years<br/>
         <strong>Oldest Vehicle Age:</strong> ${oldestAge} years
       `;
+
+      // Render chart of ages per row
+      const ctx = document.getElementById('ageChart').getContext('2d');
+      const labels = data.map((_, i) => (i + 1).toString());
+      if (ageChart) {
+        ageChart.destroy();
+      }
+      ageChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Vehicle Age (years)',
+            data: ages,
+            backgroundColor: 'rgba(52, 152, 219, 0.7)',
+            borderColor: 'rgba(41, 128, 185, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { title: { display: true, text: 'Vehicle Index' } },
+            y: { title: { display: true, text: 'Age (years)' }, beginAtZero: true }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
     }
 
     document.getElementById('searchInput').addEventListener('input', function () {
