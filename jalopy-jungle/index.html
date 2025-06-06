@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jalopy Jungle Inventory Dashboard</title>
+  <title>PROFIT - Parts Resale Optimization &amp; Field Inventory Tool</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,7 +14,6 @@
     tr:hover { background-color: #f2f2f2; }
     body.dark-mode tr:hover { background-color: #333; }
     th { cursor: pointer; }
-    /* Disable controls when locked */
     #toggleDarkMode:disabled,
     #exportBtn:disabled,
     #settingsBtn:disabled {
@@ -26,7 +25,10 @@
 <body>
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1>Jalopy Jungle Inventory Dashboard</h1>
+      <div>
+        <div class="display-1">PROFIT</div>
+        <div class="h5">Parts Resale Optimization &amp; Field Inventory Tool</div>
+      </div>
       <div>
         <button class="btn btn-outline-primary me-2" id="unlockBtn">Unlock Premium Features</button>
         <button class="btn btn-outline-secondary me-2" id="settingsBtn" disabled>⚙️ Settings</button>
@@ -144,8 +146,8 @@
 
     function checkKey(){
       const key=localStorage.getItem('premiumKey');
-      const e=serialData.find(x=>x.key===key);
-      if(e){ isPremium=true; premiumName=e.name; enablePremium(); }
+      const entry=serialData.find(x=>x.key===key);
+      if(entry){ isPremium=true; premiumName=entry.name; enablePremium(); }
     }
 
     unlockBtn.onclick=()=>{
@@ -155,10 +157,10 @@
     };
     document.getElementById('submitSerial').onclick=()=>{
       const key=document.getElementById('serialInput').value.trim();
-      const e=serialData.find(x=>x.key===key);
-      if(e){
+      const entry=serialData.find(x=>x.key===key);
+      if(entry){
         localStorage.setItem('premiumKey',key);
-        isPremium=true; premiumName=e.name;
+        isPremium=true; premiumName=entry.name;
         serialModal.hide(); enablePremium();
         alert(`Welcome, ${premiumName}!`);
       } else {
@@ -172,7 +174,6 @@
       settingsBtn.disabled=false;
       unlockBtn.disabled=true;
       unlockBtn.textContent=`Premium: ${premiumName}`;
-      // apply home yard default now that we can
       applyHomeYardDefault();
     }
 
@@ -181,7 +182,7 @@
       document.body.classList.toggle('dark-mode');
     };
 
-    // Settings: home yard
+    // Settings logic
     settingsBtn.onclick=()=>{
       const sel=document.getElementById('homeYardSelect');
       sel.value=localStorage.getItem('homeYard')||'';
@@ -207,10 +208,8 @@
     function populateSelector(files){
       const sel=document.getElementById('csvSelector');
       sel.innerHTML='';
-      // newest first
       files.slice().reverse().forEach(f=>{
-        const o=new Option(f,f);
-        sel.append(o);
+        sel.add(new Option(f,f));
       });
       sel.onchange=()=>loadCSV('inventory-csvs/'+sel.value);
       applyHomeYardDefault();
@@ -218,13 +217,13 @@
 
     function applyHomeYardDefault(){
       const sel=document.getElementById('csvSelector');
-      const files=Array.from(sel.options).map(o=>o.value);
-      let choice=files[0];
+      const opts=Array.from(sel.options).map(o=>o.value);
+      let choice=opts[0];
       if(isPremium){
         const home=localStorage.getItem('homeYard');
         if(home){
           const prefix='inventory_'+home.toLowerCase().replace(/ /g,'_')+'_';
-          const found=files.find(f=>f.startsWith(prefix));
+          const found=opts.find(f=>f.startsWith(prefix));
           if(found) choice=found;
         }
       }
@@ -234,7 +233,7 @@
 
     function loadCSV(path){
       document.getElementById('searchInput').value='';
-      Papa.parse(path, { download:true, header:true, complete(r){
+      Papa.parse(path,{download:true,header:true,complete(r){
         currentData=r.data.filter(row=>row.Year&&row.Make&&row.Model&&row.Row);
         renderTable(currentData);
         showStatistics(currentData);
@@ -242,13 +241,12 @@
     }
 
     function renderTable(data){
-      const hdr=document.getElementById('tableHeader'), body=document.getElementById('tableBody');
-      hdr.innerHTML=''; body.innerHTML='';
+      const hdr=document.getElementById('tableHeader'), bd=document.getElementById('tableBody');
+      hdr.innerHTML=''; bd.innerHTML='';
       if(!data.length) return;
       const cols=Object.keys(data[0]).concat('Note');
       cols.forEach(c=>{
-        const th=document.createElement('th');
-        th.textContent=c;
+        const th=document.createElement('th'); th.textContent=c;
         th.onclick=()=>sortTableByColumn(c);
         hdr.append(th);
       });
@@ -258,10 +256,10 @@
         Object.values(row).forEach(v=>{
           const td=document.createElement('td'); td.textContent=v; tr.append(td);
         });
-        const noteTd=document.createElement('td');
-        noteTd.textContent=notes[key]||'';
-        noteTd.style.cursor='pointer';
-        noteTd.onclick=e=>{
+        const nt=document.createElement('td');
+        nt.textContent=notes[key]||'';
+        nt.style.cursor='pointer';
+        nt.onclick=e=>{
           e.stopPropagation();
           selectedRowKey=key;
           const ni=document.getElementById('noteInput');
@@ -276,14 +274,13 @@
           }
           new bootstrap.Modal(document.getElementById('noteModal')).show();
         };
-        tr.append(noteTd);
-        body.append(tr);
+        tr.append(nt);
+        bd.append(tr);
       });
       document.getElementById('searchInput').oninput=function(){
         const q=this.value.toLowerCase();
         const fil=currentData.filter(r=>Object.values(r).some(v=>v.toLowerCase().includes(q)));
-        renderTable(fil);
-        showStatistics(fil);
+        renderTable(fil); showStatistics(fil);
       };
     }
 
@@ -291,12 +288,11 @@
       const dir=sortDirection[col]==='asc'?'desc':'asc';
       sortDirection[col]=dir;
       currentData.sort((a,b)=>{
-        if(a[col]<b[col])return dir==='asc'? -1:1;
-        if(a[col]>b[col])return dir==='asc'? 1:-1;
+        if(a[col]<b[col]) return dir==='asc'? -1:1;
+        if(a[col]>b[col]) return dir==='asc'? 1:-1;
         return 0;
       });
-      renderTable(currentData);
-      showStatistics(currentData);
+      renderTable(currentData); showStatistics(currentData);
     }
 
     document.getElementById('saveNote').onclick=()=>{
@@ -331,26 +327,24 @@
       );
       const csv=[hdrs,...rows].map(r=>r.join(',')).join('\n');
       const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-      const link=document.createElement('a');
-      link.href=URL.createObjectURL(blob);
-      link.download='inventory_with_notes.csv';
-      document.body.append(link);
-      link.click();
-      link.remove();
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='inventory_with_notes.csv';
+      document.body.append(a); a.click(); a.remove();
     }
 
     function showStatistics(data){
-      const stats=document.getElementById('statistics');
+      const s=document.getElementById('statistics');
       const valid=data.map(r=>{
         const y=parseInt(r.Year), rn=parseInt(r.Row);
         return !isNaN(y)&&!isNaN(rn)?{row:rn,age:new Date().getFullYear()-y}:null;
       }).filter(x=>x);
       if(!valid.length){
-        stats.innerHTML=`<strong>Average Age:</strong> N/A<br/>
-                         <strong># Models:</strong> 0<br/>
-                         <strong># Makes:</strong> 0<br/>
-                         <strong>Newest Age:</strong> N/A<br/>
-                         <strong>Oldest Age:</strong> N/A`;
+        s.innerHTML=`<strong>Average Age:</strong> N/A<br/>
+                     <strong># Models:</strong> 0<br/>
+                     <strong># Makes:</strong> 0<br/>
+                     <strong>Newest Age:</strong> N/A<br/>
+                     <strong>Oldest Age:</strong> N/A`;
         if(ageChart){ ageChart.destroy(); ageChart=null; }
         return;
       }
@@ -362,11 +356,11 @@
       const ages=valid.map(x=>x.age);
       const models=new Set(data.map(r=>`${r.Make}|${r.Model}`));
       const makes=new Set(data.map(r=>r.Make));
-      stats.innerHTML=`<strong>Average Age:</strong> ${cum[cum.length-1]}<br/>
-                       <strong># Models:</strong> ${models.size}<br/>
-                       <strong># Makes:</strong> ${makes.size}<br/>
-                       <strong>Newest Age:</strong> ${Math.min(...ages)}<br/>
-                       <strong>Oldest Age:</strong> ${Math.max(...ages)}`;
+      s.innerHTML=`<strong>Average Age:</strong> ${cum[cum.length-1]}<br/>
+                   <strong># Models:</strong> ${models.size}<br/>
+                   <strong># Makes:</strong> ${makes.size}<br/>
+                   <strong>Newest Age:</strong> ${Math.min(...ages)}<br/>
+                   <strong>Oldest Age:</strong> ${Math.max(...ages)}`;
       const ctx=document.getElementById('ageChart').getContext('2d');
       if(ageChart) ageChart.destroy();
       ageChart=new Chart(ctx,{
@@ -383,7 +377,6 @@
       });
     }
 
-    // init
     listCSVFiles();
   </script>
 </body>
