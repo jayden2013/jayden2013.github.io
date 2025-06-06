@@ -137,12 +137,12 @@
     const serialInput = document.getElementById('serialInput');
     const serialFeedback = document.getElementById('serialFeedback');
 
-    // Load serial-keys.json on page load
-    fetch('serial-keys.json')
+    // Load serial-keys.json from jalopy-jungle/json on page load
+    fetch('json/serial-keys.json')
       .then(res => res.json())
       .then(data => {
-        serialData = data; 
-        checkStoredKey(); 
+        serialData = data;
+        checkStoredKey();
       })
       .catch(err => {
         console.error('Failed to load serial-keys.json:', err);
