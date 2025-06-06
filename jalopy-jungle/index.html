@@ -135,7 +135,7 @@
         selector.appendChild(option);
       });
       if (csvFiles.length) loadCSV('inventory-csvs/' + csvFiles[0]);
-      selector.addEventListener('change', e => loadCSV(e.target.value));
+      selector.addEventListener('change', e => loadCSV('inventory-csvs/' + e.target.value));
     }
 
     function loadCSV(url) {
@@ -264,7 +264,19 @@
         return;
       }
       const currentYear = new Date().getFullYear();
-      const ages = validYears.map(y => currentYear - y);
+      // Build a map from Row (numeric) to age
+      const rowAgeMap = {};
+      data.forEach(row => {
+        const rowNum = parseInt(row.Row);
+        const yearNum = parseInt(row.Year);
+        if (!isNaN(rowNum) && !isNaN(yearNum)) {
+          rowAgeMap[rowNum] = currentYear - yearNum;
+        }
+      });
+      const sortedRowNums = Object.keys(rowAgeMap)
+                               .map(k => parseInt(k))
+                               .sort((a, b) => a - b);
+      const ages = sortedRowNums.map(rn => rowAgeMap[rn]);
       const avgAge = (ages.reduce((a, b) => a + b, 0) / ages.length).toFixed(1);
       const newestAge = Math.min(...ages).toFixed(1);
       const oldestAge = Math.max(...ages).toFixed(1);
@@ -279,16 +291,15 @@
         <strong>Oldest Vehicle Age:</strong> ${oldestAge} years
       `;
 
-      // Render chart of ages with "Row" as x-axis labels
+      // Render chart using sorted, unique Row values
       const ctx = document.getElementById('ageChart').getContext('2d');
-      const labels = data.map(row => row.Row);
       if (ageChart) {
         ageChart.destroy();
       }
       ageChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: labels,
+          labels: sortedRowNums.map(rn => String(rn)),
           datasets: [{
             label: 'Vehicle Age (years)',
             data: ages,
