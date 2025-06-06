@@ -1,151 +1,161 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Jalopy Jungle Dashboard</title>
-  <style>
-    /* All your CSS styles already in the canvas go here — unchanged */
-    /* Assuming you're using the styles already defined in the canvas above */
-  </style>
-</head>
-<body>
-  <nav>
-    <div><strong>Jalopy Jungle Dashboard</strong></div>
-    <label class="switch">
-      <input type="checkbox" id="darkModeToggle">
-      <span class="slider"></span>
-    </label>
-  </nav>
+<!-- Inside <body> tag -->
+<nav>
+  <div><strong>Jalopy Jungle Dashboard</strong></div>
+  <label class="switch">
+    <input type="checkbox" id="darkModeToggle">
+    <span class="slider"></span>
+  </label>
+</nav>
 
-  <div class="container">
-    <div class="tabs">
-      <button class="tab-button active" onclick="showTab('table')">Inventory Table</button>
-      <button class="tab-button" onclick="showTab('stats')">Statistics</button>
-    </div>
-
-    <div id="table" class="tab-content active">
-      <select id="csvSelector" onchange="loadCSV(this.value)">
-        <option value="">Select a CSV...</option>
-      </select>
-      <div id="inventoryTableContainer"></div>
-    </div>
-
-    <div id="stats" class="tab-content">
-      <p id="averageAge">Average Vehicle Age: ...</p>
-      <p id="modelCount">Unique Models: ...</p>
-    </div>
+<div class="container">
+  <div class="tabs">
+    <button class="tab-button active" onclick="showTab('table')">Inventory Table</button>
+    <button class="tab-button" onclick="showTab('stats')">Statistics</button>
   </div>
 
-  <!-- Modal -->
-  <div id="popupModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <div id="modalOptions">
-        <button onclick="openNoteInput()">Add Note</button>
-        <button onclick="openSoldData()">View Sold Data</button>
-      </div>
-      <div id="modalContentArea"></div>
-    </div>
+  <div id="table" class="tab-content active">
+    <select id="csvSelector" onchange="loadCSV(this.value)">
+      <option value="">Select a CSV...</option>
+    </select>
+    <div id="inventoryTableContainer"></div>
   </div>
 
-  <script>
-    function showTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
-    }
+  <div id="stats" class="tab-content">
+    <p id="averageAge">Average Vehicle Age: ...</p>
+    <p id="modelCount">Unique Models: ...</p>
+  </div>
+</div>
 
-    const toggle = document.getElementById('darkModeToggle');
-    toggle.addEventListener('change', () => {
-      document.body.classList.toggle('dark-mode', toggle.checked);
-      localStorage.setItem('darkMode', toggle.checked);
-    });
+<div id="popupModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <div id="modalOptions">
+      <button onclick="openNoteInput()">Add Note</button>
+      <button onclick="openSoldData()">View Sold Data</button>
+    </div>
+    <div id="modalContentArea"></div>
+  </div>
+</div>
 
-    window.onload = () => {
-      const dark = JSON.parse(localStorage.getItem('darkMode'));
-      toggle.checked = dark;
-      document.body.classList.toggle('dark-mode', dark);
-      fetch('jalopy-jungle/inventory-csvs/index.json')
-        .then(res => res.json())
-        .then(files => {
-          const selector = document.getElementById('csvSelector');
-          files.forEach(f => {
-            const opt = document.createElement('option');
-            opt.value = `jalopy-jungle/inventory-csvs/${f}`;
-            opt.textContent = f;
-            selector.appendChild(opt);
-          });
+<script>
+  function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+  }
+
+  const toggle = document.getElementById('darkModeToggle');
+  toggle.addEventListener('change', () => {
+    document.body.classList.toggle('dark-mode', toggle.checked);
+    localStorage.setItem('darkMode', toggle.checked);
+  });
+
+  window.onload = () => {
+    const dark = JSON.parse(localStorage.getItem('darkMode'));
+    toggle.checked = dark;
+    document.body.classList.toggle('dark-mode', dark);
+    fetch('jalopy-jungle/inventory-csvs/index.json')
+      .then(res => res.json())
+      .then(files => {
+        const selector = document.getElementById('csvSelector');
+        files.forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = `jalopy-jungle/inventory-csvs/${f}`;
+          opt.textContent = f;
+          selector.appendChild(opt);
         });
-    };
+      });
+  };
 
-    let selectedRowData = null;
+  let selectedRowData = null;
 
-    function loadCSV(filePath) {
-      fetch(filePath)
-        .then(res => res.text())
-        .then(csv => {
-          const rows = csv.split("\n").map(r => r.split(","));
-          const table = document.createElement("table");
-          const thead = document.createElement("thead");
-          const tbody = document.createElement("tbody");
+  function loadCSV(filePath) {
+    fetch(filePath)
+      .then(res => res.text())
+      .then(csv => {
+        const rows = csv.split("\n").map(r => r.split(","));
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        const tbody = document.createElement("tbody");
 
-          rows[0].forEach(h => {
-            const th = document.createElement("th");
-            th.textContent = h;
-            thead.appendChild(th);
-          });
-
-          for (let i = 1; i < rows.length; i++) {
-            const tr = document.createElement("tr");
-            if (rows[i].length < 2) continue;
-            rows[i].forEach((cell, idx) => {
-              const td = document.createElement("td");
-              td.textContent = cell;
-              tr.appendChild(td);
-            });
-            tr.onclick = () => {
-              selectedRowData = rows[i];
-              document.getElementById("popupModal").style.display = "block";
-              document.getElementById("modalContentArea").innerHTML = "";
-            };
-            tbody.appendChild(tr);
-          }
-
-          table.appendChild(thead);
-          table.appendChild(tbody);
-          document.getElementById("inventoryTableContainer").innerHTML = "";
-          document.getElementById("inventoryTableContainer").appendChild(table);
+        rows[0].forEach(h => {
+          const th = document.createElement("th");
+          th.textContent = h;
+          thead.appendChild(th);
         });
+
+        for (let i = 1; i < rows.length; i++) {
+          const tr = document.createElement("tr");
+          if (rows[i].length < 2) continue;
+          rows[i].forEach((cell, idx) => {
+            const td = document.createElement("td");
+            td.textContent = cell;
+            tr.appendChild(td);
+          });
+          tr.onclick = () => {
+            selectedRowData = rows[i];
+            document.getElementById("popupModal").style.display = "block";
+            document.getElementById("modalContentArea").innerHTML = "";
+          };
+          tbody.appendChild(tr);
+        }
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        document.getElementById("inventoryTableContainer").innerHTML = "";
+        document.getElementById("inventoryTableContainer").appendChild(table);
+
+        calculateStats(rows);
+      });
+  }
+
+  function closeModal() {
+    document.getElementById("popupModal").style.display = "none";
+  }
+
+  function openNoteInput() {
+    const container = document.getElementById("modalContentArea");
+    const key = selectedRowData.join("-");
+    const saved = localStorage.getItem(`note-${key}`) || "";
+    container.innerHTML = `
+      <textarea id="noteInput" placeholder="Enter your note here...">${saved}</textarea>
+      <button onclick="saveNote()">Save Note</button>
+    `;
+  }
+
+  function saveNote() {
+    const note = document.getElementById("noteInput").value;
+    if (selectedRowData) {
+      const key = selectedRowData.join("-");
+      localStorage.setItem(`note-${key}`, note);
+      alert("Note saved.");
+    }
+    closeModal();
+  }
+
+  function openSoldData() {
+    const container = document.getElementById("modalContentArea");
+    container.innerHTML = `<p>Sold data for this vehicle will appear here (to be implemented).</p>`;
+  }
+
+  function calculateStats(data) {
+    const yearIdx = data[0].indexOf("Year");
+    const modelIdx = data[0].indexOf("Model");
+    const currentYear = new Date().getFullYear();
+
+    const years = [];
+    const models = new Set();
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (!row[yearIdx] || !row[modelIdx]) continue;
+      years.push(currentYear - parseInt(row[yearIdx]));
+      models.add(row[modelIdx]);
     }
 
-    function closeModal() {
-      document.getElementById("popupModal").style.display = "none";
-    }
-
-    function openNoteInput() {
-      const container = document.getElementById("modalContentArea");
-      container.innerHTML = `
-        <textarea id="noteInput" placeholder="Enter your note here..."></textarea>
-        <button onclick="saveNote()">Save Note</button>
-      `;
-    }
-
-    function saveNote() {
-      const note = document.getElementById("noteInput").value;
-      if (selectedRowData) {
-        const key = selectedRowData.join("-");
-        localStorage.setItem(`note-${key}`, note);
-        alert("Note saved.");
-      }
-      closeModal();
-    }
-
-    function openSoldData() {
-      const container = document.getElementById("modalContentArea");
-      container.innerHTML = `<p>Sold data for this vehicle will appear here (to be implemented).</p>`;
-    }
-  </script>
-</body>
-</html>
+    const avgAge = years.reduce((a, b) => a + b, 0) / years.length;
+    document.getElementById("averageAge").textContent = `Average Vehicle Age: ${avgAge.toFixed(1)} years`;
+    document.getElementById("modelCount").textContent = `Unique Models: ${models.size}`;
+  }
+</script>
