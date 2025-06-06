@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -226,8 +227,8 @@
         delete notes[selectedRowKey];
         localStorage.setItem('jalopyNotes', JSON.stringify(notes));
         renderTable(currentData);
+        document.getElementById('noteInput').value = '';
       }
-      bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
     });
 
     function exportTableToCSV() {
@@ -267,3 +268,4 @@
   </script>
 </body>
 </html>
+```
