@@ -111,7 +111,8 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <textarea class="form-control" id="noteInput" rows="4" placeholder="Enter your note here..."></textarea>
+          <textarea class="form-control" id="noteInput" rows="4" placeholder="Enter your note here..." maxlength="20"></textarea>
+          <div id="noteLengthFeedback" class="text-danger mt-2" style="display:none;">Max 20 characters for non-premium users.</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -137,7 +138,7 @@
     const serialInput = document.getElementById('serialInput');
     const serialFeedback = document.getElementById('serialFeedback');
 
-    // Load serial-keys.json from jalopy-jungle/json on page load
+    // Load serial-keys.json from json folder on page load
     fetch('json/serial-keys.json')
       .then(res => res.json())
       .then(data => {
@@ -290,7 +291,14 @@
         noteTd.addEventListener('click', e => {
           e.stopPropagation();
           selectedRowKey = rowKey;
+          const noteInputEl = document.getElementById('noteInput');
           document.getElementById('noteInput').value = notes[rowKey] || '';
+          document.getElementById('noteLengthFeedback').style.display = 'none';
+          if (isPremium) {
+            noteInputEl.removeAttribute('maxlength');
+          } else {
+            noteInputEl.setAttribute('maxlength', '20');
+          }
           new bootstrap.Modal(document.getElementById('noteModal')).show();
         });
         tr.appendChild(noteTd);
@@ -321,7 +329,13 @@
     }
 
     document.getElementById('saveNote').addEventListener('click', () => {
-      const newNote = document.getElementById('noteInput').value;
+      const noteInputEl = document.getElementById('noteInput');
+      const newNote = noteInputEl.value;
+      if (!isPremium && newNote.length > 20) {
+        document.getElementById('noteLengthFeedback').style.display = 'block';
+        return;
+      }
+      document.getElementById('noteLengthFeedback').style.display = 'none';
       if (selectedRowKey) {
         notes[selectedRowKey] = newNote;
         localStorage.setItem('jalopyNotes', JSON.stringify(notes));
@@ -336,6 +350,7 @@
         localStorage.setItem('jalopyNotes', JSON.stringify(notes));
         renderTable(currentData);
         document.getElementById('noteInput').value = '';
+        document.getElementById('noteLengthFeedback').style.display = 'none';
       }
     });
 
