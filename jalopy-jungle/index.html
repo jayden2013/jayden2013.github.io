@@ -14,8 +14,16 @@
     tr:hover { background-color: #f2f2f2; }
     body.dark-mode tr:hover { background-color: #333; }
     th { cursor: pointer; }
+
+    /* PROFIT header hover */
+    .display-1:hover {
+      color: orange;
+      cursor: pointer;
+    }
+
     /* Appearance for disabled-looking buttons */
     .btn.disabled-look { opacity: 0.5; }
+
   </style>
 </head>
 <body>
@@ -47,7 +55,7 @@
           <input type="text" id="searchInput" class="form-control" placeholder="Filter rows...">
         </div>
         <div class="mb-3">
-          <button class="btn btn-success disabled-look" id="exportBtn" onclick="exportTableToCSV()">Export Table to CSV</button>
+          <button class="btn btn-success disabled-look" id="exportBtn">Export Table to CSV</button>
         </div>
         <div class="table-responsive">
           <table class="table table-striped table-bordered" id="inventoryTable">
@@ -202,6 +210,15 @@
       localStorage.setItem('homeYard', yard);
       settingsModal.hide();
       applyHomeYardDefault();
+    };
+
+    // Export button behavior
+    exportBtn.onclick = () => {
+      if (!isPremium) {
+        alert('Exporting is only available to premium users.');
+        return;
+      }
+      exportTableToCSV();
     };
   </script>
 
