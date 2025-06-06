@@ -11,19 +11,11 @@
     body.dark-mode { background-color: #121212; color: #f1f1f1; }
     body.dark-mode .table { color: #f1f1f1; }
     body.dark-mode .table-dark { background-color: #2c2c2c; }
-    tr:hover { background-color: #f2f2f2; }
-    body.dark-mode tr:hover { background-color: #333; }
+    /* orange hover on rows */
+    #inventoryTable tbody tr:hover td { background-color: orange !important; color: #000; }
     th { cursor: pointer; }
-
-    /* PROFIT header hover */
-    .display-1:hover {
-      color: orange;
-      cursor: pointer;
-    }
-
-    /* Appearance for disabled-looking buttons */
-    .btn.disabled-look { opacity: 0.5; }
-
+    .display-1:hover { color: orange; cursor: pointer; }
+    .btn.disabled-look { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -36,7 +28,7 @@
       <div>
         <button class="btn btn-outline-primary me-2" id="unlockBtn">Unlock Premium Features</button>
         <button class="btn btn-outline-secondary me-2 disabled-look" id="settingsBtn">⚙️ Settings</button>
-        <button class="btn btn-outline-secondary disabled-look" id="toggleDarkMode">Toggle Dark Mode</button>
+        <!-- Dark mode button removed from header -->
       </div>
     </div>
 
@@ -95,19 +87,22 @@
       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
     </div>
     <div class="modal-body">
-      <label for="homeYardSelect" class="form-label">Home Yard</label>
-      <select id="homeYardSelect" class="form-select">
-        <option value="">-- select yard --</option>
-        <option>Boise</option>
-        <option>Caldwell</option>
-        <option>Garden City</option>
-        <option>Nampa</option>
-        <option>Twin Falls</option>
-      </select>
+      <div class="mb-3">
+        <label for="homeYardSelect" class="form-label">Home Yard</label>
+        <select id="homeYardSelect" class="form-select">
+          <option value="">-- select yard --</option>
+          <option>Boise</option>
+          <option>Caldwell</option>
+          <option>Garden City</option>
+          <option>Nampa</option>
+          <option>Twin Falls</option>
+        </select>
+      </div>
+      <button class="btn btn-outline-secondary w-100 mb-2" id="modalToggleDark">Toggle Dark Mode</button>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-      <button class="btn btn-primary" id="saveSettings">Save</button>
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <button class="btn btn-primary" id="saveSettings">Save Settings</button>
     </div>
   </div></div></div>
 
@@ -137,17 +132,17 @@
     let isPremium = false, premiumName = '';
     let serialData = [];
     const unlockBtn = document.getElementById('unlockBtn');
-    const toggleDarkMode = document.getElementById('toggleDarkMode');
     const exportBtn = document.getElementById('exportBtn');
     const settingsBtn = document.getElementById('settingsBtn');
     const serialModal = new bootstrap.Modal(document.getElementById('serialModal'));
     const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+    const modalToggleDark = document.getElementById('modalToggleDark');
 
-    // Load and check serial keys
+    // Load/check serial keys
     fetch('json/serial-keys.json')
       .then(r => r.json())
       .then(data => { serialData = data; checkKey(); })
-      .catch(console.error);
+      .catch(() => console.error('Could not load serial keys'));
 
     function checkKey() {
       const key = localStorage.getItem('premiumKey');
@@ -179,15 +174,15 @@
     };
 
     function enablePremium() {
-      toggleDarkMode.classList.remove('disabled-look');
-      exportBtn.classList.remove('disabled-look');
       settingsBtn.classList.remove('disabled-look');
+      exportBtn.classList.remove('disabled-look');
       unlockBtn.disabled = true;
       unlockBtn.textContent = `Premium: ${premiumName}`;
       applyHomeYardDefault();
     }
 
-    toggleDarkMode.onclick = () => {
+    // Toggle dark mode from settings modal
+    modalToggleDark.onclick = () => {
       if (!isPremium) {
         alert('Dark mode is only available for premium users.');
         return;
@@ -210,15 +205,6 @@
       localStorage.setItem('homeYard', yard);
       settingsModal.hide();
       applyHomeYardDefault();
-    };
-
-    // Export button behavior
-    exportBtn.onclick = () => {
-      if (!isPremium) {
-        alert('Exporting is only available to premium users.');
-        return;
-      }
-      exportTableToCSV();
     };
   </script>
 
