@@ -112,6 +112,9 @@
         </div>
         <div class="modal-body">
           <textarea class="form-control" id="noteInput" rows="4" placeholder="Enter your note here..." maxlength="20"></textarea>
+          <div id="noteLimitInfo" class="text-muted mt-2">
+            Notes are limited to 20 characters. Upgrade to premium for unlimited characters.
+          </div>
           <div id="noteLengthFeedback" class="text-danger mt-2" style="display:none;">Max 20 characters for non-premium users.</div>
         </div>
         <div class="modal-footer">
@@ -296,8 +299,10 @@
           document.getElementById('noteLengthFeedback').style.display = 'none';
           if (isPremium) {
             noteInputEl.removeAttribute('maxlength');
+            document.getElementById('noteLimitInfo').style.display = 'none';
           } else {
             noteInputEl.setAttribute('maxlength', '20');
+            document.getElementById('noteLimitInfo').style.display = 'block';
           }
           new bootstrap.Modal(document.getElementById('noteModal')).show();
         });
