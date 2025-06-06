@@ -143,7 +143,7 @@
         download: true,
         header: true,
         complete: function (results) {
-          currentData = results.data.filter(row => row.Year && row.Make && row.Model);
+          currentData = results.data.filter(row => row.Year && row.Make && row.Model && row.Row);
           renderTable(currentData);
           showStatistics(currentData);
         },
@@ -279,9 +279,9 @@
         <strong>Oldest Vehicle Age:</strong> ${oldestAge} years
       `;
 
-      // Render chart of ages per row
+      // Render chart of ages with "Row" as x-axis labels
       const ctx = document.getElementById('ageChart').getContext('2d');
-      const labels = data.map((_, i) => (i + 1).toString());
+      const labels = data.map(row => row.Row);
       if (ageChart) {
         ageChart.destroy();
       }
@@ -300,7 +300,7 @@
         options: {
           responsive: true,
           scales: {
-            x: { title: { display: true, text: 'Vehicle Index' } },
+            x: { title: { display: true, text: 'Row' } },
             y: { title: { display: true, text: 'Age (years)' }, beginAtZero: true }
           },
           plugins: {
