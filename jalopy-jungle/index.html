@@ -277,7 +277,12 @@
                                .map(k => parseInt(k))
                                .sort((a, b) => a - b);
       const ages = sortedRowNums.map(rn => rowAgeMap[rn]);
-      const avgAge = (ages.reduce((a, b) => a + b, 0) / ages.length).toFixed(1);
+      // Compute cumulative averages for each row in sorted order
+      const cumAvg = ages.map((_, i) => {
+        const sum = ages.slice(0, i + 1).reduce((a, b) => a + b, 0);
+        return (sum / (i + 1)).toFixed(1);
+      });
+      const avgAge = cumAvg[cumAvg.length - 1];
       const newestAge = Math.min(...ages).toFixed(1);
       const oldestAge = Math.max(...ages).toFixed(1);
       const uniqueModels = new Set(data.filter(r => r.Make && r.Model).map(row => `${row.Make.toUpperCase()} ${row.Model.toUpperCase()}`));
@@ -291,7 +296,7 @@
         <strong>Oldest Vehicle Age:</strong> ${oldestAge} years
       `;
 
-      // Render chart using sorted, unique Row values
+      // Render chart with cumulative average age per row
       const ctx = document.getElementById('ageChart').getContext('2d');
       if (ageChart) {
         ageChart.destroy();
@@ -301,8 +306,8 @@
         data: {
           labels: sortedRowNums.map(rn => String(rn)),
           datasets: [{
-            label: 'Vehicle Age (years)',
-            data: ages,
+            label: 'Cumulative Average Age (years)',
+            data: cumAvg,
             backgroundColor: 'rgba(52, 152, 219, 0.7)',
             borderColor: 'rgba(41, 128, 185, 1)',
             borderWidth: 1
@@ -312,7 +317,7 @@
           responsive: true,
           scales: {
             x: { title: { display: true, text: 'Row' } },
-            y: { title: { display: true, text: 'Age (years)' }, beginAtZero: true }
+            y: { title: { display: true, text: 'Avg Age (years)' }, beginAtZero: true }
           },
           plugins: {
             legend: { display: false }
