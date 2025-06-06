@@ -8,45 +8,23 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Base & dark-mode body */
-    body.dark-mode {
-      background-color: #121212;
-      color: #f1f1f1;
-    }
-    body.dark-mode .table {
-      color: #f1f1f1;
-    }
-    body.dark-mode .table-dark {
-      background-color: #2c2c2c;
-    }
+    body.dark-mode { background-color: #121212; color: #f1f1f1; }
+    body.dark-mode .table { color: #f1f1f1; }
+    body.dark-mode .table-dark { background-color: #2c2c2c; }
 
-    /* Row hover orange */
-    #inventoryTable tbody tr:hover td {
+    /* orange hover on rows */
+    #inventoryTable tbody tr:hover td,
+    #myInventoryTable tbody tr:hover td {
       background-color: orange !important;
       color: #000;
     }
 
-    th {
-      cursor: pointer;
-    }
+    th { cursor: pointer; }
+    .display-1:hover { color: orange; cursor: pointer; }
+    .btn.disabled-look { opacity: 0.5; cursor: not-allowed; }
 
-    /* PROFIT header hover */
-    .display-1:hover {
-      color: orange;
-      cursor: pointer;
-    }
-
-    /* Disabled-look buttons */
-    .btn.disabled-look {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    /* Dark-mode styling for all modals */
-    .dark-mode .modal-content {
-      background-color: #2c2c2c;
-      color: #f1f1f1;
-    }
+    /* Dark-mode styling for modals */
+    .dark-mode .modal-content,
     .dark-mode .modal-content .modal-header,
     .dark-mode .modal-content .modal-body,
     .dark-mode .modal-content .modal-footer {
@@ -66,7 +44,6 @@
       <div>
         <button class="btn btn-outline-primary me-2" id="unlockBtn">Unlock Premium Features</button>
         <button class="btn btn-outline-secondary me-2 disabled-look" id="settingsBtn">⚙️ Settings</button>
-        <!-- Dark mode moved into Settings modal -->
       </div>
     </div>
 
@@ -77,6 +54,9 @@
       </li>
       <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#statsTab" type="button">Statistics</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#myInventoryTab" type="button">My Inventory</button>
       </li>
     </ul>
 
@@ -101,10 +81,33 @@
           </table>
         </div>
       </div>
+
       <!-- Statistics Tab -->
       <div class="tab-pane fade" id="statsTab">
         <div id="statistics"></div>
         <canvas id="ageChart" style="max-width:100%; margin-top:1em;"></canvas>
+      </div>
+
+      <!-- My Inventory Tab -->
+      <div class="tab-pane fade" id="myInventoryTab">
+        <div class="mb-3">
+          <button class="btn btn-outline-primary disabled-look" id="addInventoryRow">Add Row</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered" id="myInventoryTable">
+            <thead class="table-dark">
+              <tr>
+                <th>Part</th>
+                <th>List Price</th>
+                <th>My Cost</th>
+                <th>Shipping Cost</th>
+                <th>Listing</th>
+                <th>Profit</th>
+              </tr>
+            </thead>
+            <tbody id="myInventoryBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -193,6 +196,7 @@
     const settingsBtn = document.getElementById('settingsBtn');
     const modalToggleDark = document.getElementById('modalToggleDark');
     const exportBtn = document.getElementById('exportBtn');
+    const addInventoryRow = document.getElementById('addInventoryRow');
     const serialModal = new bootstrap.Modal(document.getElementById('serialModal'));
     const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
 
@@ -206,9 +210,7 @@
       const key = localStorage.getItem('premiumKey');
       const entry = serialData.find(e => e.key === key);
       if (entry) {
-        isPremium = true;
-        premiumName = entry.name;
-        enablePremium();
+        isPremium = true; premiumName = entry.name; enablePremium();
       }
     }
 
@@ -217,15 +219,13 @@
       document.getElementById('serialInput').value = '';
       serialModal.show();
     };
-
     document.getElementById('submitSerial').onclick = () => {
       const key = document.getElementById('serialInput').value.trim();
       const entry = serialData.find(e => e.key === key);
       if (entry) {
         localStorage.setItem('premiumKey', key);
         isPremium = true; premiumName = entry.name;
-        serialModal.hide(); enablePremium();
-        alert(`Welcome, ${premiumName}!`);
+        serialModal.hide(); enablePremium(); alert(`Welcome, ${premiumName}!`);
       } else {
         document.getElementById('serialFeedback').style.display = 'block';
       }
@@ -234,6 +234,7 @@
     function enablePremium() {
       settingsBtn.classList.remove('disabled-look');
       exportBtn.classList.remove('disabled-look');
+      addInventoryRow.classList.remove('disabled-look');
       unlockBtn.disabled = true;
       unlockBtn.textContent = `Premium: ${premiumName}`;
       applyHomeYardDefault();
@@ -241,23 +242,16 @@
 
     // Dark mode toggle in modal
     modalToggleDark.onclick = () => {
-      if (!isPremium) {
-        alert('Dark mode is only available for premium users.');
-        return;
-      }
+      if (!isPremium) { alert('Dark mode is only available for premium users.'); return; }
       document.body.classList.toggle('dark-mode');
     };
 
     settingsBtn.onclick = () => {
-      if (!isPremium) {
-        alert('Settings are only available for premium users.');
-        return;
-      }
+      if (!isPremium) { alert('Settings are only available for premium users.'); return; }
       const sel = document.getElementById('homeYardSelect');
       sel.value = localStorage.getItem('homeYard') || '';
       settingsModal.show();
     };
-
     document.getElementById('saveSettings').onclick = () => {
       const yard = document.getElementById('homeYardSelect').value;
       localStorage.setItem('homeYard', yard);
@@ -265,18 +259,41 @@
       applyHomeYardDefault();
     };
 
-    // Export button
+    // Export CSV
     exportBtn.onclick = () => {
-      if (!isPremium) {
-        alert('Exporting is only available to premium users.');
-        return;
-      }
+      if (!isPremium) { alert('Exporting is only available to premium users.'); return; }
       exportTableToCSV();
     };
-  </script>
 
-  <script>
-    // Dashboard logic
+    // My Inventory: dynamic rows + profit calc
+    function addRow() {
+      const tbody = document.getElementById('myInventoryBody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input class="form-control part-input" /></td>
+        <td><input type="number" step="0.01" class="form-control list-price" /></td>
+        <td><input type="number" step="0.01" class="form-control my-cost" /></td>
+        <td><input type="number" step="0.01" class="form-control ship-cost" /></td>
+        <td><input class="form-control listing-input" /></td>
+        <td class="profit-cell">0.00</td>
+      `;
+      tbody.append(tr);
+      ['list-price','my-cost','ship-cost'].forEach(cls => {
+        tr.querySelector(`.${cls}`).addEventListener('input', () => calcProfit(tr));
+      });
+    }
+    function calcProfit(tr) {
+      const lp = parseFloat(tr.querySelector('.list-price').value) || 0;
+      const mc = parseFloat(tr.querySelector('.my-cost').value) || 0;
+      const sc = parseFloat(tr.querySelector('.ship-cost').value) || 0;
+      tr.querySelector('.profit-cell').textContent = (lp - mc - sc).toFixed(2);
+    }
+    addInventoryRow.onclick = () => {
+      if (!isPremium) { alert('Adding rows is only for premium users.'); return; }
+      addRow();
+    };
+
+    // Dashboard logic (Inventory table, notes, stats)
     let notes = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
     let selectedRowKey = null, currentData = [], sortDirection = {}, ageChart = null;
 
@@ -285,7 +302,6 @@
       const files = await res.json();
       populateSelector(files);
     }
-
     function populateSelector(files) {
       const sel = document.getElementById('csvSelector');
       sel.innerHTML = '';
@@ -293,7 +309,6 @@
       sel.onchange = () => loadCSV('inventory-csvs/' + sel.value);
       applyHomeYardDefault();
     }
-
     function applyHomeYardDefault() {
       const sel = document.getElementById('csvSelector');
       const opts = Array.from(sel.options).map(o => o.value);
@@ -301,7 +316,7 @@
       if (isPremium) {
         const home = localStorage.getItem('homeYard');
         if (home) {
-          const prefix = 'inventory_' + home.toLowerCase().replace(/ /g, '_') + '_';
+          const prefix = 'inventory_' + home.toLowerCase().replace(/ /g,'_') + '_';
           const found = opts.find(f => f.startsWith(prefix));
           if (found) choice = found;
         }
@@ -309,21 +324,16 @@
       sel.value = choice;
       loadCSV('inventory-csvs/' + choice);
     }
-
     function loadCSV(path) {
       document.getElementById('searchInput').value = '';
-      Papa.parse(path, {
-        download: true, header: true, complete(r) {
-          currentData = r.data.filter(row => row.Year && row.Make && row.Model && row.Row);
-          renderTable(currentData);
-          showStatistics(currentData);
-        }
-      });
+      Papa.parse(path, { download: true, header: true, complete(r) {
+        currentData = r.data.filter(row => row.Year && row.Make && row.Model && row.Row);
+        renderTable(currentData);
+        showStatistics(currentData);
+      }});
     }
-
     function renderTable(data) {
-      const hdr = document.getElementById('tableHeader'),
-            bd = document.getElementById('tableBody');
+      const hdr = document.getElementById('tableHeader'), bd = document.getElementById('tableBody');
       hdr.innerHTML = ''; bd.innerHTML = '';
       if (!data.length) return;
       const cols = Object.keys(data[0]).concat('Note');
@@ -338,8 +348,7 @@
         const key = Object.values(row).join('|');
         Object.values(row).forEach(v => {
           const td = document.createElement('td');
-          td.textContent = v;
-          tr.append(td);
+          td.textContent = v; tr.append(td);
         });
         const nt = document.createElement('td');
         nt.textContent = notes[key] || '';
@@ -354,15 +363,14 @@
             ni.removeAttribute('maxlength');
             document.getElementById('noteLimitInfo').style.display = 'none';
           } else {
-            ni.setAttribute('maxlength', '20');
-            document.getElementById('noteLimitInfo').style.display = 'block';
+            ni.setAttribute('maxlength','20'); document.getElementById('noteLimitInfo').style.display='block';
           }
           new bootstrap.Modal(document.getElementById('noteModal')).show();
         };
         tr.append(nt);
         bd.append(tr);
       });
-      document.getElementById('searchInput').oninput = function () {
+      document.getElementById('searchInput').oninput = function() {
         const q = this.value.toLowerCase();
         const fil = currentData.filter(r =>
           Object.values(r).some(v => v.toLowerCase().includes(q))
@@ -370,24 +378,16 @@
         renderTable(fil); showStatistics(fil);
       };
     }
-
     function sortTableByColumn(col) {
-      const dir = sortDirection[col] === 'asc' ? 'desc' : 'asc';
+      const dir = sortDirection[col]==='asc'?'desc':'asc';
       sortDirection[col] = dir;
-      currentData.sort((a, b) => {
-        if (a[col] < b[col]) return dir === 'asc' ? -1 : 1;
-        if (a[col] > b[col]) return dir === 'asc' ? 1 : -1;
-        return 0;
-      });
+      currentData.sort((a,b)=> a[col]<b[col] ? (dir==='asc'? -1:1) : a[col]>b[col] ? (dir==='asc'?1:-1) : 0);
       renderTable(currentData); showStatistics(currentData);
     }
-
     document.getElementById('saveNote').onclick = () => {
-      const ni = document.getElementById('noteInput'),
-            val = ni.value;
-      if (!isPremium && val.length > 20) {
-        document.getElementById('noteLengthFeedback').style.display = 'block';
-        return;
+      const ni = document.getElementById('noteInput'), val = ni.value;
+      if (!isPremium && val.length>20) {
+        document.getElementById('noteLengthFeedback').style.display = 'block'; return;
       }
       document.getElementById('noteLengthFeedback').style.display = 'none';
       if (selectedRowKey) {
@@ -397,85 +397,73 @@
       }
       bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
     };
-
     document.getElementById('clearNote').onclick = () => {
       if (selectedRowKey) {
         delete notes[selectedRowKey];
         localStorage.setItem('jalopyNotes', JSON.stringify(notes));
         renderTable(currentData);
-        document.getElementById('noteInput').value = '';
-        document.getElementById('noteLengthFeedback').style.display = 'none';
+        document.getElementById('noteInput').value='';
+        document.getElementById('noteLengthFeedback').style.display='none';
       }
     };
-
     function exportTableToCSV() {
-      const hdrs = Array.from(document.querySelectorAll('#tableHeader th')).map(th => th.textContent);
-      const rows = Array.from(document.querySelectorAll('#tableBody tr')).map(tr =>
-        Array.from(tr.cells).map(td => td.textContent)
+      const hdrs = Array.from(document.querySelectorAll('#tableHeader th')).map(th=>th.textContent);
+      const rows = Array.from(document.querySelectorAll('#tableBody tr')).map(tr=>
+        Array.from(tr.cells).map(td=>td.textContent)
       );
-      const csv = [hdrs, ...rows].map(r => r.join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'inventory_with_notes.csv';
+      const csv = [hdrs, ...rows].map(r=>r.join(',')).join('\n');
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='inventory_with_notes.csv';
       document.body.append(a); a.click(); a.remove();
     }
-
     function showStatistics(data) {
       const s = document.getElementById('statistics');
-      const valid = data.map(r => {
-        const y = parseInt(r.Year), rn = parseInt(r.Row);
-        return !isNaN(y) && !isNaN(rn) ? { row: rn, age: new Date().getFullYear() - y } : null;
-      }).filter(x => x);
+      const valid = data.map(r=>{
+        const y=parseInt(r.Year), rn=parseInt(r.Row);
+        return !isNaN(y)&&!isNaN(rn)?{row:rn,age:new Date().getFullYear()-y}:null;
+      }).filter(x=>x);
       if (!valid.length) {
         s.innerHTML = `<strong>Average Age:</strong> N/A<br/>
                        <strong># Models:</strong> 0<br/>
                        <strong># Makes:</strong> 0<br/>
                        <strong>Newest Age:</strong> N/A<br/>
                        <strong>Oldest Age:</strong> N/A`;
-        if (ageChart) { ageChart.destroy(); ageChart = null; }
+        if (ageChart){ ageChart.destroy(); ageChart=null; }
         return;
       }
-      valid.sort((a, b) => a.row - b.row);
-      const cum = [];
-      valid.forEach((it, i) => {
-        const slice = valid.slice(0, i + 1).map(x => x.age);
-        cum.push(+(slice.reduce((s, v) => s + v, 0) / slice.length).toFixed(1));
+      valid.sort((a,b)=>a.row-b.row);
+      const cum=[]; valid.forEach((it,i)=>{
+        const slice=valid.slice(0,i+1).map(x=>x.age);
+        cum.push(+(slice.reduce((s,v)=>s+v,0)/slice.length).toFixed(1));
       });
-      const ages = valid.map(x => x.age);
-      const models = new Set(data.map(r => `${r.Make}|${r.Model}`));
-      const makes = new Set(data.map(r => r.Make));
-      s.innerHTML = `<strong>Average Age:</strong> ${cum[cum.length - 1]}<br/>
+      const ages = valid.map(x=>x.age);
+      const models=new Set(data.map(r=>`${r.Make}|${r.Model}`));
+      const makes=new Set(data.map(r=>r.Make));
+      s.innerHTML = `<strong>Average Age:</strong> ${cum[cum.length-1]}<br/>
                      <strong># Models:</strong> ${models.size}<br/>
                      <strong># Makes:</strong> ${makes.size}<br/>
                      <strong>Newest Age:</strong> ${Math.min(...ages)}<br/>
                      <strong>Oldest Age:</strong> ${Math.max(...ages)}`;
       const ctx = document.getElementById('ageChart').getContext('2d');
       if (ageChart) ageChart.destroy();
-      ageChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: valid.map(x => x.row),
-          datasets: [{
-            label: 'Cumulative Avg Age',
-            data: cum,
-            backgroundColor: 'rgba(52,152,219,0.7)',
-            borderColor: 'rgba(41,128,185,1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: { title: { display: true, text: 'Row' } },
-            y: { title: { display: true, text: 'Age' }, beginAtZero: true }
-          },
-          plugins: { legend: { display: false } }
-        }
+      ageChart=new Chart(ctx,{
+        type:'bar',
+        data:{labels:valid.map(x=>x.row),datasets:[{
+          label:'Cumulative Avg Age',
+          data:cum,
+          backgroundColor:'rgba(52,152,219,0.7)',
+          borderColor:'rgba(41,128,185,1)',borderWidth:1
+        }]},
+        options:{responsive:true,scales:{
+          x:{title:{display:true,text:'Row'}},
+          y:{title:{display:true,text:'Age'},beginAtZero:true}
+        },plugins:{legend:{display:false}}}
       });
     }
 
-    // initialize
+    // Initialize
     listCSVFiles();
   </script>
 </body>
