@@ -1,216 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Jalopy Jungle Dashboard</title>
   <style>
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      transition: background 0.3s, color 0.3s;
-      background: #f4f4f4;
-      color: #222;
-      margin: 0;
+    body.dark-mode {
+      background-color: #121212;
+      color: #f1f1f1;
     }
-
-    .dark-mode {
-      background: #121212;
-      color: #f0f0f0;
+    body.dark-mode .table {
+      color: #f1f1f1;
     }
-
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1em 2em;
-      background: #2c3e50;
-      color: white;
-      font-size: 1.2em;
+    body.dark-mode .table-dark {
+      background-color: #2c2c2c;
     }
-
-    .container {
-      padding: 1em 2em;
-      max-width: 1000px;
-      margin: auto;
+    tr:hover {
+      background-color: #f2f2f2;
     }
-
-    .tabs {
-      margin: 1.5em 0;
+    body.dark-mode tr:hover {
+      background-color: #333;
     }
-
-    .tab-button {
-      margin-right: 1em;
-      padding: 0.6em 1.2em;
-      border: none;
-      border-radius: 20px;
-      background: #ddd;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.2s;
-    }
-
-    .tab-button.active {
-      background: #3498db;
-      color: white;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    select {
-      margin: 1em 0;
-      padding: 0.5em;
-      font-size: 1em;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      margin-top: 1em;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-
     th {
-      background: #3498db;
-      color: white;
-      text-align: left;
-      padding: 0.75em;
-    }
-
-    td {
-      padding: 0.75em;
-      background: white;
-      border-bottom: 1px solid #ddd;
-    }
-
-    tr:hover td {
-      background: #ecf0f1;
       cursor: pointer;
-    }
-
-    .dark-mode table {
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
-    }
-
-    .dark-mode th {
-      background: #2980b9;
-    }
-
-    .dark-mode td {
-      background: #1e1e1e;
-      border-color: #333;
-    }
-
-    .dark-mode tr:hover td {
-      background: #333;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 24px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 24px;
-    }
-
-    .slider:before {
-      content: "";
-      position: absolute;
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider {
-      background-color: #2196F3;
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(26px);
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 100;
-      left: 0; top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(2px);
-    }
-
-    .modal-content {
-      background: white;
-      margin: 10% auto;
-      padding: 1.5em;
-      width: 90%;
-      max-width: 400px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    }
-
-    .dark-mode .modal-content {
-      background: #1e1e1e;
-      color: white;
-    }
-
-    .close {
-      float: right;
-      font-size: 1.5em;
-      cursor: pointer;
-    }
-
-    textarea {
-      width: 100%;
-      margin-top: 1em;
-      padding: 0.5em;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      margin-top: 1em;
-      padding: 0.5em 1em;
-      font-weight: bold;
-      border: none;
-      border-radius: 5px;
-      background: #3498db;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #2980b9;
     }
   </style>
 </head>
 <body>
-  <!-- Your HTML body content would follow here -->
+  <nav>
+    <div><strong>Jalopy Jungle Dashboard</strong></div>
+    <label class="switch">
+      <input type="checkbox" id="darkModeToggle">
+      <span class="slider"></span>
+    </label>
+  </nav>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-button active" onclick="showTab('table')">Inventory Table</button>
+      <button class="tab-button" onclick="showTab('stats')">Statistics</button>
+    </div>
+
+    <div id="table" class="tab-content active">
+      <select id="csvSelector"></select>
+      <div id="inventoryTableContainer"></div>
+    </div>
+
+    <div id="stats" class="tab-content">
+      <p id="averageAge">Average Vehicle Age: ...</p>
+      <p id="modelCount">Unique Models: ...</p>
+    </div>
+  </div>
+
+  <!-- Modal for Notes and Sold Data -->
+  <div id="popupModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div id="modalOptions">
+        <button onclick="openNoteInput()">Add Note</button>
+        <button onclick="openSoldData()">View Sold Data</button>
+      </div>
+      <div id="modalContentArea" style="margin-top: 1em;"></div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+    }
+
+    const toggle = document.getElementById('darkModeToggle');
+    toggle.addEventListener('change', () => {
+      document.body.classList.toggle('dark-mode', toggle.checked);
+      localStorage.setItem('darkMode', toggle.checked);
+    });
+
+    window.onload = () => {
+      const dark = JSON.parse(localStorage.getItem('darkMode'));
+      toggle.checked = dark;
+      document.body.classList.toggle('dark-mode', dark);
+      loadCSVSelector(); // Implement to populate dropdown
+    };
+
+    function openPopup(rowData) {
+      document.getElementById("popupModal").style.display = "block";
+      document.getElementById("modalContentArea").innerHTML = "";
+    }
+
+    function closeModal() {
+      document.getElementById("popupModal").style.display = "none";
+    }
+
+    function openNoteInput() {
+      const container = document.getElementById("modalContentArea");
+      container.innerHTML = `
+        <textarea placeholder="Enter note..."></textarea>
+        <button onclick="saveNote()">Save Note</button>
+      `;
+    }
+
+    function openSoldData() {
+      const container = document.getElementById("modalContentArea");
+      container.innerHTML = `<p>Sold data will be shown here (to be implemented).</p>`;
+    }
+
+    function saveNote() {
+      alert("Note saved (placeholder).");
+      closeModal();
+    }
+
+    // Placeholder - implement CSV loading logic
+    function loadCSVSelector() {
+      const selector = document.getElementById("csvSelector");
+      selector.innerHTML = `<option>Select CSV...</option>`;
+    }
+  </script>
 </body>
 </html>
