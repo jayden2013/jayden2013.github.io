@@ -2,199 +2,284 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Jalopy Jungle Dashboard</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs/dist/theme/mermaid.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/gridjs/dist/gridjs.umd.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #fff;
-      color: #000;
       transition: background-color 0.3s, color 0.3s;
     }
-    body.dark {
+
+    .dark-mode {
       background-color: #121212;
       color: #f0f0f0;
     }
+
+    .container {
+      padding: 1em;
+    }
+
     nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 1em;
       background-color: #333;
       color: white;
-      padding: 1em;
     }
+
     .tabs {
-      display: flex;
-      gap: 10px;
-      margin: 1em;
+      margin: 1em 0;
     }
-    .tab {
+
+    .tab-button {
       padding: 0.5em 1em;
-      background: #ddd;
-      border: none;
+      margin-right: 0.5em;
       cursor: pointer;
+      border: none;
+      background-color: #eee;
     }
-    .tab.active {
-      background: #aaa;
+
+    .tab-button.active {
+      background-color: #ccc;
     }
+
     .tab-content {
       display: none;
-      padding: 1em;
     }
+
     .tab-content.active {
       display: block;
     }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .dark-mode tr:hover {
+      background-color: #333333;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    /* Modal Styles */
     .modal {
       display: none;
       position: fixed;
-      z-index: 999;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
     }
+
     .modal-content {
-      background: white;
+      background-color: white;
+      margin: 15% auto;
       padding: 1em;
+      border: 1px solid #888;
+      width: 90%;
       max-width: 500px;
-      border-radius: 5px;
     }
-    .dark .modal-content {
-      background: #333;
-      color: white;
+
+    .dark-mode .modal-content {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
     }
-    .dark-mode-toggle {
-      display: flex;
-      align-items: center;
+
+    .close {
+      float: right;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+
+    button {
+      margin-top: 1em;
     }
   </style>
 </head>
 <body>
   <nav>
-    <strong>Jalopy Jungle Dashboard</strong>
-    <label class="dark-mode-toggle">
-      <input type="checkbox" id="darkToggle" /> Dark Mode
+    <div><strong>Jalopy Jungle Dashboard</strong></div>
+    <label class="switch">
+      <input type="checkbox" id="darkModeToggle">
+      <span class="slider"></span>
     </label>
   </nav>
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('inventory')">Inventory</button>
-    <button class="tab" onclick="switchTab('stats')">Statistics</button>
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-button active" onclick="showTab('table')">Inventory Table</button>
+      <button class="tab-button" onclick="showTab('stats')">Statistics</button>
+    </div>
+
+    <div id="table" class="tab-content active">
+      <table id="inventoryTable">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Make</th>
+            <th>Model</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be injected by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <div id="stats" class="tab-content">
+      <p>Average Vehicle Age: <span id="avgAge">-</span></p>
+      <p>Unique Models: <span id="modelCount">-</span></p>
+    </div>
   </div>
 
-  <div id="inventory" class="tab-content active">
-    <div id="table-container"></div>
-  </div>
-  <div id="stats" class="tab-content">
-    <p id="stats-info">Loading stats...</p>
-  </div>
-
-  <div id="modal" class="modal">
+  <!-- Modal -->
+  <div id="rowModal" class="modal">
     <div class="modal-content">
-      <p id="modal-text"></p>
-      <textarea id="noteBox" rows="3" style="width: 100%"></textarea>
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3 id="modalTitle"></h3>
+      <textarea id="noteInput" rows="4" style="width: 100%;"></textarea>
       <button onclick="saveNote()">Save Note</button>
-      <button onclick="viewSoldData()">View Sold Data</button>
-      <button onclick="closeModal()">Close</button>
+      <button onclick="alert('Sold data view not implemented yet')">View Sold Data</button>
     </div>
   </div>
 
   <script>
-    const inventoryPath = 'jalopy-jungle/inventory-csvs/index.json';
-    const ebayPath = 'jalopy-jungle/ebay-sales';
-    const modal = document.getElementById('modal');
-    const modalText = document.getElementById('modal-text');
-    const noteBox = document.getElementById('noteBox');
-    let selectedVehicle = '';
+    const toggle = document.getElementById('darkModeToggle');
+    const modal = document.getElementById('rowModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const noteInput = document.getElementById('noteInput');
+    let currentRowKey = "";
 
-    document.getElementById('darkToggle').addEventListener('change', function () {
-      document.body.classList.toggle('dark', this.checked);
-      localStorage.setItem('darkMode', this.checked);
+    toggle.addEventListener('change', () => {
+      document.body.classList.toggle('dark-mode', toggle.checked);
+      localStorage.setItem('darkMode', toggle.checked);
     });
 
-    if (localStorage.getItem('darkMode') === 'true') {
-      document.getElementById('darkToggle').checked = true;
-      document.body.classList.add('dark');
+    window.onload = () => {
+      const darkModeEnabled = JSON.parse(localStorage.getItem('darkMode'));
+      toggle.checked = darkModeEnabled;
+      document.body.classList.toggle('dark-mode', darkModeEnabled);
+      populateTable();
+    };
+
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
     }
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(button => button.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      event.target.classList.add('active');
+    function populateTable() {
+      const table = document.querySelector("#inventoryTable tbody");
+      const sampleData = [
+        { year: "1998", make: "Ford", model: "Mustang" },
+        { year: "1996", make: "Ford", model: "Thunderbird" }
+      ];
+
+      sampleData.forEach(vehicle => {
+        const key = `${vehicle.year}-${vehicle.make}-${vehicle.model}`;
+        const row = document.createElement("tr");
+        row.addEventListener("click", () => openModal(vehicle, key));
+
+        row.innerHTML = `
+          <td>${vehicle.year}</td>
+          <td>${vehicle.make}</td>
+          <td>${vehicle.model}</td>
+          <td>${localStorage.getItem(`note-${key}`) || ""}</td>
+        `;
+        table.appendChild(row);
+      });
+
+      // Statistics
+      const years = sampleData.map(v => parseInt(v.year));
+      const avgAge = (new Date().getFullYear() - years.reduce((a, b) => a + b) / years.length).toFixed(1);
+      document.getElementById("avgAge").textContent = avgAge;
+      document.getElementById("modelCount").textContent = new Set(sampleData.map(v => v.model)).size;
+    }
+
+    function openModal(vehicle, key) {
+      modal.style.display = "block";
+      currentRowKey = key;
+      modalTitle.textContent = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+      noteInput.value = localStorage.getItem(`note-${key}`) || "";
     }
 
     function closeModal() {
-      modal.style.display = 'none';
+      modal.style.display = "none";
     }
 
     function saveNote() {
-      localStorage.setItem(`note-${selectedVehicle}`, noteBox.value);
-      alert('Note saved.');
+      localStorage.setItem(`note-${currentRowKey}`, noteInput.value);
+      closeModal();
+      location.reload(); // Reload to show updated note
     }
 
-    async function viewSoldData() {
-      alert('Sold data feature coming soon.');
-    }
-
-    function showModal(rowData) {
-      selectedVehicle = `${rowData.Year}-${rowData.Make}-${rowData.Model}`;
-      modalText.innerText = `${rowData.Year} ${rowData.Make} ${rowData.Model}`;
-      noteBox.value = localStorage.getItem(`note-${selectedVehicle}`) || '';
-      modal.style.display = 'flex';
-    }
-
-    async function loadCSV(file) {
-      const response = await fetch(`jalopy-jungle/inventory-csvs/${file}`);
-      const text = await response.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
-      const headers = rows[0];
-      const data = rows.slice(1).map(row => Object.fromEntries(row.map((v, i) => [headers[i], v])));
-
-      new gridjs.Grid({
-        columns: headers,
-        data: data.map(row => headers.map(h => row[h])),
-        search: true,
-        sort: true,
-        pagination: true,
-        style: {
-          th: { backgroundColor: '#eee' },
-          td: { cursor: 'pointer' },
-        },
-        className: {
-          container: 'gridjs-container',
-        },
-        resizable: true,
-        fixedHeader: true,
-        height: '600px',
-        events: {
-          cellClick: (cell, colIndex, rowIndex) => {
-            showModal(data[rowIndex]);
-          }
-        }
-      }).render(document.getElementById('table-container'));
-
-      updateStats(data);
-    }
-
-    async function updateStats(data) {
-      const ages = data.map(v => new Date().getFullYear() - parseInt(v.Year)).filter(n => !isNaN(n));
-      const models = new Set(data.map(v => `${v.Make} ${v.Model}`));
-      document.getElementById('stats-info').innerText =
-        `Average Vehicle Age: ${(ages.reduce((a, b) => a + b, 0) / ages.length).toFixed(1)}\n` +
-        `Unique Models: ${models.size}`;
-    }
-
-    async function init() {
-      const index = await fetch(inventoryPath).then(r => r.json());
-      if (index.length > 0) loadCSV(index[index.length - 1]);
-    }
-
-    init();
+    window.onclick = function(event) {
+      if (event.target === modal) {
+        closeModal();
+      }
+    };
   </script>
 </body>
 </html>
