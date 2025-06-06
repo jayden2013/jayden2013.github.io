@@ -2,105 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Jalopy Jungle Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     body {
       font-family: Arial, sans-serif;
+      transition: background 0.3s, color 0.3s;
       margin: 0;
       padding: 0;
-      transition: background-color 0.3s, color 0.3s;
     }
-
     .dark-mode {
-      background-color: #121212;
+      background: #121212;
       color: #f0f0f0;
     }
-
-    .container {
-      padding: 1em;
-    }
-
     nav {
       display: flex;
       justify-content: space-between;
-      align-items: center;
       padding: 1em;
-      background-color: #333;
+      background: #333;
       color: white;
     }
-
-    .tabs {
-      margin: 1em 0;
+    .container {
+      padding: 1em;
     }
-
-    .tab-button {
-      padding: 0.5em 1em;
-      margin-right: 0.5em;
-      cursor: pointer;
-      border: none;
-      background-color: #eee;
-    }
-
-    .tab-button.active {
-      background-color: #ccc;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1em;
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
-
-    tr:hover {
-      background-color: #f1f1f1;
-    }
-
-    .dark-mode tr:hover {
-      background-color: #333333;
-    }
-
     .switch {
       position: relative;
       display: inline-block;
       width: 50px;
       height: 24px;
     }
-
     .switch input {
       opacity: 0;
       width: 0;
       height: 0;
     }
-
     .slider {
       position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
       background-color: #ccc;
       transition: .4s;
       border-radius: 24px;
     }
-
     .slider:before {
-      position: absolute;
       content: "";
+      position: absolute;
       height: 18px;
       width: 18px;
       left: 3px;
@@ -109,50 +54,73 @@
       transition: .4s;
       border-radius: 50%;
     }
-
     input:checked + .slider {
       background-color: #2196F3;
     }
-
     input:checked + .slider:before {
       transform: translateX(26px);
     }
-
-    /* Modal Styles */
+    .tabs {
+      margin: 1em 0;
+    }
+    .tab-button {
+      margin-right: 0.5em;
+      padding: 0.5em 1em;
+      border: none;
+      background: #eee;
+      cursor: pointer;
+    }
+    .tab-button.active {
+      background: #ccc;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .dark-mode tr:hover {
+      background-color: #333333;
+    }
+    select {
+      margin: 0.5em 0;
+    }
     .modal {
       display: none;
       position: fixed;
       z-index: 100;
-      left: 0;
-      top: 0;
+      left: 0; top: 0;
       width: 100%;
       height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.4);
     }
-
     .modal-content {
-      background-color: white;
-      margin: 15% auto;
+      background: white;
+      margin: 10% auto;
       padding: 1em;
-      border: 1px solid #888;
       width: 90%;
-      max-width: 500px;
+      max-width: 400px;
     }
-
     .dark-mode .modal-content {
-      background-color: #1e1e1e;
-      color: #f0f0f0;
+      background: #1e1e1e;
+      color: white;
     }
-
     .close {
       float: right;
       font-size: 1.5em;
       cursor: pointer;
-    }
-
-    button {
-      margin-top: 1em;
     }
   </style>
 </head>
@@ -167,23 +135,19 @@
 
   <div class="container">
     <div class="tabs">
-      <button class="tab-button active" onclick="showTab('table')">Inventory Table</button>
+      <button class="tab-button active" onclick="showTab('inventory')">Inventory Table</button>
       <button class="tab-button" onclick="showTab('stats')">Statistics</button>
     </div>
 
-    <div id="table" class="tab-content active">
+    <div id="inventory" class="tab-content active">
+      <label>Select Inventory File:
+        <select id="csvSelector"></select>
+      </label>
       <table id="inventoryTable">
         <thead>
-          <tr>
-            <th>Year</th>
-            <th>Make</th>
-            <th>Model</th>
-            <th>Notes</th>
-          </tr>
+          <tr><th>Year</th><th>Make</th><th>Model</th><th>Notes</th></tr>
         </thead>
-        <tbody>
-          <!-- Rows will be injected by JavaScript -->
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
 
@@ -198,17 +162,17 @@
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
       <h3 id="modalTitle"></h3>
-      <textarea id="noteInput" rows="4" style="width: 100%;"></textarea>
+      <textarea id="noteInput" rows="4" style="width:100%"></textarea>
       <button onclick="saveNote()">Save Note</button>
-      <button onclick="alert('Sold data view not implemented yet')">View Sold Data</button>
+      <button onclick="alert('Sold data view not implemented')">View Sold Data</button>
     </div>
   </div>
 
   <script>
     const toggle = document.getElementById('darkModeToggle');
     const modal = document.getElementById('rowModal');
-    const modalTitle = document.getElementById('modalTitle');
     const noteInput = document.getElementById('noteInput');
+    const modalTitle = document.getElementById('modalTitle');
     let currentRowKey = "";
 
     toggle.addEventListener('change', () => {
@@ -216,70 +180,76 @@
       localStorage.setItem('darkMode', toggle.checked);
     });
 
-    window.onload = () => {
-      const darkModeEnabled = JSON.parse(localStorage.getItem('darkMode'));
-      toggle.checked = darkModeEnabled;
-      document.body.classList.toggle('dark-mode', darkModeEnabled);
-      populateTable();
-    };
-
     function showTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
     }
 
-    function populateTable() {
-      const table = document.querySelector("#inventoryTable tbody");
-      const sampleData = [
-        { year: "1998", make: "Ford", model: "Mustang" },
-        { year: "1996", make: "Ford", model: "Thunderbird" }
-      ];
-
-      sampleData.forEach(vehicle => {
-        const key = `${vehicle.year}-${vehicle.make}-${vehicle.model}`;
-        const row = document.createElement("tr");
-        row.addEventListener("click", () => openModal(vehicle, key));
-
-        row.innerHTML = `
-          <td>${vehicle.year}</td>
-          <td>${vehicle.make}</td>
-          <td>${vehicle.model}</td>
-          <td>${localStorage.getItem(`note-${key}`) || ""}</td>
-        `;
-        table.appendChild(row);
-      });
-
-      // Statistics
-      const years = sampleData.map(v => parseInt(v.year));
-      const avgAge = (new Date().getFullYear() - years.reduce((a, b) => a + b) / years.length).toFixed(1);
-      document.getElementById("avgAge").textContent = avgAge;
-      document.getElementById("modelCount").textContent = new Set(sampleData.map(v => v.model)).size;
-    }
-
-    function openModal(vehicle, key) {
-      modal.style.display = "block";
-      currentRowKey = key;
-      modalTitle.textContent = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
-      noteInput.value = localStorage.getItem(`note-${key}`) || "";
-    }
-
     function closeModal() {
-      modal.style.display = "none";
+      modal.style.display = 'none';
     }
 
     function saveNote() {
       localStorage.setItem(`note-${currentRowKey}`, noteInput.value);
-      closeModal();
-      location.reload(); // Reload to show updated note
+      modal.style.display = 'none';
+      loadCSV(document.getElementById('csvSelector').value);
     }
 
-    window.onclick = function(event) {
-      if (event.target === modal) {
-        closeModal();
-      }
+    window.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+    window.onload = () => {
+      const dark = JSON.parse(localStorage.getItem('darkMode'));
+      toggle.checked = dark;
+      if (dark) document.body.classList.add('dark-mode');
+      fetch("inventory-csvs/index.json")
+        .then(res => res.json())
+        .then(list => {
+          const selector = document.getElementById('csvSelector');
+          list.forEach(file => {
+            const opt = document.createElement('option');
+            opt.value = file;
+            opt.textContent = file;
+            selector.appendChild(opt);
+          });
+          loadCSV(list[0]);
+          selector.onchange = () => loadCSV(selector.value);
+        });
     };
+
+    function loadCSV(file) {
+      fetch(`inventory-csvs/${file}`)
+        .then(res => res.text())
+        .then(text => {
+          const rows = text.trim().split("\n").slice(1).map(row => row.split(","));
+          const tbody = document.querySelector("#inventoryTable tbody");
+          tbody.innerHTML = "";
+          const models = new Set();
+          let yearSum = 0;
+
+          rows.forEach(parts => {
+            const [year, make, model] = parts;
+            const key = `${year}-${make}-${model}`;
+            const note = localStorage.getItem(`note-${key}`) || "";
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${year}</td><td>${make}</td><td>${model}</td><td>${note}</td>`;
+            tr.onclick = () => {
+              currentRowKey = key;
+              modalTitle.textContent = `${year} ${make} ${model}`;
+              noteInput.value = note;
+              modal.style.display = "block";
+            };
+            tbody.appendChild(tr);
+            models.add(model);
+            yearSum += parseInt(year);
+          });
+
+          const avg = rows.length ? (new Date().getFullYear() - (yearSum / rows.length)).toFixed(1) : "-";
+          document.getElementById('avgAge').textContent = avg;
+          document.getElementById('modelCount').textContent = models.size;
+        });
+    }
   </script>
 </body>
 </html>
