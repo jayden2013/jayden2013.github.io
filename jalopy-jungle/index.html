@@ -27,8 +27,9 @@
     th {
       cursor: pointer;
     }
-    /* Disable dark mode toggle when locked */
-    #toggleDarkMode:disabled {
+    /* Disable dark mode & export button when locked */
+    #toggleDarkMode:disabled,
+    #exportBtn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
@@ -63,7 +64,7 @@
           <input type="text" id="searchInput" class="form-control" placeholder="Filter rows...">
         </div>
         <div class="mb-3">
-          <button class="btn btn-success" onclick="exportTableToCSV()">Export Table to CSV</button>
+          <button class="btn btn-success" id="exportBtn" onclick="exportTableToCSV()" disabled>Export Table to CSV</button>
         </div>
         <div class="table-responsive">
           <table class="table table-striped table-bordered" id="inventoryTable">
@@ -82,7 +83,7 @@
     </div>
   </div>
 
-  <!-- Modal for entering serial key -->
+  <!-- Serial Key Modal -->
   <div class="modal fade" id="serialModal" tabindex="-1" aria-labelledby="serialModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -102,7 +103,7 @@
     </div>
   </div>
 
-  <!-- Modal for adding notes -->
+  <!-- Notes Modal -->
   <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -111,8 +112,8 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <textarea class="form-control" id="noteInput" rows="4" placeholder="Enter your note here..." maxlength="20"></textarea>
-          <div id="noteLimitInfo" class="text-muted mt-2">
+          <textarea class="form-control" id="noteInput" rows="4" placeholder="Enter your note here..."></textarea>
+          <div id="noteLimitInfo" class="text-muted mt-2" style="display:none;">
             Notes are limited to 20 characters. Upgrade to premium for unlimited characters.
           </div>
           <div id="noteLengthFeedback" class="text-danger mt-2" style="display:none;">Max 20 characters for non-premium users.</div>
@@ -128,35 +129,26 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // State variables
-    let isPremium = false;
-    let premiumName = '';
+    // Premium feature state
+    let isPremium = false, premiumName = '';
     let serialData = [];
-
-    // DOM elements
     const unlockBtn = document.getElementById('unlockBtn');
     const toggleDarkMode = document.getElementById('toggleDarkMode');
+    const exportBtn = document.getElementById('exportBtn');
     const serialModal = new bootstrap.Modal(document.getElementById('serialModal'));
     const submitSerial = document.getElementById('submitSerial');
     const serialInput = document.getElementById('serialInput');
     const serialFeedback = document.getElementById('serialFeedback');
 
-    // Load serial-keys.json from json folder on page load
+    // Load serial keys
     fetch('json/serial-keys.json')
-      .then(res => res.json())
-      .then(data => {
-        serialData = data;
-        checkStoredKey();
-      })
-      .catch(err => {
-        console.error('Failed to load serial-keys.json:', err);
-      });
+      .then(r => r.json())
+      .then(data => { serialData = data; checkStoredKey(); })
+      .catch(console.error);
 
-    // Check localStorage for stored valid key
     function checkStoredKey() {
-      const storedKey = localStorage.getItem('premiumKey');
-      if (!storedKey) return;
-      const entry = serialData.find(e => e.key === storedKey);
+      const key = localStorage.getItem('premiumKey');
+      const entry = serialData.find(e => e.key === key);
       if (entry) {
         isPremium = true;
         premiumName = entry.name;
@@ -164,56 +156,41 @@
       }
     }
 
-    // Show serial key modal
-    unlockBtn.addEventListener('click', () => {
+    unlockBtn.onclick = () => {
       serialInput.value = '';
       serialFeedback.style.display = 'none';
       serialModal.show();
-    });
+    };
 
-    // Handle serial key submission
-    submitSerial.addEventListener('click', () => {
-      const enteredKey = serialInput.value.trim();
-      const entry = serialData.find(e => e.key === enteredKey);
+    submitSerial.onclick = () => {
+      const key = serialInput.value.trim();
+      const entry = serialData.find(e => e.key === key);
       if (entry) {
-        isPremium = true;
-        premiumName = entry.name;
-        localStorage.setItem('premiumKey', enteredKey);
-        serialFeedback.style.display = 'none';
+        localStorage.setItem('premiumKey', key);
+        isPremium = true; premiumName = entry.name;
         serialModal.hide();
         enablePremium();
-        alert(`Welcome, ${premiumName}! Premium features unlocked.`);
+        alert(`Welcome, ${premiumName}!`);
       } else {
-        serialFeedback.textContent = 'Invalid serial key.';
         serialFeedback.style.display = 'block';
       }
-    });
+    };
 
-    // Enable dark mode button and other premium behavior
     function enablePremium() {
       toggleDarkMode.disabled = false;
+      exportBtn.disabled = false;
       unlockBtn.disabled = true;
       unlockBtn.textContent = `Premium: ${premiumName}`;
     }
 
-    // Dark mode toggle (only works if premium)
-    toggleDarkMode.addEventListener('click', () => {
+    toggleDarkMode.onclick = () => {
       if (!isPremium) return;
-      const isDark = document.body.classList.toggle('dark-mode');
-      localStorage.setItem('darkMode', JSON.stringify(isDark));
-    });
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const darkPref = JSON.parse(localStorage.getItem('darkMode'));
-      if (darkPref && isPremium) {
-        document.body.classList.add('dark-mode');
-        toggleDarkMode.checked = true;
-      }
-    });
+      document.body.classList.toggle('dark-mode');
+    };
   </script>
 
   <script>
-    // Existing dashboard logic for CSV, table, notes, and chart starts here...
+    // Dashboard logic for CSV, table, notes, and chart
     let notes = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
     let selectedRowKey = null;
     let currentData = [];
@@ -239,12 +216,8 @@
         option.textContent = file;
         selector.appendChild(option);
       });
-      if (csvFiles.length) {
-        loadCSV('inventory-csvs/' + csvFiles[0]);
-      }
-      selector.addEventListener('change', e => {
-        loadCSV(e.target.value);
-      });
+      if (csvFiles.length) loadCSV('inventory-csvs/' + csvFiles[0]);
+      selector.addEventListener('change', e => loadCSV(e.target.value));
     }
 
     function loadCSV(url) {
@@ -268,7 +241,6 @@
       headerRow.innerHTML = '';
       body.innerHTML = '';
       if (!data.length) return;
-
       const columns = Object.keys(data[0]);
       columns.push('Note');
       columns.forEach(col => {
@@ -277,44 +249,39 @@
         th.addEventListener('click', () => sortTableByColumn(col));
         headerRow.appendChild(th);
       });
-
       data.forEach(row => {
         const tr = document.createElement('tr');
         const rowKey = Object.values(row).join('|');
-
         Object.values(row).forEach(val => {
           const td = document.createElement('td');
           td.textContent = val;
           tr.appendChild(td);
         });
-
         const noteTd = document.createElement('td');
         noteTd.textContent = notes[rowKey] || '';
         noteTd.style.cursor = 'pointer';
         noteTd.addEventListener('click', e => {
           e.stopPropagation();
           selectedRowKey = rowKey;
-          const noteInputEl = document.getElementById('noteInput');
-          document.getElementById('noteInput').value = notes[rowKey] || '';
+          const ni = document.getElementById('noteInput');
+          ni.value = notes[rowKey] || '';
           document.getElementById('noteLengthFeedback').style.display = 'none';
           if (isPremium) {
-            noteInputEl.removeAttribute('maxlength');
+            ni.removeAttribute('maxlength');
             document.getElementById('noteLimitInfo').style.display = 'none';
           } else {
-            noteInputEl.setAttribute('maxlength', '20');
+            ni.setAttribute('maxlength', '20');
             document.getElementById('noteLimitInfo').style.display = 'block';
           }
           new bootstrap.Modal(document.getElementById('noteModal')).show();
         });
         tr.appendChild(noteTd);
-
         body.appendChild(tr);
       });
-
       document.getElementById('searchInput').oninput = function () {
-        const query = this.value.toLowerCase();
+        const q = this.value.toLowerCase();
         const filtered = currentData.filter(row =>
-          Object.values(row).some(val => val.toLowerCase().includes(query))
+          Object.values(row).some(v => v.toLowerCase().includes(q))
         );
         renderTable(filtered);
         showStatistics(filtered);
@@ -322,11 +289,11 @@
     }
 
     function sortTableByColumn(col) {
-      const direction = sortDirection[col] === 'asc' ? 'desc' : 'asc';
-      sortDirection[col] = direction;
+      const dir = sortDirection[col] === 'asc' ? 'desc' : 'asc';
+      sortDirection[col] = dir;
       currentData.sort((a, b) => {
-        if (a[col] < b[col]) return direction === 'asc' ? -1 : 1;
-        if (a[col] > b[col]) return direction === 'asc' ? 1 : -1;
+        if (a[col] < b[col]) return dir === 'asc' ? -1 : 1;
+        if (a[col] > b[col]) return dir === 'asc' ? 1 : -1;
         return 0;
       });
       renderTable(currentData);
@@ -334,8 +301,8 @@
     }
 
     document.getElementById('saveNote').addEventListener('click', () => {
-      const noteInputEl = document.getElementById('noteInput');
-      const newNote = noteInputEl.value;
+      const ni = document.getElementById('noteInput');
+      const newNote = ni.value;
       if (!isPremium && newNote.length > 20) {
         document.getElementById('noteLengthFeedback').style.display = 'block';
         return;
@@ -364,11 +331,11 @@
       const rows = Array.from(document.querySelectorAll('#tableBody tr')).map(tr =>
         Array.from(tr.querySelectorAll('td')).map(td => td.textContent)
       );
-      const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
-      link.setAttribute('href', URL.createObjectURL(blob));
-      link.setAttribute('download', 'inventory_with_notes.csv');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'inventory_with_notes.csv';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -376,98 +343,56 @@
 
     function showStatistics(data) {
       const statsDiv = document.getElementById('statistics');
-      const validRows = data
-        .map(row => {
-          const yearNum = parseInt(row.Year);
-          const rowNum = parseInt(row.Row);
-          if (!isNaN(yearNum) && !isNaN(rowNum)) {
-            return { row: rowNum, age: new Date().getFullYear() - yearNum };
-          }
-          return null;
-        })
-        .filter(x => x !== null);
-
-      if (!validRows.length) {
-        statsDiv.innerHTML = `<strong>Average Vehicle Age:</strong> N/A<br/>
-                              <strong>Number of Different Models:</strong> 0<br/>
-                              <strong>Number of Makes:</strong> 0<br/>
-                              <strong>Newest Vehicle Age:</strong> N/A<br/>
-                              <strong>Oldest Vehicle Age:</strong> N/A`;
-        if (ageChart) {
-          ageChart.destroy();
-          ageChart = null;
-        }
+      const valid = data.map(r => {
+        const y = parseInt(r.Year), rn = parseInt(r.Row);
+        return !isNaN(y)&&!isNaN(rn) ? { row: rn, age: new Date().getFullYear() - y } : null;
+      }).filter(x => x);
+      if (!valid.length) {
+        statsDiv.innerHTML = `<strong>Average Age:</strong> N/A<br/>
+                              <strong># Models:</strong> 0<br/>
+                              <strong># Makes:</strong> 0<br/>
+                              <strong>Newest Age:</strong> N/A<br/>
+                              <strong>Oldest Age:</strong> N/A`;
+        if (ageChart) { ageChart.destroy(); ageChart = null; }
         return;
       }
-
-      validRows.sort((a, b) => a.row - b.row);
-
-      const cumAges = [];
-      validRows.forEach((item, idx) => {
-        const slice = validRows.slice(0, idx + 1).map(x => x.age);
-        const avg = slice.reduce((sum, v) => sum + v, 0) / slice.length;
-        cumAges.push(parseFloat(avg.toFixed(1)));
+      valid.sort((a,b)=>a.row-b.row);
+      const cumA = valid.map((_,i)=>{
+        const slice = valid.slice(0,i+1).map(x=>x.age);
+        return +(slice.reduce((s,v)=>s+v,0)/slice.length).toFixed(1);
       });
-
-      const ages = validRows.map(x => x.age);
-      const uniqueModels = new Set(data.filter(r => r.Make && r.Model).map(row => `${row.Make.toUpperCase()} ${row.Model.toUpperCase()}`));
-      const uniqueMakes = new Set(data.filter(r => r.Make).map(row => row.Make.toUpperCase()));
-      const newestAge = Math.min(...ages).toFixed(1);
-      const oldestAge = Math.max(...ages).toFixed(1);
-
+      const ages = valid.map(x=>x.age);
+      const models = new Set(data.map(r=>`${r.Make}|${r.Model}`));
+      const makes = new Set(data.map(r=>r.Make));
       statsDiv.innerHTML = `
-        <strong>Average Vehicle Age:</strong> ${cumAges[cumAges.length - 1]} years<br/>
-        <strong>Number of Different Models:</strong> ${uniqueModels.size}<br/>
-        <strong>Number of Makes:</strong> ${uniqueMakes.size}<br/>
-        <strong>Newest Vehicle Age:</strong> ${newestAge} years<br/>
-        <strong>Oldest Vehicle Age:</strong> ${oldestAge} years
+        <strong>Average Age:</strong> ${cumA[cumA.length-1]}<br/>
+        <strong># Models:</strong> ${models.size}<br/>
+        <strong># Makes:</strong> ${makes.size}<br/>
+        <strong>Newest Age:</strong> ${Math.min(...ages)}<br/>
+        <strong>Oldest Age:</strong> ${Math.max(...ages)}
       `;
-
       const ctx = document.getElementById('ageChart').getContext('2d');
-      if (ageChart) {
-        ageChart.destroy();
-      }
+      if (ageChart) ageChart.destroy();
       ageChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: validRows.map(item => String(item.row)),
-          datasets: [{
-            label: 'Cumulative Average Age',
-            data: cumAges,
-            backgroundColor: 'rgba(52, 152, 219, 0.7)',
-            borderColor: 'rgba(41, 128, 185, 1)',
-            borderWidth: 1
-          }]
+        type:'bar',
+        data:{
+          labels: valid.map(x=>x.row),
+          datasets:[{ label:'Cumulative Avg Age', data:cumA, backgroundColor:'rgba(52,152,219,0.7)', borderColor:'rgba(41,128,185,1)', borderWidth:1 }]
         },
-        options: {
-          responsive: true,
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: 'Row'
-              }
-            },
-            y: {
-              title: {
-                display: true,
-                text: 'Avg Age (years)'
-              },
-              beginAtZero: true
-            }
+        options:{
+          responsive:true,
+          scales:{
+            x:{ title:{ display:true, text:'Row' } },
+            y:{ title:{ display:true, text:'Age' }, beginAtZero:true }
           },
-          plugins: {
-            legend: { display: false }
-          }
+          plugins:{ legend:{ display:false } }
         }
       });
     }
 
-    document.getElementById('searchInput').addEventListener('input', function () {
-      const query = this.value.toLowerCase();
-      const filtered = currentData.filter(row =>
-        Object.values(row).some(val => val.toLowerCase().includes(query))
-      );
+    document.getElementById('searchInput').addEventListener('input',function(){
+      const q=this.value.toLowerCase();
+      const filtered = currentData.filter(r=>Object.values(r).some(v=>v.toLowerCase().includes(q)));
       renderTable(filtered);
       showStatistics(filtered);
     });
