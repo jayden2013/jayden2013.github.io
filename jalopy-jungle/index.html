@@ -92,7 +92,7 @@
         download: true,
         header: true,
         complete: function (results) {
-          currentData = results.data;
+          currentData = results.data.filter(row => row.Year && row.Make && row.Model);
           renderTable(currentData);
           showStatistics(currentData);
         },
@@ -184,7 +184,7 @@
       const validYears = data.map(row => parseInt(row.Year)).filter(y => !isNaN(y));
       const currentYear = new Date().getFullYear();
       const avgAge = validYears.length ? (validYears.reduce((a, b) => a + (currentYear - b), 0) / validYears.length).toFixed(1) : 'N/A';
-      const uniqueModels = new Set(data.map(row => `${row.Make} ${row.Model}`));
+      const uniqueModels = new Set(data.map(row => `${row.Make?.toUpperCase()} ${row.Model?.toUpperCase()}`));
       statsDiv.innerHTML = `<strong>Average Vehicle Age:</strong> ${avgAge} years<br/><strong>Number of Different Models:</strong> ${uniqueModels.size}`;
     }
 
