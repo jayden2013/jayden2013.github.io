@@ -27,13 +27,21 @@
     th {
       cursor: pointer;
     }
+    /* Disable dark mode toggle when locked */
+    #toggleDarkMode:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1>Jalopy Jungle Inventory Dashboard</h1>
-      <button class="btn btn-outline-secondary" id="toggleDarkMode">Toggle Dark Mode</button>
+      <div>
+        <button class="btn btn-outline-primary me-2" id="unlockBtn">Unlock Premium Features</button>
+        <button class="btn btn-outline-secondary" id="toggleDarkMode" disabled>Toggle Dark Mode</button>
+      </div>
     </div>
 
     <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
@@ -74,6 +82,26 @@
     </div>
   </div>
 
+  <!-- Modal for entering serial key -->
+  <div class="modal fade" id="serialModal" tabindex="-1" aria-labelledby="serialModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="serialModalLabel">Enter Serial Key</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control" id="serialInput" placeholder="Serial Key">
+          <div id="serialFeedback" class="text-danger mt-2" style="display:none;">Invalid serial key.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="submitSerial">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal for adding notes -->
   <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -96,20 +124,92 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const darkModeToggle = document.getElementById('toggleDarkMode');
-    darkModeToggle.addEventListener('click', () => {
+    // State variables
+    let isPremium = false;
+    let premiumName = '';
+    let serialData = [];
+
+    // DOM elements
+    const unlockBtn = document.getElementById('unlockBtn');
+    const toggleDarkMode = document.getElementById('toggleDarkMode');
+    const serialModal = new bootstrap.Modal(document.getElementById('serialModal'));
+    const submitSerial = document.getElementById('submitSerial');
+    const serialInput = document.getElementById('serialInput');
+    const serialFeedback = document.getElementById('serialFeedback');
+
+    // Load serial-keys.json on page load
+    fetch('serial-keys.json')
+      .then(res => res.json())
+      .then(data => {
+        serialData = data; 
+        checkStoredKey(); 
+      })
+      .catch(err => {
+        console.error('Failed to load serial-keys.json:', err);
+      });
+
+    // Check localStorage for stored valid key
+    function checkStoredKey() {
+      const storedKey = localStorage.getItem('premiumKey');
+      if (!storedKey) return;
+      const entry = serialData.find(e => e.key === storedKey);
+      if (entry) {
+        isPremium = true;
+        premiumName = entry.name;
+        enablePremium();
+      }
+    }
+
+    // Show serial key modal
+    unlockBtn.addEventListener('click', () => {
+      serialInput.value = '';
+      serialFeedback.style.display = 'none';
+      serialModal.show();
+    });
+
+    // Handle serial key submission
+    submitSerial.addEventListener('click', () => {
+      const enteredKey = serialInput.value.trim();
+      const entry = serialData.find(e => e.key === enteredKey);
+      if (entry) {
+        isPremium = true;
+        premiumName = entry.name;
+        localStorage.setItem('premiumKey', enteredKey);
+        serialFeedback.style.display = 'none';
+        serialModal.hide();
+        enablePremium();
+        alert(`Welcome, ${premiumName}! Premium features unlocked.`);
+      } else {
+        serialFeedback.textContent = 'Invalid serial key.';
+        serialFeedback.style.display = 'block';
+      }
+    });
+
+    // Enable dark mode button and other premium behavior
+    function enablePremium() {
+      toggleDarkMode.disabled = false;
+      unlockBtn.disabled = true;
+      unlockBtn.textContent = `Premium: ${premiumName}`;
+    }
+
+    // Dark mode toggle (only works if premium)
+    toggleDarkMode.addEventListener('click', () => {
+      if (!isPremium) return;
       const isDark = document.body.classList.toggle('dark-mode');
       localStorage.setItem('darkMode', JSON.stringify(isDark));
     });
 
     window.addEventListener('DOMContentLoaded', () => {
       const darkPref = JSON.parse(localStorage.getItem('darkMode'));
-      if (darkPref) {
+      if (darkPref && isPremium) {
         document.body.classList.add('dark-mode');
+        toggleDarkMode.checked = true;
       }
     });
   </script>
+
   <script>
+    // Existing dashboard logic for CSV, table, notes, and chart starts here...
     let notes = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
     let selectedRowKey = null;
     let currentData = [];
@@ -136,7 +236,6 @@
         selector.appendChild(option);
       });
       if (csvFiles.length) {
-        // Load first CSV by default
         loadCSV('inventory-csvs/' + csvFiles[0]);
       }
       selector.addEventListener('change', e => {
@@ -145,7 +244,6 @@
     }
 
     function loadCSV(url) {
-      // Clear search input when switching CSV
       document.getElementById('searchInput').value = '';
       Papa.parse(url, {
         download: true,
@@ -167,7 +265,6 @@
       body.innerHTML = '';
       if (!data.length) return;
 
-      // Create column headers (all keys plus "Note")
       const columns = Object.keys(data[0]);
       columns.push('Note');
       columns.forEach(col => {
@@ -181,14 +278,12 @@
         const tr = document.createElement('tr');
         const rowKey = Object.values(row).join('|');
 
-        // Populate each cell
         Object.values(row).forEach(val => {
           const td = document.createElement('td');
           td.textContent = val;
           tr.appendChild(td);
         });
 
-        // "Note" cell
         const noteTd = document.createElement('td');
         noteTd.textContent = notes[rowKey] || '';
         noteTd.style.cursor = 'pointer';
@@ -203,7 +298,6 @@
         body.appendChild(tr);
       });
 
-      // Re-apply search filter listener
       document.getElementById('searchInput').oninput = function () {
         const query = this.value.toLowerCase();
         const filtered = currentData.filter(row =>
@@ -286,10 +380,8 @@
         return;
       }
 
-      // Sort by row number ascending
       validRows.sort((a, b) => a.row - b.row);
 
-      // Compute average age up to each row index
       const cumAges = [];
       validRows.forEach((item, idx) => {
         const slice = validRows.slice(0, idx + 1).map(x => x.age);
@@ -297,7 +389,6 @@
         cumAges.push(parseFloat(avg.toFixed(1)));
       });
 
-      // Overall stats
       const ages = validRows.map(x => x.age);
       const uniqueModels = new Set(data.filter(r => r.Make && r.Model).map(row => `${row.Make.toUpperCase()} ${row.Model.toUpperCase()}`));
       const uniqueMakes = new Set(data.filter(r => r.Make).map(row => row.Make.toUpperCase()));
@@ -312,7 +403,6 @@
         <strong>Oldest Vehicle Age:</strong> ${oldestAge} years
       `;
 
-      // Chart: x-axis is sorted validRows[].row (no duplicates, ascending), y-axis is cumAges
       const ctx = document.getElementById('ageChart').getContext('2d');
       if (ageChart) {
         ageChart.destroy();
