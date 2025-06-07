@@ -292,9 +292,13 @@
     }
     addInventoryRow.onclick = () => {
 		const rowCount = document.querySelectorAll('#myInventoryTable tr').length;
-      if (!isPremium && rowCount >= 5) { alert('Adding rows is only for premium users.'); return; }
+      if (!isPremium && rowCount > 5) { alert('Adding additional rows is only for premium users.'); return; }
       addRow();
     };
+	
+	for (let i = 0; i < 3; i++) {
+		addRow();
+	}
 	
 	exportMyInvBtn.onclick = () => {
 		if (!isPremium) {
