@@ -291,12 +291,9 @@
       tr.querySelector('.profit-cell').textContent = (lp - mc - sc).toFixed(2);
     }
     addInventoryRow.onclick = () => {
-+   	addRow();
+      if (!isPremium) { alert('Adding rows is only for premium users.'); return; }
+      addRow();
     };
-	
-	for (let i = 0; i < 3; i++) {
-		addInventoryRowBtn.click();
-	}
 	
 	exportMyInvBtn.onclick = () => {
 		if (!isPremium) {
