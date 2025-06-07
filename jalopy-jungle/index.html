@@ -291,7 +291,8 @@
       tr.querySelector('.profit-cell').textContent = (lp - mc - sc).toFixed(2);
     }
     addInventoryRow.onclick = () => {
-      if (!isPremium) { alert('Adding rows is only for premium users.'); return; }
+		const rowCount = document.querySelectorAll('#myInventoryTable tr').length;
+      if (!isPremium && rowCount >= 5) { alert('Adding rows is only for premium users.'); return; }
       addRow();
     };
 	
