@@ -276,7 +276,8 @@
     // Dark mode toggle in modal
     modalToggleDark.onclick = () => {
       if (!isPremium) { alert('Dark mode is only available for premium users.'); return; }
-      document.body.classList.toggle('dark-mode');
+		const isDark = document.body.classList.toggle('dark-mode');
+		localStorage.setItem('darkMode', isDark);      // ← save it
     };
 
     settingsBtn.onclick = () => {
