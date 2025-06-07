@@ -304,10 +304,6 @@
       addRow();
     };
 	
-	for (let i = 0; i < 3; i++) {
-		addRow();
-	}
-	
 	exportMyInvBtn.onclick = () => {
 		if (!isPremium) {
 		alert('Exporting is only available to premium users.');
@@ -562,6 +558,9 @@
 
 
     // Initialize
+	for (let i = 0; i < 3; i++) {
+		addRow();
+	}
     listCSVFiles();
 	loadMyInventory();
   </script>
