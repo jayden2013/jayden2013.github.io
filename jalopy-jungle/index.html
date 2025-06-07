@@ -621,6 +621,12 @@ window.addEventListener('DOMContentLoaded', () => {
     listCSVFiles();
 	loadMyInventory();
   updateMyInvStats();
+  
+  // restore dark mode if previously set
+if (localStorage.getItem('darkMode') === 'true') {
+  document.body.classList.add('dark-mode');
+}
+
 });
 
 
