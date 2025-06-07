@@ -299,6 +299,10 @@
 +   	addRow();
     };
 	
+	for (let i = 0; i < 3; i++) {
+		addInventoryRowBtn.click();
+	}
+	
 	exportMyInvBtn.onclick = () => {
 		if (!isPremium) {
 		alert('Exporting is only available to premium users.');
