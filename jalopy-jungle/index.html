@@ -517,20 +517,17 @@
 	* Read every row in My Inventory and save its input values to localStorage
 	*/
 	function saveMyInventory() {
-		const rows = Array.from(
+		const data = Array.from(
 			document.querySelectorAll('#myInventoryTable tbody tr')
-		).map(tr => {
-			const cells = tr.querySelectorAll('td, input');
-			return {
-				part:    cells[0].querySelector('input').value.trim(),
-				list:    cells[1].querySelector('input').value.trim(),
-				cost:    cells[2].querySelector('input').value.trim(),
-				ship:    cells[3].querySelector('input').value.trim(),
-				listing: cells[4].querySelector('input').value.trim()
+		).map(tr => ({
+				part:    tr.querySelector('.part-input')?.value.trim()    || '',
+				list:    tr.querySelector('.list-price')?.value.trim()    || '',
+				cost:    tr.querySelector('.my-cost')?.value.trim()       || '',
+				ship:    tr.querySelector('.ship-cost')?.value.trim()     || '',
+				listing: tr.querySelector('.listing-input')?.value.trim() || ''
 				// profit is computed, no need to store
-			};
-		});
-		localStorage.setItem('myInventoryData', JSON.stringify(rows));
+			}));
+		localStorage.setItem('myInventoryData', JSON.stringify(data));
 	}
 
 	/**
