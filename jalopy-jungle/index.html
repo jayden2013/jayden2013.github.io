@@ -92,6 +92,7 @@
       <div class="tab-pane fade" id="myInventoryTab">
         <div class="mb-3">
           <button class="btn btn-outline-primary disabled-look" id="addInventoryRow">Add Row</button>
+		  <button class="btn btn-outline-success disabled-look" id="exportMyInventory">Export My Inventory to CSV</button>
         </div>
         <div class="table-responsive">
           <table class="table table-striped table-bordered" id="myInventoryTable">
@@ -197,6 +198,7 @@
     const modalToggleDark = document.getElementById('modalToggleDark');
     const exportBtn = document.getElementById('exportBtn');
     const addInventoryRow = document.getElementById('addInventoryRow');
+	const exportMyInvBtn = document.getElementById('exportMyInventory');
     const serialModal = new bootstrap.Modal(document.getElementById('serialModal'));
     const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
 
@@ -292,6 +294,45 @@
       if (!isPremium) { alert('Adding rows is only for premium users.'); return; }
       addRow();
     };
+	
+	exportMyInvBtn.onclick = () => {
+		if (!isPremium) {
+		alert('Exporting is only available to premium users.');
+		return;
+	}
+		exportMyInventory();
+	};
+	
+	function exportMyInventory() {
+		const headers = ['Part','List Price','My Cost','Shipping Cost','Listing','Profit'];
+		const rows = Array.from(
+		document.querySelectorAll('#myInventoryTable tbody tr')
+	).map(tr => {
+		const cells = tr.querySelectorAll('td');
+		return [
+			cells[0].querySelector('input')?.value.trim() || '',
+			cells[1].querySelector('input')?.value.trim() || '',
+			cells[2].querySelector('input')?.value.trim() || '',
+			cells[3].querySelector('input')?.value.trim() || '',
+			cells[4].querySelector('input')?.value.trim() || '',
+			cells[5].textContent.trim() || ''
+		];
+	});
+
+  // build CSV text
+  const csv = [
+    headers.join(','),
+    ...rows.map(r => r.join(','))
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'my_inventory.csv';
+  document.body.append(link);
+  link.click();
+  link.remove();
+}
 
     // Dashboard logic (Inventory table, notes, stats)
     let notes = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
