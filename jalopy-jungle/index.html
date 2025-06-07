@@ -90,6 +90,22 @@
 
       <!-- My Inventory Tab -->
       <div class="tab-pane fade" id="myInventoryTab">
+	    <!-- start nested pills -->
+  <ul class="nav nav-pills mb-3" id="myInvSubTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="inv-table-pill" data-bs-toggle="pill" data-bs-target="#invTablePane" type="button" role="tab">
+        My Inventory
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="inv-stats-pill" data-bs-toggle="pill" data-bs-target="#invStatsPane" type="button" role="tab">
+        My Statistics
+      </button>
+    </li>
+  </ul>
+  <div class="tab-content">
+    <!-- inventory table pane -->
+    <div class="tab-pane fade show active" id="invTablePane" role="tabpanel">
         <div class="mb-3">
           <button class="btn btn-outline-primary" id="addInventoryRow">Add Row</button>
 		  <button class="btn btn-outline-success disabled-look" id="exportMyInventory">Export My Inventory to CSV</button>
@@ -110,6 +126,14 @@
           </table>
         </div>
       </div>
+	  <div class="tab-pane fade" id="invStatsPane" role="tabpanel">
+      <div id="myInvStatistics" class="p-3">
+        <!-- placeholder -->
+        <p><strong>Total Items:</strong> <span id="mi-total-items">0</span></p>
+        <p><strong>Total Profit:</strong> $<span id="mi-total-profit">0.00</span></p>
+        <p><strong>Average Profit per Item:</strong> $<span id="mi-avg-profit">0.00</span></p>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -552,14 +576,48 @@
 			calcProfit(tr);
 		});
 	}
+	
+	function updateMyInvStats() {
+  const rows = Array.from(document.querySelectorAll('#myInventoryBody tr'))
+    .filter(tr => tr.querySelector('.part-input')?.value.trim() !== '');
+  const totalItems = rows.reduce((sum, tr) => {
+    const q = parseInt(tr.querySelector('.quantity-input')?.value) || 1;
+    return sum + q;
+  }, 0);
+  const totalProfit = rows.reduce((sum, tr) => {
+    return sum + (parseFloat(tr.querySelector('.profit-cell').textContent) || 0);
+  }, 0);
+  const avgProfit = totalItems ? (totalProfit / totalItems).toFixed(2) : '0.00';
 
+  document.getElementById('mi-total-items').textContent = totalItems;
+  document.getElementById('mi-total-profit').textContent = totalProfit.toFixed(2);
+  document.getElementById('mi-avg-profit').textContent = avgProfit;
+}
 
-    // Initialize
+// call this whenever you add/save rows:
+addInventoryRowBtn.addEventListener('click', updateMyInvStats);
+exportMyInvBtn.addEventListener('click', updateMyInvStats);
+// also after load/save:
+saveMyInventory = (function(orig) {
+  return function() { orig(); updateMyInvStats(); };
+})(saveMyInventory);
+loadMyInventory = (function(orig) {
+  return function() { orig(); updateMyInvStats(); };
+})(loadMyInventory);
+
+// and finally at initial load:
+window.addEventListener('DOMContentLoaded', () => {
+      // Initialize
 	for (let i = 0; i < 3; i++) {
 		addRow();
 	}
     listCSVFiles();
 	loadMyInventory();
+  updateMyInvStats();
+});
+
+
+
   </script>
 </body>
 </html>
