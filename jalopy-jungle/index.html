@@ -284,6 +284,13 @@
       ['list-price','my-cost','ship-cost'].forEach(cls => {
         tr.querySelector(`.${cls}`).addEventListener('input', () => calcProfit(tr));
       });
+	  // any time any input in this row changes, recalc & save
+	tr.querySelectorAll('input').forEach(inp => {
+		inp.addEventListener('input', () => {
+			calcProfit(tr);
+			saveMyInventory();
+		});
+	});
     }
     function calcProfit(tr) {
       const lp = parseFloat(tr.querySelector('.list-price').value) || 0;
@@ -509,6 +516,50 @@
         },plugins:{legend:{display:false}}}
       });
     }
+
+	/**
+	* Read every row in My Inventory and save its input values to localStorage
+	*/
+	function saveMyInventory() {
+		const rows = Array.from(
+			document.querySelectorAll('#myInventoryTable tbody tr')
+		).map(tr => {
+			const cells = tr.querySelectorAll('td, input');
+			return {
+				part:    cells[0].querySelector('input').value.trim(),
+				list:    cells[1].querySelector('input').value.trim(),
+				cost:    cells[2].querySelector('input').value.trim(),
+				ship:    cells[3].querySelector('input').value.trim(),
+				listing: cells[4].querySelector('input').value.trim()
+				// profit is computed, no need to store
+			};
+		});
+		localStorage.setItem('myInventoryData', JSON.stringify(rows));
+	}
+
+	/**
+	* On load, read saved data and repopulate My Inventory rows
+	*/
+	function loadMyInventory() {
+		const saved = JSON.parse(localStorage.getItem('myInventoryData') || '[]');
+		const tbody = document.querySelector('#myInventoryTable tbody');
+		// if we have fewer rows than saved, add more
+		while (tbody.rows.length < Math.max(saved.length, 3)) {
+			addRow();
+		}
+		// fill each saved row
+		saved.forEach((rowData, i) => {
+			const tr = tbody.rows[i];
+			const inputs = tr.querySelectorAll('input');
+			inputs[0].value = rowData.part;
+			inputs[1].value = rowData.list;
+			inputs[2].value = rowData.cost;
+			inputs[3].value = rowData.ship;
+			inputs[4].value = rowData.listing;
+			calcProfit(tr);
+		});
+	}
+
 
     // Initialize
     listCSVFiles();
