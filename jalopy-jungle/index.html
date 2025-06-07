@@ -37,6 +37,14 @@
 	.nav-pills .nav-link.active {
 	color: orange !important;
 }
+
+/* gold styling for unlocked premium button */
+.btn-premium {
+  background-color: gold !important;
+  border-color: goldenrod !important;
+  color: #000 !important;
+}
+
   </style>
 </head>
 <body>
@@ -270,6 +278,9 @@
 	  exportMyInvBtn.classList.remove('disabled-look');
       unlockBtn.disabled = true;
       unlockBtn.textContent = `Premium: ${premiumName}`;
+	  // remove the old outline style and apply gold
+	  unlockBtn.classList.remove('btn-outline-primary');
+	  unlockBtn.classList.add('btn-premium');
       applyHomeYardDefault();
     }
 
