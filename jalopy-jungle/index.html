@@ -143,6 +143,7 @@
                 <th>Shipping Cost</th>
                 <th>Listing</th>
                 <th>Profit</th>
+				<th>Mark Sold</th>
               </tr>
             </thead>
             <tbody id="myInventoryBody"></tbody>
@@ -348,9 +349,8 @@
         <td><input type="number" step="0.01" class="form-control list-price" /></td>
         <td><input type="number" step="0.01" class="form-control my-cost" /></td>
         <td><input type="number" step="0.01" class="form-control ship-cost" /></td>
-		<td><textarea class="form-control notes-input">…</textarea></td>
-		<td><button class="btn btn-sm btn-outline-success mark-sold-btn">Mark Sold</button></td>
         <td><input class="form-control listing-input" /></td>
+		<td><button class="btn btn-sm btn-outline-success mark-sold-btn">Mark Sold</button></td>
         <td class="profit-cell">0.00</td>
       `;
       tbody.append(tr);
