@@ -663,6 +663,43 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
 		});
 	}
 	
+	function saveMySoldData() {
+  const sold = Array.from(
+    document.querySelectorAll('#mySoldBody tr')
+  ).map(tr => {
+    const cells = tr.querySelectorAll('td');
+    return {
+      part:    cells[0].textContent.trim(),
+      list:    cells[1].textContent.trim(),
+      cost:    cells[2].textContent.trim(),
+      ship:    cells[3].textContent.trim(),
+      listing: cells[4].textContent.trim(),
+      profit:  cells[5].textContent.trim(),
+      notes:   cells[6].textContent.trim()
+    };
+  });
+  localStorage.setItem('mySoldData', JSON.stringify(sold));
+}
+
+function loadMySoldData() {
+  const saved = JSON.parse(localStorage.getItem('mySoldData') || '[]');
+  const tbody = document.getElementById('mySoldBody');
+  tbody.innerHTML = '';
+  saved.forEach(data => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${data.part}</td>
+      <td>${data.list}</td>
+      <td>${data.cost}</td>
+      <td>${data.ship}</td>
+      <td>${data.listing}</td>
+      <td>${data.profit}</td>
+      <td>${data.notes}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+	
 	function updateMyInvStats() {
   const rows = Array.from(document.querySelectorAll('#myInventoryBody tr'))
     .filter(tr => tr.querySelector('.part-input')?.value.trim() !== '');
@@ -699,6 +736,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
     listCSVFiles();
 	loadMyInventory();
+	loadMySoldData();
   updateMyInvStats();
   
   // restore dark mode if previously set
