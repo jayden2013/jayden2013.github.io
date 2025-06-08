@@ -143,6 +143,8 @@
                 <th>Shipping Cost</th>
                 <th>Listing</th>
                 <th>Profit</th>
+				<th>Notes</th>
+				<th>Mark Sold</th>
               </tr>
             </thead>
             <tbody id="myInventoryBody"></tbody>
@@ -348,6 +350,8 @@
         <td><input type="number" step="0.01" class="form-control list-price" /></td>
         <td><input type="number" step="0.01" class="form-control my-cost" /></td>
         <td><input type="number" step="0.01" class="form-control ship-cost" /></td>
+		<td><textarea class="form-control notes-input">…</textarea></td>
+		<td><button class="btn btn-sm btn-outline-success mark-sold-btn">Mark Sold</button></td>
         <td><input class="form-control listing-input" /></td>
         <td class="profit-cell">0.00</td>
       `;
@@ -362,6 +366,43 @@
 			saveMyInventory();
 		});
 	});
+	
+	// when you click “Mark Sold”:
+tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
+  // 1) gather the values from this row
+  const data = {
+    part:    tr.querySelector('.part-input').value.trim(),
+    list:    tr.querySelector('.list-price').value.trim(),
+    cost:    tr.querySelector('.my-cost').value.trim(),
+    ship:    tr.querySelector('.ship-cost').value.trim(),
+    listing: tr.querySelector('.listing-input').value.trim(),
+    quantity:tr.querySelector('.quantity-input').value.trim(),
+    profit:  tr.querySelector('.profit-cell').textContent.trim(),
+    notes:   tr.querySelector('.notes-input').value.trim()
+  };
+
+  // 2) append a new row to the My Sold table
+  const soldTbody = document.getElementById('mySoldBody');
+  const soldTr = document.createElement('tr');
+  soldTr.innerHTML = `
+    <td>${data.part}</td>
+    <td>${data.list}</td>
+    <td>${data.cost}</td>
+    <td>${data.ship}</td>
+    <td>${data.listing}</td>
+    <td>${data.profit}</td>
+    <td>${data.notes}</td>
+  `;
+  soldTbody.appendChild(soldTr);
+
+  // 3) remove this row from My Inventory
+  tr.remove();
+
+  // 4) persist both tables
+  saveMyInventory();  // your existing function
+  saveMySoldData();   // see next step
+});
+	
     }
     function calcProfit(tr) {
       const lp = parseFloat(tr.querySelector('.list-price').value) || 0;
