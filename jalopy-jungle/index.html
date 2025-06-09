@@ -451,10 +451,9 @@ function calcProfit(tr) {
   const lp   = parseFloat(tr.querySelector('.list-price').value)   || 0;
   const mc   = parseFloat(tr.querySelector('.my-cost').value)      || 0;
   const sc   = parseFloat(tr.querySelector('.ship-cost').value)    || 0;
-  const qty  = parseInt  (tr.querySelector('.quantity-input').value) || 1;
 
   // total sales value
-  const sale = lp * qty;
+  const sale = lp;
 
   // eBay fees:
   // 13.6% on first $7,500, then 2.35% above
