@@ -501,82 +501,76 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
     let notes = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
     let selectedRowKey = null, currentData = [], sortDirection = {}, ageChart = null;
 
+  async function listCSVFiles() {
+    const selector = document.getElementById('csvSelector');
+    selector.innerHTML = '';
 
-  const LOCATION_NAMES = {
-    boise:        'Boise',
-    caldwell:     'Caldwell',
-    garden_city:  'Garden City',
-    nampa:        'Nampa',
-    twin_falls:   'Twin Falls'
-  };
+    // the exact yards you want, and how to humanize them
+    const LOCATION_KEYS  = ['boise','caldwell','garden_city','nampa','twin_falls'];
+    const LOCATION_NAMES = {
+      boise:       'Boise',
+      caldwell:    'Caldwell',
+      garden_city: 'Garden City',
+      nampa:       'Nampa',
+      twin_falls:  'Twin Falls'
+    };
 
-async function listCSVFiles() {
-  const selector = document.getElementById('csvSelector');
-  selector.innerHTML = '';
+    try {
+      // 1) fetch all filenames
+      const res   = await fetch('./inventory-csvs/index.json');
+      const files = await res.json();
 
-  try {
-    // 1) fetch inventory CSV index
-    const res   = await fetch('./inventory-csvs/index.json');
-    const files = await res.json();  // e.g. ["inventory_boise_2025-06-08_07-17-49.csv", ...]
+      // 2) pick the latest timestamp per locKey
+      const latest = {};
+      const re = /^inventory_(.+?)_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.csv$/;
+      files
+        .filter(f => f.startsWith('inventory_'))
+        .forEach(f => {
+          const m = f.match(re);
+          if (!m) return;
+          const locKey = m[1].toLowerCase();  // e.g. "garden_city"
+          const dt     = m[2];                // e.g. "2025-06-08_07-17-49"
+          if (!latest[locKey] || dt > latest[locKey].dt) {
+            latest[locKey] = { filename: f, dt };
+          }
+        });
+      console.log('Latest map:', latest);
 
-    // 2) pick newest per location
-    const latest = {};
-    const re = /^inventory_(.+?)_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.csv$/;
-    files
-      .filter(f => f.startsWith('inventory_'))
-      .forEach(f => {
-        const m = f.match(re);
-        if (!m) return;
-        const locKey = m[1].toLowerCase();   // e.g. "garden_city"
-        const dt     = m[2];                 // "2025-06-08_07-17-49"
-        if (!latest[locKey] || dt > latest[locKey].dt) {
-          latest[locKey] = { filename: f, dt };
-        }
-      });
-
-    // 3) build dropdown options in human-sorted order
-    Object.keys(latest)
-      .map(locKey => {
-        // humanize "garden_city" → "Garden City"
-        const humanName = locKey
-          .split('_')
-          .map(w => w[0].toUpperCase() + w.slice(1))
-          .join(' ');
-        return { locKey, humanName, ...latest[locKey] };
-      })
-      .sort((a, b) => a.humanName.localeCompare(b.humanName))
-      .forEach(({ locKey, humanName, filename, dt }) => {
+      // 3) build the <option>s in the specific order
+      LOCATION_KEYS.forEach(locKey => {
+        const entry = latest[locKey];
+        if (!entry) return;  // skip if no CSV yet
         const opt = document.createElement('option');
-        opt.value       = 'inventory-csvs/' + filename;
+        opt.value       = 'inventory-csvs/' + entry.filename;
         opt.dataset.loc = locKey;
-        opt.textContent = `${humanName} (${dt.replace('_', ' ')})`;
+        opt.textContent = `${LOCATION_NAMES[locKey]} (${entry.dt.replace('_',' ')})`;
         selector.appendChild(opt);
       });
 
-    // 4) on change, save homeYard and load CSV
-    selector.addEventListener('change', e => {
-      const loc = e.target.selectedOptions[0].dataset.loc;
-      localStorage.setItem('homeYard', loc);
-      loadCSV(e.target.value);
-    });
+      // 4) on user change, store the locKey and reload
+      selector.addEventListener('change', e => {
+        const locKey = e.target.selectedOptions[0].dataset.loc;
+        localStorage.setItem('homeYard', locKey);
+        loadCSV(e.target.value);
+      });
 
-    // 5) apply saved homeYard or default to first
-    const saved = (localStorage.getItem('homeYard') || '').toLowerCase();
-    let toSelect = null;
-    if (saved) {
-      toSelect = selector.querySelector(`option[data-loc="${saved}"]`);
+      // 5) apply saved homeYard (with normalization), or default to first
+      let savedHome = localStorage.getItem('homeYard') || '';
+      // normalize: lower, trim, spaces→underscores
+      savedHome = savedHome.trim().toLowerCase().replace(/\s+/g, '_');
+      let toSelect = selector.querySelector(`option[data-loc="${savedHome}"]`);
+      if (!toSelect && selector.options.length) {
+        toSelect = selector.options[0];
+      }
+      if (toSelect) {
+        selector.value = toSelect.value;
+        loadCSV(toSelect.value);
+      }
+    } 
+    catch (err) {
+      console.error('Error listing inventory CSVs:', err);
     }
-    if (!toSelect && selector.options.length) {
-      toSelect = selector.options[0];
-    }
-    if (toSelect) {
-      selector.value = toSelect.value;
-      loadCSV(toSelect.value);
-    }
-  } catch (err) {
-    console.error('Error listing inventory CSVs:', err);
   }
-}
 
 function applyHomeYardDefault() {
   const home = localStorage.getItem('homeYard');
