@@ -461,7 +461,7 @@ function calcProfit(tr) {
 
 // decide whether to charge eBay fees
   let ebayFee = 0;
-  if ( JSON.parse(localStorage.getItem('calcEbayFees') || 'true') ) {
+  if ( JSON.parse(localStorage.getItem('calcEbayFees') || 'false') ) {
     // tiered fees
     const tier1 = Math.min(sale, 7500) * 0.136;
     const tier2 = sale > 7500 ? (sale - 7500) * 0.0235 : 0;
