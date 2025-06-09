@@ -189,10 +189,6 @@
     <h5>Profit Over Time</h5>
     <canvas id="soldProfitChart"></canvas>
   </div>
-  <div class="mt-4">
-    <h5>Sales Count by Search Term</h5>
-    <canvas id="soldTermChart"></canvas>
-  </div>
 </div>
 
     </div>
@@ -1067,7 +1063,6 @@ function renderSoldTable(data) {
 }
 
 let soldProfitChart = null;
-let soldTermChart   = null;
 
 function updateSoldCharts() {
   const rows = Array.from(document.querySelectorAll('#mySoldBody tr'));
@@ -1100,34 +1095,6 @@ function updateSoldCharts() {
       scales: {
         x: { title: { display: true, text: 'Date Sold' } },
         y: { title: { display: true, text: 'Profit ($)' }, beginAtZero: true }
-      }
-    }
-  });
-
-  // 2) Sales Count by Search Term
-  const countByTerm = {};
-  rows.forEach(tr => {
-    const term = tr.children[3].textContent; // adjust index if needed
-    countByTerm[term] = (countByTerm[term] || 0) + 1;
-  });
-  const terms = Object.keys(countByTerm);
-  const counts = terms.map(t => countByTerm[t]);
-
-  const ctx2 = document.getElementById('soldTermChart').getContext('2d');
-  if (soldTermChart) soldTermChart.destroy();
-  soldTermChart = new Chart(ctx2, {
-    type: 'bar',
-    data: {
-      labels: terms,
-      datasets: [{
-        label: 'Items Sold',
-        data: counts
-      }]
-    },
-    options: {
-      scales: {
-        x: { title: { display: true, text: 'Search Term' } },
-        y: { title: { display: true, text: 'Count' }, beginAtZero: true }
       }
     }
   });
