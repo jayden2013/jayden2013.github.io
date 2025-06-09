@@ -352,7 +352,7 @@
     };
 
     // My Inventory: dynamic rows + profit calc
-    function addRow() {
+    function addRow(item = {}) {
       const tbody = document.getElementById('myInventoryBody');
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -670,6 +670,7 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
 			inputs[2].value = rowData.cost;
 			inputs[3].value = rowData.ship;
 			inputs[4].value = rowData.listing;
+			inputs[5].value = rowData.date;
 			calcProfit(tr);
 		});
 	}
