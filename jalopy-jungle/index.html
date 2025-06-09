@@ -168,7 +168,9 @@
           <th>Shipping Cost</th>
           <th>Listing</th>
           <th>Profit</th>
+		  <th>Date Listed</th>
 		  <th>Date Sold</th>
+		  <th>Time to Sell</th>
         </tr>
       </thead>
       <tbody id="mySoldBody"></tbody>
@@ -427,6 +429,7 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
     ship:    tr.querySelector('.ship-cost').value.trim(),
     listing: tr.querySelector('.listing-input').value.trim(),
     profit:  tr.querySelector('.profit-cell').textContent.trim(),
+	date:	 tr.querySelector('.inventory-date-cell').textContent.trim()
   };
 
   // 2) append a new row to the My Sold table
@@ -439,6 +442,7 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
     <td>${data.ship}</td>
     <td>${data.listing}</td>
     <td>${data.profit}</td>
+	<td>${data.date}</td>
 	<td class="sold-date-cell">${new Date().toLocaleDateString()}</td>
   `;
   soldTbody.appendChild(soldTr);
