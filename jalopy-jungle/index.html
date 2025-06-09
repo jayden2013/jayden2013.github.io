@@ -265,6 +265,36 @@
       </div>
     </div>
   </div>
+  
+  <!-- Sold Data Modal -->
+<div class="modal fade" id="soldModal" tabindex="-1" aria-labelledby="soldModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="soldModalLabel">Sold Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="soldDataContainer">
+          <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>Search Term</th>
+                <th>Listing Title</th>
+                <th>Final Price</th>
+                <th>Sale Date</th>
+              </tr>
+            </thead>
+            <tbody id="soldDataBody"></tbody>
+          </table>
+        </div>
+        <div id="soldDataEmpty" class="text-center text-muted" style="display:none;">
+          No sold data found for this vehicle.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -539,6 +569,10 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
           }
           new bootstrap.Modal(document.getElementById('noteModal')).show();
         };
+		// NEW: clicking any other cell opens the sold-data modal
+tr.addEventListener('click', () => {
+  openSoldModal(row);   // pass the row object { Year, Make, Model, … }
+});
         tr.append(nt);
         bd.append(tr);
       });
@@ -821,7 +855,61 @@ if (localStorage.getItem('darkMode') === 'true') {
 
 });
 
+/**
+ * Fetch the matching sold-data CSV (same filename under /ebay-sales/)
+ * then filter and display only rows for this inventory row.
+ */
+function openSoldModal(row) {
+  // derive the CSV filename from the currently selected inventory file
+  const inventoryPath = document.getElementById('csvSelector').value;
+  const csvName       = inventoryPath.split('/').pop();
+  const soldPath      = 'ebay-sales/' + csvName;
 
+  Papa.parse(soldPath, {
+    download: true,
+    header: true,
+    complete(results) {
+      const data = results.data.filter(r => 
+        r.Year  === row.Year &&
+        r.Make  === row.Make &&
+        r.Model === row.Model
+      );
+
+      renderSoldTable(data);
+      new bootstrap.Modal(document.getElementById('soldModal')).show();
+    },
+    error(err) {
+      console.error('Failed to load sold CSV:', err);
+      renderSoldTable([]);
+      new bootstrap.Modal(document.getElementById('soldModal')).show();
+    }
+  });
+}
+
+/**
+ * Populate the sold-data modal’s table body
+ */
+function renderSoldTable(data) {
+  const tbody = document.getElementById('soldDataBody');
+  tbody.innerHTML = '';
+
+  if (!data || !data.length) {
+    document.getElementById('soldDataEmpty').style.display = '';
+    return;
+  }
+  document.getElementById('soldDataEmpty').style.display = 'none';
+
+  data.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r['Search Term']   || ''}</td>
+      <td>${r['Listing Title'] || ''}</td>
+      <td>${r['Final Price']   || ''}</td>
+      <td>${r['Sale Date']     || ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
   </script>
 </body>
