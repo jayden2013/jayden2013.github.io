@@ -4,149 +4,187 @@ import csv
 import time
 import random
 from datetime import datetime
-import pandas as pd
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import requests
 from bs4 import BeautifulSoup
+import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-SEARCH_TERMS = [
+# ───── SETTINGS ───────────────────────────────────────────────────────────────
+
+SEARCH_TERMS        = [
     "dash vents", "headlights", "tail lights", "throttle body",
     "intake manifold", "ecu ecm", "gauge cluster", "valve covers"
 ]
-DELAY_SECONDS = 3
+DELAY_SECONDS       = 1             # base delay after each successful request
+MAX_ITEMS_PER_QUERY = 5             # cap per term
+WORKERS             = 5             # reduced threads to avoid rate-limit
+MAX_RETRIES         = 3             # how many times to retry on 429
+BACKOFF_FACTOR      = 2             # exponential backoff multiplier
+
+# ───── PATHS & SESSION ────────────────────────────────────────────────────────
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-base_path = os.path.join(script_dir, "..", "ebay-sales")
-latest_csv = None
+csv_dir    = os.path.join(script_dir, "..", "inventory-csvs")
+out_dir    = os.path.join(script_dir, "..", "ebay-sales")
+today_str  = datetime.now().strftime("%Y-%m-%d")
 
-# Match both inventory and vehicles_of_interest CSVs
-csv_source_path = os.path.join(script_dir, "..", "inventory-csvs")
-csv_files = sorted(
-    glob.glob(os.path.join(csv_source_path, "inventory_*.csv")) +
-    glob.glob(os.path.join(csv_source_path, "vehicles_of_interest_*.csv")),
-    key=os.path.getmtime,
-    reverse=True
-)
+session = requests.Session()
+session.headers.update({
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/114.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+})
 
-if csv_files:
-    latest_csv = csv_files[0]
-else:
-    print("No inventory CSV files found.")
-    exit()
+os.makedirs(out_dir, exist_ok=True)
 
-print(f"Using CSV: {latest_csv}")
-vehicles_df = pd.read_csv(latest_csv)
-output_data = []
+# ───── SCRAPER FUNCTION ───────────────────────────────────────────────────────
 
-# Deduplicate year/make/model combinations
-unique_vehicles = vehicles_df.drop_duplicates(subset=["Year", "Make", "Model"])
+def scrape_vehicle_term(year, make, model, term, idx, total):
+    query = f"{year} {make} {model} {term}"
+    url_kw = requests.utils.quote(query)
+    url    = (
+        "https://www.watchcount.com/"
+        f"sold/{url_kw}/-/all"
+        "?condition=used&site=EBAY_US&sortBy=bestmatch"
+    )
 
-# Setup Selenium WebDriver with local chromedriver
-chrome_path = os.path.join(script_dir, "chromedriver.exe")
-options = Options()
-options.add_argument("--headless")
-options.add_argument("--disable-gpu")
-options.add_argument("--no-sandbox")
-service = Service(executable_path=chrome_path)
-driver = webdriver.Chrome(service=service, options=options)
-
-for _, row in unique_vehicles.iterrows():
-    year = str(row.get("Year", "")).strip()
-    make = str(row.get("Make", "")).strip()
-    model = str(row.get("Model", "")).strip()
-
-    if not (year and make and model):
-        continue
-
-    for term in SEARCH_TERMS:
-        query = f"{year} {make} {model} {term}"
-        url_query = query.replace(" ", "+")
-        url = f"https://www.watchcount.com/sold/{url_query}/-/all?condition=used&site=EBAY_US&sortBy=bestmatch"
-        print(f"Fetching: {query}")
-        print(f"URL: {url}")
-
+    # Retry loop for status 429 or transient failures
+    for attempt in range(1, MAX_RETRIES+1):
         try:
-            driver.get(url)
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "selling-info-box"))
-            )
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            resp = session.get(url, timeout=15)
+            if resp.status_code == 429:
+                wait = BACKOFF_FACTOR ** (attempt - 1) + random.random()
+                print(f"[{idx}/{total}] {query} → 429, backing off {wait:.1f}s (attempt {attempt})")
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            break
+        except requests.RequestException as e:
+            if attempt == MAX_RETRIES:
+                print(f"[{idx}/{total}] {query} → failed after {MAX_RETRIES} tries: {e}")
+                return []
+            # exponential backoff on other errors too
+            wait = BACKOFF_FACTOR ** (attempt - 1) + random.random()
+            print(f"[{idx}/{total}] {query} → error: {e}. retrying in {wait:.1f}s")
+            time.sleep(wait)
+    else:
+        # never got a successful response
+        return []
 
-            boxes = soup.select("div.col-auto.normal-text.selling-info-box")
-            print(f"Found {len(boxes)} 'selling-info-box' containers")
+    soup  = BeautifulSoup(resp.text, "html.parser")
+    boxes = soup.select("div.col-auto.normal-text.selling-info-box")[:MAX_ITEMS_PER_QUERY]
 
-            for i, box in enumerate(boxes):
-                if i >= 5:
-                    break
+    print(f"[{idx}/{total}] {query} → found {len(boxes)} boxes")
+    out = []
+    for box in boxes:
+        total_sold = time_to_sell = last_sold_price = date_sold = title_text = ""
 
-                total_sold = ""
-                time_to_sell = ""
-                last_sold_price = ""
-                date_sold = ""
-                title_text = ""
+        # parse the spans
+        for span in box.find_all("span"):
+            txt = span.get_text(strip=True).lower()
+            if "total sold" in txt:
+                total_sold = span.get_text(strip=True).replace("total sold", "").strip()
+            elif "to sell" in txt:
+                time_to_sell = span.get_text(strip=True).replace("to sell one", "").strip()
 
-                spans = box.find_all("span")
-                for span in spans:
-                    text = span.get_text(strip=True)
-                    print(f"  Span text: {text}")
-                    if "total sold" in text:
-                        total_sold = text.replace("total sold", "").strip()
-                    elif "to sell" in text:
-                        time_to_sell = text.replace("to sell one", "").strip()
+        # last sold price & date
+        end_div = box.select_one("div.col.text-lg-end")
+        if end_div:
+            txt = end_div.get_text(" ", strip=True)
+            if "Last sold for" in txt:
+                parts = txt.split(" on ")
+                last_sold_price = parts[0].replace("Last sold for", "").replace("or Best Offer", "").strip()
+                if len(parts) > 1:
+                    date_sold = parts[1].strip()
 
-                end_text_div = box.select_one("div.col.text-lg-end")
-                if end_text_div:
-                    last_text = end_text_div.get_text(strip=True)
-                    print(f"  End div text: {last_text}")
-                    if "Last sold for" in last_text:
-                        if " on " in last_text:
-                            price_part, date_part = last_text.split(" on ", 1)
-                            last_sold_price = price_part.replace("Last sold for ", "").replace("or Best Offer", "").strip()
-                            date_sold = date_part.strip()
-                        else:
-                            last_sold_price = last_text.replace("Last sold for ", "").replace("or Best Offer", "").strip()
+        # listing title
+        gin = box.find_previous("div", class_="general-info-container")
+        if gin:
+            span = gin.select_one("div.row > div.col > span")
+            if span:
+                title_text = span.get_text(strip=True)
 
-                title_container = box.find_previous("div", class_="general-info-container")
-                if title_container:
-                    span = title_container.select_one("div.row > div.col > span")
-                    if span:
-                        title_text = span.get_text(strip=True)
+        out.append([
+            year, make, model, term,
+            total_sold, time_to_sell,
+            last_sold_price, date_sold,
+            title_text
+        ])
 
-                if total_sold or time_to_sell or last_sold_price or date_sold:
-                    print(f"  Parsed: {total_sold}, {time_to_sell}, {last_sold_price}, {date_sold}, {title_text}")
-                    output_data.append([
-                        year, make, model, term,
-                        total_sold, time_to_sell, last_sold_price, date_sold, title_text
-                    ])
-        except Exception as e:
-            print(f"Error fetching {query}: {e}")
+    time.sleep(DELAY_SECONDS + random.random())
+    return out
 
-        time.sleep(DELAY_SECONDS + random.uniform(0.5, 1.5))
+# ───── CSV PROCESSOR ──────────────────────────────────────────────────────────
 
-# Deduplicate output rows
-unique_rows = []
-seen = set()
-for row in output_data:
-    row_key = tuple(row)
-    if row_key not in seen:
-        seen.add(row_key)
-        unique_rows.append(row)
+def scrape_csv(csv_path, csv_index, csv_total):
+    name = os.path.splitext(os.path.basename(csv_path))[0]
+    print(f"\n=== ({csv_index}/{csv_total}) Processing '{name}' ===")
 
-# Save results to CSV
-output_filename = f"ebay_sales_{datetime.now().strftime('%Y-%m-%d')}.csv"
-output_path = os.path.join(base_path, output_filename)
+    df   = pd.read_csv(csv_path, dtype=str)
+    uniq = df.drop_duplicates(subset=["Year","Make","Model"])
+    total_tasks = len(uniq) * len(SEARCH_TERMS)
+    print(f"→ {len(uniq)} vehicles, {total_tasks} total queries")
 
-os.makedirs(base_path, exist_ok=True)
-with open(output_path, "w", newline="", encoding="utf-8") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Year", "Make", "Model", "Search Term", "Total Sold", "Time to Sell", "Last Sold Price", "Date Sold", "Listing Title"])
-    writer.writerows(unique_rows)
+    tasks   = []
+    results = []
 
-print(f"Done! Saved to {output_path}")
+    with ThreadPoolExecutor(max_workers=WORKERS) as ex:
+        counter = 0
+        for _, row in uniq.iterrows():
+            y, m, mo = row["Year"].strip(), row["Make"].strip(), row["Model"].strip()
+            if not (y and m and mo):
+                continue
+            for term in SEARCH_TERMS:
+                counter += 1
+                tasks.append(ex.submit(
+                    scrape_vehicle_term, y, m, mo, term, counter, total_tasks
+                ))
 
-# Clean up
-driver.quit()
+        completed = 0
+        for fut in as_completed(tasks):
+            results.extend(fut.result())
+            completed += 1
+            print(f"Progress: {completed}/{total_tasks}", end="\r")
+    print()  # newline
+
+    # dedupe & write out
+    seen, uniq_rows = set(), []
+    for row in results:
+        key = tuple(row)
+        if key not in seen:
+            seen.add(key)
+            uniq_rows.append(row)
+
+    out_file = os.path.join(out_dir, f"{name}_ebay_sales_{today_str}.csv")
+    with open(out_file, "w", newline="", encoding="utf-8") as fp:
+        writer = csv.writer(fp)
+        writer.writerow([
+            "Year","Make","Model","Search Term",
+            "Total Sold","Time to Sell",
+            "Last Sold Price","Date Sold","Listing Title"
+        ])
+        writer.writerows(uniq_rows)
+
+    print(f"→ Saved {len(uniq_rows)} rows to {out_file}")
+
+# ───── MAIN ────────────────────────────────────────────────────────────────────
+
+def main():
+    csvs = [
+        f for f in glob.glob(os.path.join(csv_dir, "*.csv"))
+        if today_str in os.path.basename(f)
+    ]
+    if not csvs:
+        print("No CSVs for", today_str)
+        return
+
+    for idx, path in enumerate(csvs, 1):
+        scrape_csv(path, idx, len(csvs))
+
+    print("\nAll done!")
+
+if __name__ == "__main__":
+    main()
