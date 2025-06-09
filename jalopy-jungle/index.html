@@ -513,19 +513,17 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
   async function listCSVFiles() {
     try {
       const res   = await fetch('./inventory-csvs/index.json');
-      const files = await res.json();                          // [ "inventory_boise_2025-06-08_07-17-49.csv", … ]
+      const files = await res.json();
 
-      // only keep the inventory_ files, group to find the latest per location
+      // build latest-per-location map
       const latest = {};
       const re = /^inventory_(.+?)_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.csv$/;
-
       files
         .filter(f => f.startsWith('inventory_'))
         .forEach(f => {
           const m = f.match(re);
           if (!m) return;
           const [_, locKey, dt] = m;
-          // pick the lexicographically largest datetime string
           if (!latest[locKey] || dt > latest[locKey].dt) {
             latest[locKey] = { filename: f, dt };
           }
@@ -534,24 +532,34 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
       const selector = document.getElementById('csvSelector');
       selector.innerHTML = '';
 
-      // preserve the order of locations as in LOCATION_NAMES
+      // populate in order
       Object.keys(LOCATION_NAMES).forEach(locKey => {
-        const entry = latest[locKey];
-        if (!entry) return;
-        const { filename, dt } = entry;
+        if (!latest[locKey]) return;
+        const { filename, dt } = latest[locKey];
         const opt = document.createElement('option');
         opt.value       = 'inventory-csvs/' + filename;
-        // show "Location Name (YYYY-MM-DD HH:MM:SS)"
+        opt.dataset.loc = locKey;
         opt.textContent = `${LOCATION_NAMES[locKey]} (${dt.replace('_',' ')})`;
         selector.appendChild(opt);
       });
 
-      // load the first one by default
-      if (selector.options.length) {
+      // --- NEW: apply homeYard default or fallback to first ---
+      const home = localStorage.getItem('homeYard');
+      if (home && latest[home]) {
+        // find the <option> with matching data-loc
+        const opt = selector.querySelector(`option[data-loc="${home}"]`);
+        if (opt) selector.value = opt.value;
+      }
+      // ------------------------------------------------------
+
+      // load whatever is selected now
+      if (selector.value) {
         loadCSV(selector.value);
       }
 
-      selector.addEventListener('change', e => loadCSV(e.target.value));
+      selector.addEventListener('change', e => {
+        loadCSV(e.target.value);
+      });
     } catch (err) {
       console.error('Error loading inventory files:', err);
     }
