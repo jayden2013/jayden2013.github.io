@@ -763,7 +763,7 @@ tr.addEventListener('click', () => {
 				cost:    tr.querySelector('.my-cost')?.value.trim()       || '',
 				ship:    tr.querySelector('.ship-cost')?.value.trim()     || '',
 				listing: tr.querySelector('.listing-input')?.value.trim() || '',
-				date: 	 tr.querySelector('.inventory-date-cell').textContext.trim()
+				date: 	 tr.querySelector('.inventory-date-cell').textContent.trim()
 				// profit is computed, no need to store
 			}));
 		localStorage.setItem('myInventoryData', JSON.stringify(data));
