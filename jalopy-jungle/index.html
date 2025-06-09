@@ -143,7 +143,7 @@
                 <th>My Cost</th>
                 <th>Shipping Cost</th>
                 <th>Listing</th>
-                <th>Profit</th>
+                <th>Estimated Profit</th>
 				<th>Date</th>
 				<th>Mark Sold</th>
               </tr>
@@ -446,12 +446,37 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
 });
 	
     }
-    function calcProfit(tr) {
-      const lp = parseFloat(tr.querySelector('.list-price').value) || 0;
-      const mc = parseFloat(tr.querySelector('.my-cost').value) || 0;
-      const sc = parseFloat(tr.querySelector('.ship-cost').value) || 0;
-      tr.querySelector('.profit-cell').textContent = (lp - mc - sc).toFixed(2);
-    }
+function calcProfit(tr) {
+  // grab values
+  const lp   = parseFloat(tr.querySelector('.list-price').value)   || 0;
+  const mc   = parseFloat(tr.querySelector('.my-cost').value)      || 0;
+  const sc   = parseFloat(tr.querySelector('.ship-cost').value)    || 0;
+  const qty  = parseInt  (tr.querySelector('.quantity-input').value) || 1;
+
+  // total sales value
+  const sale = lp * qty;
+
+  // eBay fees:
+  // 13.6% on first $7,500, then 2.35% above
+  const feeTier1 = Math.min(sale, 7500) * 0.136;
+  const feeTier2 = sale > 7500
+    ? (sale - 7500) * 0.0235
+    : 0;
+  let ebayFee = feeTier1 + feeTier2;
+
+  // plus flat insertion fee: $0.30 if sale<10, else $0.40
+  ebayFee += sale < 10 ? 0.30 : 0.40;
+
+  // your costs
+  const costTotal = mc + sc;
+
+  // estimated profit
+  const profit = sale - ebayFee - costTotal;
+
+  // write it back
+  tr.querySelector('.profit-cell').textContent = profit.toFixed(2);
+}
+
     addInventoryRow.onclick = () => {
 		const rowCount = document.querySelectorAll('#myInventoryTable tr').length;
       if (!isPremium && rowCount > 5) { alert('Adding additional rows is only for premium users.'); return; }
