@@ -511,23 +511,15 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
   };
 
 async function listCSVFiles() {
-  const LOCATION_NAMES = {
-    boise:       'Boise',
-    caldwell:    'Caldwell',
-    garden_city: 'Garden City',
-    nampa:       'Nampa',
-    twin_falls:  'Twin Falls'
-  };
-
   const selector = document.getElementById('csvSelector');
   selector.innerHTML = '';
 
   try {
-    // 1) Fetch the inventory CSV index
+    // 1) fetch inventory CSV index
     const res   = await fetch('./inventory-csvs/index.json');
     const files = await res.json();  // e.g. ["inventory_boise_2025-06-08_07-17-49.csv", ...]
 
-    // 2) Build a map of the latest CSV per location
+    // 2) pick newest per location
     const latest = {};
     const re = /^inventory_(.+?)_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.csv$/;
     files
@@ -535,49 +527,54 @@ async function listCSVFiles() {
       .forEach(f => {
         const m = f.match(re);
         if (!m) return;
-        const [, locKey, dt] = m;
-        const key = locKey.toLowerCase();
-        if (!latest[key] || dt > latest[key].dt) {
-          latest[key] = { filename: f, dt };
+        const locKey = m[1].toLowerCase();   // e.g. "garden_city"
+        const dt     = m[2];                 // "2025-06-08_07-17-49"
+        if (!latest[locKey] || dt > latest[locKey].dt) {
+          latest[locKey] = { filename: f, dt };
         }
       });
 
-    // 3) Populate the dropdown in a fixed order
-    Object.keys(LOCATION_NAMES).forEach(locKey => {
-      const key = locKey.toLowerCase();
-      const entry = latest[key];
-      if (!entry) return;
-      const opt = document.createElement('option');
-      opt.value       = 'inventory-csvs/' + entry.filename;
-      opt.dataset.loc = key;  // lowercase
-      // Display "Location Name (YYYY-MM-DD HH:MM:SS)"
-      opt.textContent = `${LOCATION_NAMES[key]} (${entry.dt.replace('_',' ')})`;
-      selector.appendChild(opt);
-    });
+    // 3) build dropdown options in human-sorted order
+    Object.keys(latest)
+      .map(locKey => {
+        // humanize "garden_city" → "Garden City"
+        const humanName = locKey
+          .split('_')
+          .map(w => w[0].toUpperCase() + w.slice(1))
+          .join(' ');
+        return { locKey, humanName, ...latest[locKey] };
+      })
+      .sort((a, b) => a.humanName.localeCompare(b.humanName))
+      .forEach(({ locKey, humanName, filename, dt }) => {
+        const opt = document.createElement('option');
+        opt.value       = 'inventory-csvs/' + filename;
+        opt.dataset.loc = locKey;
+        opt.textContent = `${humanName} (${dt.replace('_', ' ')})`;
+        selector.appendChild(opt);
+      });
 
-    // 4) When the user changes selection, save as homeYard and load the CSV
+    // 4) on change, save homeYard and load CSV
     selector.addEventListener('change', e => {
-      const loc = e.target.selectedOptions[0].dataset.loc.toLowerCase();
+      const loc = e.target.selectedOptions[0].dataset.loc;
       localStorage.setItem('homeYard', loc);
       loadCSV(e.target.value);
     });
 
-    // 5) On initial load, apply saved homeYard or default to first option
-    const savedHome = (localStorage.getItem('homeYard') || '').toLowerCase();
-    let optToSelect = null;
-    if (savedHome) {
-      optToSelect = selector.querySelector(`option[data-loc="${savedHome}"]`);
+    // 5) apply saved homeYard or default to first
+    const saved = (localStorage.getItem('homeYard') || '').toLowerCase();
+    let toSelect = null;
+    if (saved) {
+      toSelect = selector.querySelector(`option[data-loc="${saved}"]`);
     }
-    if (!optToSelect && selector.options.length) {
-      optToSelect = selector.options[0];
+    if (!toSelect && selector.options.length) {
+      toSelect = selector.options[0];
     }
-
-    if (optToSelect) {
-      selector.value = optToSelect.value;
-      loadCSV(optToSelect.value);
+    if (toSelect) {
+      selector.value = toSelect.value;
+      loadCSV(toSelect.value);
     }
   } catch (err) {
-    console.error('Error loading inventory files:', err);
+    console.error('Error listing inventory CSVs:', err);
   }
 }
 
