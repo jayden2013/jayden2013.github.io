@@ -789,6 +789,9 @@ function applyDataCode(code) {
 
 // hook up the buttons
 document.getElementById('exportDataBtn').onclick = () => {
+//force a write of whatever is on screen into local storage
+saveMyInventory();
+saveMySoldData();
   const code = getDataCode();
   const out  = document.getElementById('dataCodeOutput');
   out.value  = code;
