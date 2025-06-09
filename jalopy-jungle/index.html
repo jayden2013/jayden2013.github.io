@@ -226,6 +226,10 @@
             </select>
           </div>
           <button class="btn btn-outline-secondary w-100 mb-2" id="modalToggleDark">Toggle Dark Mode</button>
+		  <div class="form-check mt-3">
+		  <input type="checkbox" class="form-check-input" id="calcEbayFeesToggle">
+		  <label class="form-check-label" for="calcEbayFeesToggle">Calculate eBay fees</label>
+		  </div>
 		  <hr>
 		<button class="btn btn-outline-primary w-100 mb-2" id="exportDataBtn">📋 Copy Data Code</button>
 		<textarea id="dataCodeOutput" class="form-control mb-2" rows="3" readonly placeholder="Your data code will appear here…"></textarea>
@@ -455,24 +459,19 @@ function calcProfit(tr) {
   // total sales value
   const sale = lp;
 
-  // eBay fees:
-  // 13.6% on first $7,500, then 2.35% above
-  const feeTier1 = Math.min(sale, 7500) * 0.136;
-  const feeTier2 = sale > 7500
-    ? (sale - 7500) * 0.0235
-    : 0;
-  let ebayFee = feeTier1 + feeTier2;
+/ decide whether to charge eBay fees
+  let ebayFee = 0;
+  if ( JSON.parse(localStorage.getItem('calcEbayFees') || 'true') ) {
+    // tiered fees
+    const tier1 = Math.min(sale, 7500) * 0.136;
+    const tier2 = sale > 7500 ? (sale - 7500) * 0.0235 : 0;
+    ebayFee = tier1 + tier2;
+    // flat per-sale fee
+    ebayFee += sale < 10 ? 0.30 : 0.40;
+  }
 
-  // plus flat insertion fee: $0.30 if sale<10, else $0.40
-  ebayFee += sale < 10 ? 0.30 : 0.40;
-
-  // your costs
   const costTotal = mc + sc;
-
-  // estimated profit
   const profit = sale - ebayFee - costTotal;
-
-  // write it back
   tr.querySelector('.profit-cell').textContent = profit.toFixed(2);
 }
 
@@ -928,7 +927,22 @@ document.getElementById('importDataBtn').onclick = () => {
     listCSVFiles();
 	loadMyInventory();
 	loadMySoldData();
-  updateMySoldStats();
+	
+	const calcFeesCheckbox = document.getElementById('calcEbayFeesToggle');
+	// load saved preference (default = false)
+	let calcFees = JSON.parse(localStorage.getItem('calcEbayFees') || 'false');
+	calcFeesCheckbox.checked = calcFees;
+
+	calcFeesCheckbox.addEventListener('change', () => {
+	calcFees = calcFeesCheckbox.checked;
+	localStorage.setItem('calcEbayFees', JSON.stringify(calcFees));
+	// re-calc every row in My Inventory:
+	document.querySelectorAll('#myInventoryTable tbody tr')
+    .forEach(tr => calcProfit(tr));
+	});
+	
+	
+  updateMySoldStats(); 
   
   // restore dark mode if previously set
 if (localStorage.getItem('darkMode') === 'true') {
