@@ -621,7 +621,7 @@ function applyHomeYardDefault() {
       hdr.innerHTML = ''; bd.innerHTML = '';
       if (!data.length) return;
       const cols = Object.keys(data[0]).concat('Note');
-      cols.forEach(c => {
+      cols.filter(col => col !== 'Vehicle of Interest').forEach(c => {
         const th = document.createElement('th');
         th.textContent = c;
         th.onclick = () => sortTableByColumn(c);
@@ -630,7 +630,7 @@ function applyHomeYardDefault() {
       data.forEach(row => {
         const tr = document.createElement('tr');
         const key = Object.values(row).join('|');
-        Object.values(row).forEach(v => {
+        Object.values(row).filter(([col]) => col !== 'Vehicle of Interest').forEach(v => {
           const td = document.createElement('td');
           td.textContent = v; tr.append(td);
         });
