@@ -6,13 +6,6 @@ import time
 from html.parser import HTMLParser
 from datetime import datetime
 
-# ========= VEHICLE INTEREST LIST =========
-# Format: ("MAKE", "MODEL", START_YEAR, END_YEAR or None)
-VEHICLES_OF_INTEREST = [
-    ("FORD", "THUNDERBIRD", 1989, 1997),
-    ("FORD", "MUSTANG", 1996, None),
-]
-
 # ========= YARD DEFINITIONS =========
 YARDS = {
     "1020": "Boise",
@@ -31,23 +24,6 @@ HEADERS = {
 
 # ========= Timestamp for filenames =========
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-def is_vehicle_of_interest(year_str, make, model):
-    try:
-        year = int(year_str)
-    except ValueError:
-        return "N"
-    make = make.upper()
-    model = model.upper()
-
-    for interest_make, interest_model, start_year, end_year in VEHICLES_OF_INTEREST:
-        if make == interest_make and model == interest_model:
-            if end_year is None:
-                if year >= start_year:
-                    return "Y"
-            elif start_year <= year <= end_year:
-                return "Y"
-    return "N"
 
 class InventoryParser(HTMLParser):
     def __init__(self):
@@ -120,54 +96,46 @@ def post_inventory(yard_id, make, model):
     return html
 
 def main():
-    summary_filename = f"vehicles_of_interest_{timestamp}.csv"
-    with open(summary_filename, "w", newline="", encoding="utf-8") as summary_file:
-        summary_writer = csv.writer(summary_file)
-        summary_writer.writerow(["Location", "Year", "Make", "Model", "Row"])
+    for yard_id, location_name in YARDS.items():
+        filename = f"inventory_{location_name.lower().replace(' ', '_')}_{timestamp}.csv"
+        print(f"Processing inventory for {location_name}...")
 
-        for yard_id, location_name in YARDS.items():
-            filename = f"inventory_{location_name.lower().replace(' ', '_')}_{timestamp}.csv"
-            print(f"Processing inventory for {location_name}...")
+        try:
+            makes = post_json("/Home/GetMakes", {"yardId": yard_id})
+            print(f"Found {len(makes)} makes.")
 
-            try:
-                makes = post_json("/Home/GetMakes", {"yardId": yard_id})
-                print(f"Found {len(makes)} makes.")
+            with open(filename, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                # no "Vehicle of Interest" column
+                writer.writerow(["Year", "Make", "Model", "Row"])
 
-                with open(filename, "w", newline="", encoding="utf-8") as f:
-                    writer = csv.writer(f)
-                    writer.writerow(["Year", "Make", "Model", "Row", "Vehicle of Interest"])
+                for make_obj in makes:
+                    make = make_obj["makeName"]
+                    print(f"{make}")
 
-                    for make_obj in makes:
-                        make = make_obj["makeName"]
-                        print(f"{make}")
+                    models = post_json("/Home/GetModels", {"yardId": yard_id, "makeName": make})
+                    for model_obj in models:
+                        model = model_obj["model"]
+                        print(f"  {model}")
+                        try:
+                            html = post_inventory(yard_id, make, model)
+                            parser = InventoryParser()
+                            parser.feed(html)
 
-                        models = post_json("/Home/GetModels", {"yardId": yard_id, "makeName": make})
-                        for model_obj in models:
-                            model = model_obj["model"]
-                            print(f"  {model}")
-                            try:
-                                html = post_inventory(yard_id, make, model)
-                                parser = InventoryParser()
-                                parser.feed(html)
+                            for row in parser.entries:
+                                # simply write the 4 fields
+                                writer.writerow(list(row))
 
-                                for row in parser.entries:
-                                    interest = is_vehicle_of_interest(row[0], row[1], row[2])
-                                    writer.writerow(list(row) + [interest])
+                        except Exception as e:
+                            print(f"  Error getting {make} {model}: {e}")
+                        time.sleep(0.3)
 
-                                    if interest == "Y":
-                                        summary_writer.writerow([location_name] + list(row))
+            print(f"Saved to {filename}\n")
 
-                            except Exception as e:
-                                print(f"  Error getting {make} {model}: {e}")
-                            time.sleep(0.3)
+        except Exception as e:
+            print(f"Error fetching from {location_name}: {e}")
 
-                print(f"Saved to {filename}\n")
+    print("Done! Inventory saved.")
 
-            except Exception as e:
-                print(f"Error fetching from {location_name}: {e}")
-
-    print("Done! Inventory and summary of vehicles of interest saved.")
-
-# Run the script
 if __name__ == "__main__":
     main()
