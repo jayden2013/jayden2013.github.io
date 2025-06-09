@@ -459,7 +459,7 @@ function calcProfit(tr) {
   // total sales value
   const sale = lp;
 
-/ decide whether to charge eBay fees
+// decide whether to charge eBay fees
   let ebayFee = 0;
   if ( JSON.parse(localStorage.getItem('calcEbayFees') || 'true') ) {
     // tiered fees
