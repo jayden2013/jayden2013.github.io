@@ -860,41 +860,58 @@ if (localStorage.getItem('darkMode') === 'true') {
  * then filter and display only rows for this inventory row.
  */
 function openSoldModal(row) {
-  // 1) Grab the selected inventory CSV name, minus “.csv”
-  const invPath   = document.getElementById('csvSelector').value;           // e.g. "inventory-csvs/inventory_nampa_2025-06-08_07-17-49.csv"
-  const invBase   = invPath.split('/').pop().replace(/\.csv$/, '');       // "inventory_nampa_2025-06-08_07-17-49"
+  const invPath = document.getElementById('csvSelector').value;   // e.g. "inventory-csvs/inventory_nampa_2025-06-08_07-17-49.csv"
+  const invBase = invPath.split('/').pop().replace(/\.csv$/, '');
 
-  // 2) Build today’s date string "YYYY-MM-DD"
-  const today     = new Date();
-  const yyyy      = today.getFullYear();
-  const mm        = String(today.getMonth()+1).padStart(2, '0');
-  const dd        = String(today.getDate()).padStart(2, '0');
-  const dateStr   = `${yyyy}-${mm}-${dd}`;                                // "2025-06-08"
-
-  // 3) Compose the sold‐CSV filename & path
-  const soldFile  = `${invBase}_ebay_sales_${dateStr}.csv`;
-  const soldPath  = `ebay-sales/${soldFile}`;
-
-  // 4) Fetch & parse it
-  Papa.parse(soldPath, {
-    download: true,
-    header:   true,
-    complete(results) {
-      // filter to this exact vehicle
-      const data = results.data.filter(r =>
-        r.Year  === row.Year &&
-        r.Make  === row.Make &&
-        r.Model === row.Model
-      );
-      renderSoldTable(data);
-      new bootstrap.Modal(document.getElementById('soldModal')).show();
-    },
-    error(err) {
-      console.error('Failed to load sold CSV:', err);
+  // try to load the sold CSV for offset days ago (0 = today, 1 = yesterday, …)
+  function tryParse(offset) {
+    if (offset > 6) {
+      // gave up after a week
       renderSoldTable([]);
       new bootstrap.Modal(document.getElementById('soldModal')).show();
+      return;
     }
-  });
+
+    // build date string for offset
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth()+1).padStart(2,'0');
+    const dd   = String(d.getDate()).padStart(2,'0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;  // "2025-06-07", etc.
+
+    // compose the CSV filename
+    const soldFile = `${invBase}_ebay_sales_${dateStr}.csv`;
+    const soldPath = `ebay-sales/${soldFile}`;
+
+    Papa.parse(soldPath, {
+      download: true,
+      header:   true,
+      skipEmptyLines: true,
+      complete(results) {
+        // if we got any rows at all, use them
+        if (results.data && results.data.length) {
+          const filtered = results.data.filter(r =>
+            r.Year  === row.Year &&
+            r.Make  === row.Make &&
+            r.Model === row.Model
+          );
+          renderSoldTable(filtered);
+          new bootstrap.Modal(document.getElementById('soldModal')).show();
+        } else {
+          // empty file or header-only: try the previous day
+          tryParse(offset + 1);
+        }
+      },
+      error(err) {
+        // file not found or parse error: try the previous day
+        tryParse(offset + 1);
+      }
+    });
+  }
+
+  // start with today (offset = 0)
+  tryParse(0);
 }
 
 /**
