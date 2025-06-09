@@ -173,11 +173,11 @@
   </div>
 </div>
 	  <div class="tab-pane fade" id="invStatsPane" role="tabpanel">
-      <div id="myInvStatistics" class="p-3">
+      <div id="mySoldStatistics" class="p-3">
         <!-- placeholder -->
-        <p><strong>Total Items:</strong> <span id="mi-total-items">0</span></p>
-        <p><strong>Total Profit:</strong> $<span id="mi-total-profit">0.00</span></p>
-        <p><strong>Average Profit per Item:</strong> $<span id="mi-avg-profit">0.00</span></p>
+        <p><strong>Total Items:</strong> <span id="ms-total-items">0</span></p>
+        <p><strong>Total Profit:</strong> $<span id="ms-total-profit">0.00</span></p>
+        <p><strong>Average Profit per Item:</strong> $<span id="ms-avg-profit">0.00</span></p>
       </div>
     </div>
     </div>
@@ -707,32 +707,36 @@ function loadMySoldData() {
   });
 }
 	
-	function updateMyInvStats() {
-  const rows = Array.from(document.querySelectorAll('#myInventoryBody tr'))
-    .filter(tr => tr.querySelector('.part-input')?.value.trim() !== '');
-  const totalItems = rows.reduce((sum, tr) => {
-    const q = parseInt(tr.querySelector('.quantity-input')?.value) || 1;
-    return sum + q;
-  }, 0);
+	function updateMySoldStats() {
+// grab every sold‐row
+  const rows = Array.from(document.querySelectorAll('#mySoldBody tr'));
+  // count them
+  const totalItems = rows.length;
+  // sum up the profit column (7th cell)
   const totalProfit = rows.reduce((sum, tr) => {
-    return sum + (parseFloat(tr.querySelector('.profit-cell').textContent) || 0);
+    const p = parseFloat(tr.children[5].textContent) || 0;
+    return sum + p;
   }, 0);
-  const avgProfit = totalItems ? (totalProfit / totalItems).toFixed(2) : '0.00';
+  // average per row
+  const avgProfit = totalItems
+    ? (totalProfit / totalItems).toFixed(2)
+    : '0.00';
 
-  document.getElementById('mi-total-items').textContent = totalItems;
-  document.getElementById('mi-total-profit').textContent = totalProfit.toFixed(2);
-  document.getElementById('mi-avg-profit').textContent = avgProfit;
+  // write out
+  document.getElementById('ms-total-items').textContent  = totalItems;
+  document.getElementById('ms-total-profit').textContent = totalProfit.toFixed(2);
+  document.getElementById('ms-avg-profit').textContent   = avgProfit;
 }
 
 // call this whenever you add/save rows:
-addInventoryRow.addEventListener('click', updateMyInvStats);
-exportMyInvBtn.addEventListener('click', updateMyInvStats);
+addInventoryRow.addEventListener('click', updateMySoldStats);
+exportMyInvBtn.addEventListener('click', updateMySoldStats);
 // also after load/save:
 saveMyInventory = (function(orig) {
-  return function() { orig(); updateMyInvStats(); };
+  return function() { orig(); updateMySoldStats(); };
 })(saveMyInventory);
 loadMyInventory = (function(orig) {
-  return function() { orig(); updateMyInvStats(); };
+  return function() { orig(); updateMySoldStats(); };
 })(loadMyInventory);
 
 // and finally at initial load:
@@ -789,7 +793,7 @@ document.getElementById('importDataBtn').onclick = () => {
     listCSVFiles();
 	loadMyInventory();
 	loadMySoldData();
-  updateMyInvStats();
+  updateMySoldStats();
   
   // restore dark mode if previously set
 if (localStorage.getItem('darkMode') === 'true') {
