@@ -915,8 +915,10 @@ function renderSoldTable(data) {
     tr.innerHTML = `
       <td>${r['Search Term']   || ''}</td>
       <td>${r['Listing Title'] || ''}</td>
-      <td>${r['Final Price']   || ''}</td>
-      <td>${r['Sale Date']     || ''}</td>
+      <td>${r['Last Sold Price']   || ''}</td>
+      <td>${r['Date Sold']     || ''}</td>
+	  <td>${r['Time to Sell']     || ''}</td>
+	  <td>${r['Total Sold']     || ''}</td>
     `;
     tbody.appendChild(tr);
   });
