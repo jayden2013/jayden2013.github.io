@@ -184,6 +184,17 @@
         <p><strong>Total Profit:</strong> $<span id="ms-total-profit">0.00</span></p>
         <p><strong>Average Profit per Item:</strong> $<span id="ms-avg-profit">0.00</span></p>
       </div>
+	  
+	  <div class="mt-4">
+    <h5>Profit Over Time</h5>
+    <canvas id="soldProfitChart"></canvas>
+  </div>
+  <div class="mt-4">
+    <h5>Sales Count by Search Term</h5>
+    <canvas id="soldTermChart"></canvas>
+  </div>
+</div>
+
     </div>
     </div>
   </div>
@@ -834,6 +845,7 @@ tr.innerHTML = `
   <td class="sold-date-cell">${data.dateSold}</td>
 `;
     tbody.appendChild(tr);
+	updateSoldCharts();
   });
 }
 	
@@ -1015,6 +1027,7 @@ function openSoldModal(row) {
         r.Model === row.Model
       );
       renderSoldTable(filtered);
+	  updateSoldCharts();
     })
     .catch(err => {
       console.warn('Sold-data load:', err);
@@ -1049,8 +1062,81 @@ function renderSoldTable(data) {
 	  <td>${r['Total Sold']     || ''}</td>
     `;
     tbody.appendChild(tr);
+	updateSoldCharts();
   });
 }
+
+let soldProfitChart = null;
+let soldTermChart   = null;
+
+function updateSoldCharts() {
+  const rows = Array.from(document.querySelectorAll('#mySoldBody tr'));
+
+  // 1) Profit by Date Sold
+  //   sum profit for each unique dateSold
+  const profitByDate = {};
+  rows.forEach(tr => {
+    const date = tr.querySelector('.sold-date-cell').textContent;
+    const profit = parseFloat(tr.children[5].textContent) || 0;
+    profitByDate[date] = (profitByDate[date] || 0) + profit;
+  });
+  const dates = Object.keys(profitByDate).sort();
+  const profits = dates.map(d => profitByDate[d].toFixed(2));
+
+  const ctx1 = document.getElementById('soldProfitChart').getContext('2d');
+  if (soldProfitChart) soldProfitChart.destroy();
+  soldProfitChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Total Profit',
+        data: profits,
+        fill: false,
+        tension: 0.1
+      }]
+    },
+    options: {
+      scales: {
+        x: { title: { display: true, text: 'Date Sold' } },
+        y: { title: { display: true, text: 'Profit ($)' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // 2) Sales Count by Search Term
+  const countByTerm = {};
+  rows.forEach(tr => {
+    const term = tr.children[3].textContent; // adjust index if needed
+    countByTerm[term] = (countByTerm[term] || 0) + 1;
+  });
+  const terms = Object.keys(countByTerm);
+  const counts = terms.map(t => countByTerm[t]);
+
+  const ctx2 = document.getElementById('soldTermChart').getContext('2d');
+  if (soldTermChart) soldTermChart.destroy();
+  soldTermChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: terms,
+      datasets: [{
+        label: 'Items Sold',
+        data: counts
+      }]
+    },
+    options: {
+      scales: {
+        x: { title: { display: true, text: 'Search Term' } },
+        y: { title: { display: true, text: 'Count' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// when the My Statistics pill is shown, redraw charts
+document.getElementById('inv-stats-pill').addEventListener('shown.bs.tab', () => {
+  updateSoldCharts();
+});
 
   </script>
 </body>
