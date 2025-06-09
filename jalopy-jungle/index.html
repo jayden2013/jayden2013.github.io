@@ -860,21 +860,32 @@ if (localStorage.getItem('darkMode') === 'true') {
  * then filter and display only rows for this inventory row.
  */
 function openSoldModal(row) {
-  // derive the CSV filename from the currently selected inventory file
-  const inventoryPath = document.getElementById('csvSelector').value;
-  const csvName       = inventoryPath.split('/').pop();
-  const soldPath      = 'ebay-sales/' + csvName;
+  // 1) Grab the selected inventory CSV name, minus “.csv”
+  const invPath   = document.getElementById('csvSelector').value;           // e.g. "inventory-csvs/inventory_nampa_2025-06-08_07-17-49.csv"
+  const invBase   = invPath.split('/').pop().replace(/\.csv$/, '');       // "inventory_nampa_2025-06-08_07-17-49"
 
+  // 2) Build today’s date string "YYYY-MM-DD"
+  const today     = new Date();
+  const yyyy      = today.getFullYear();
+  const mm        = String(today.getMonth()+1).padStart(2, '0');
+  const dd        = String(today.getDate()).padStart(2, '0');
+  const dateStr   = `${yyyy}-${mm}-${dd}`;                                // "2025-06-08"
+
+  // 3) Compose the sold‐CSV filename & path
+  const soldFile  = `${invBase}_ebay_sales_${dateStr}.csv`;
+  const soldPath  = `ebay-sales/${soldFile}`;
+
+  // 4) Fetch & parse it
   Papa.parse(soldPath, {
     download: true,
-    header: true,
+    header:   true,
     complete(results) {
-      const data = results.data.filter(r => 
+      // filter to this exact vehicle
+      const data = results.data.filter(r =>
         r.Year  === row.Year &&
         r.Make  === row.Make &&
         r.Model === row.Model
       );
-
       renderSoldTable(data);
       new bootstrap.Modal(document.getElementById('soldModal')).show();
     },
