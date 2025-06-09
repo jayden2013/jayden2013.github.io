@@ -884,8 +884,9 @@ function getDataCode() {
   const inv = JSON.parse(localStorage.getItem('myInventoryData') || '[]');
   const sold = JSON.parse(localStorage.getItem('mySoldData')     || '[]');
   const homeYard = localStorage.getItem('homeYard') || '';
-  const darkMode = localStorage.getItem('darkMode') || '';
-  const combined = JSON.stringify({ inventory: inv, sold: sold, homeYard: homeYard, darkMode: darkMode });
+  const darkMode = localStorage.getItem('darkMode') || 'false';
+  const calcEbayFees = localStorage.getItem('calcEbayFees')	|| 'false';
+  const combined = JSON.stringify({ inventory: inv, sold: sold, homeYard: homeYard, darkMode: darkMode, calcEbayFees: calcEbayFees });
   return LZString.compressToBase64(combined);
 }
 
@@ -897,7 +898,8 @@ function applyDataCode(code) {
     localStorage.setItem('myInventoryData', JSON.stringify(obj.inventory));
     localStorage.setItem('mySoldData',      JSON.stringify(obj.sold));
 	localStorage.setItem('homeYard',		obj.homeYard || '');
-	localStorage.setItem('darkMode',		obj.darkMode || '');
+	localStorage.setItem('darkMode',		obj.darkMode || 'false');
+	localStorage.setItem('calcEbayFees',	obj.calcEbayFees || 'false');
     loadMyInventory();
     loadMySoldData();
     alert('Data synced successfully!');
