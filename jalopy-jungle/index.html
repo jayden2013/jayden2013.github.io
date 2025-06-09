@@ -565,21 +565,18 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
     }
   }
 
-    function applyHomeYardDefault() {
-      const sel = document.getElementById('csvSelector');
-      const opts = Array.from(sel.options).map(o => o.value);
-      let choice = opts[0];
-      if (isPremium) {
-        const home = localStorage.getItem('homeYard');
-        if (home) {
-          const prefix = 'inventory_' + home.toLowerCase().replace(/ /g,'_') + '_';
-          const found = opts.find(f => f.startsWith(prefix));
-          if (found) choice = found;
-        }
-      }
-      sel.value = choice;
-      loadCSV('inventory-csvs/' + choice);
-    }
+function applyHomeYardDefault() {
+  const home = localStorage.getItem('homeYard');
+  if (!home) return;
+
+  const selector = document.getElementById('csvSelector');
+  // find the option whose data-loc matches the saved homeYard
+  const opt = selector.querySelector(`option[data-loc="${home}"]`);
+  if (opt) {
+    selector.value = opt.value;    // set the URL (inventory-csvs/...)
+    loadCSV(opt.value);            // reload the table
+  }
+}
     function loadCSV(path) {
       document.getElementById('searchInput').value = '';
       Papa.parse(path, { download: true, header: true, complete(r) {
