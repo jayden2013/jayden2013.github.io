@@ -884,7 +884,8 @@ function getDataCode() {
   const inv = JSON.parse(localStorage.getItem('myInventoryData') || '[]');
   const sold = JSON.parse(localStorage.getItem('mySoldData')     || '[]');
   const homeYard = localStorage.getItem('homeYard') || '';
-  const combined = JSON.stringify({ inventory: inv, sold: sold, homeYard: homeYard });
+  const darkMode = localStorage.getItem('darkMode') || '';
+  const combined = JSON.stringify({ inventory: inv, sold: sold, homeYard: homeYard, darkMode: darkMode });
   return LZString.compressToBase64(combined);
 }
 
@@ -896,6 +897,7 @@ function applyDataCode(code) {
     localStorage.setItem('myInventoryData', JSON.stringify(obj.inventory));
     localStorage.setItem('mySoldData',      JSON.stringify(obj.sold));
 	localStorage.setItem('homeYard',		obj.homeYard || '');
+	localStorage.setItem('darkMode',		obj.darkMode || '');
     loadMyInventory();
     loadMySoldData();
     alert('Data synced successfully!');
