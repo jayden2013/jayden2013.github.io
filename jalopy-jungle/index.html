@@ -441,7 +441,7 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
     <td>${data.ship}</td>
     <td>${data.listing}</td>
     <td>${data.profit}</td>
-	<td>${data.date}</td>
+	<td class="sold-date-listed-cell">${data.date}</td>
 	<td class="sold-date-cell">${new Date().toLocaleDateString()}</td>
   `;
   soldTbody.appendChild(soldTr);
@@ -495,7 +495,7 @@ function calcProfit(tr) {
 	};
 	
 	function exportMyInventory() {
-		const headers = ['Part','List Price','My Cost','Shipping Cost','Listing','Profit'];
+		const headers = ['Part','List Price','My Cost','Shipping Cost','Listing','Estimated Profit', 'Date];
 		const rows = Array.from(
 		document.querySelectorAll('#myInventoryTable tbody tr')
 	).map(tr => {
@@ -506,7 +506,8 @@ function calcProfit(tr) {
 			cells[2].querySelector('input')?.value.trim() || '',
 			cells[3].querySelector('input')?.value.trim() || '',
 			cells[4].querySelector('input')?.value.trim() || '',
-			cells[5].textContent.trim() || ''
+			cells[5].textContent.trim() || '',
+			cells[6].textContent.trim() || ''
 		];
 	});
 
@@ -803,14 +804,15 @@ tr.addEventListener('click', () => {
   ).map(tr => {
     const cells = tr.querySelectorAll('td');
     return {
-      part:    cells[0].textContent.trim(),
-      list:    cells[1].textContent.trim(),
-      cost:    cells[2].textContent.trim(),
-      ship:    cells[3].textContent.trim(),
-      listing: cells[4].textContent.trim(),
-      profit:  cells[5].textContent.trim(),
-	  dateSold: tr.querySelector('.sold-date-cell').textContent.trim()
-    };
+  part:       tr.querySelector('td:nth-child(1)').textContent.trim(),
+  list:       tr.querySelector('td:nth-child(2)').textContent.trim(),
+  cost:       tr.querySelector('td:nth-child(3)').textContent.trim(),
+  ship:       tr.querySelector('td:nth-child(4)').textContent.trim(),
+  listing:    tr.querySelector('td:nth-child(5)').textContent.trim(),
+  profit:     tr.querySelector('td:nth-child(6)').textContent.trim(),
+  dateListed: tr.querySelector('.sold-date-listed-cell').textContent.trim(),
+  dateSold:   tr.querySelector('.sold-date-cell').textContent.trim()
+};
   });
   localStorage.setItem('mySoldData', JSON.stringify(sold));
 }
@@ -821,15 +823,16 @@ function loadMySoldData() {
   tbody.innerHTML = '';
   saved.forEach(data => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${data.part}</td>
-      <td>${data.list}</td>
-      <td>${data.cost}</td>
-      <td>${data.ship}</td>
-      <td>${data.listing}</td>
-      <td>${data.profit}</td>
-	  <td class="sold-date-cell">${data.dateSold}</td>
-    `;
+tr.innerHTML = `
+  <td>${data.part}</td>
+  <td>${data.list}</td>
+  <td>${data.cost}</td>
+  <td>${data.ship}</td>
+  <td>${data.listing}</td>
+  <td>${data.profit}</td>
+  <td class="sold-date-listed-cell">${data.dateListed}</td>
+  <td class="sold-date-cell">${data.dateSold}</td>
+`;
     tbody.appendChild(tr);
   });
 }
