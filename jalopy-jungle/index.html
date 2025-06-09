@@ -175,7 +175,8 @@
 	  <div class="tab-pane fade" id="invStatsPane" role="tabpanel">
       <div id="mySoldStatistics" class="p-3">
         <!-- placeholder -->
-        <p><strong>Total Items:</strong> <span id="ms-total-items">0</span></p>
+        <p><strong>Total Sold Items:</strong> <span id="ms-total-items">0</span></p>
+		<p><strong>Total Cost:</strong> $<span id="ms-total-cost">0.00</span></p>
         <p><strong>Total Profit:</strong> $<span id="ms-total-profit">0.00</span></p>
         <p><strong>Average Profit per Item:</strong> $<span id="ms-avg-profit">0.00</span></p>
       </div>
@@ -717,6 +718,14 @@ function loadMySoldData() {
     const p = parseFloat(tr.children[5].textContent) || 0;
     return sum + p;
   }, 0);
+  
+  // total cost + shipping (columns 2 and 3)
+  const totalCost = rows.reduce((sum, tr) => {
+    const cost = parseFloat(tr.children[2].textContent) || 0;
+    const ship = parseFloat(tr.children[3].textContent) || 0;
+    return sum + cost + ship;
+  }, 0);
+  
   // average per row
   const avgProfit = totalItems
     ? (totalProfit / totalItems).toFixed(2)
@@ -725,6 +734,7 @@ function loadMySoldData() {
   // write out
   document.getElementById('ms-total-items').textContent  = totalItems;
   document.getElementById('ms-total-profit').textContent = totalProfit.toFixed(2);
+  document.getElementById('ms-total-cost').textContent   = totalCost.toFixed(2);
   document.getElementById('ms-avg-profit').textContent   = avgProfit;
 }
 
