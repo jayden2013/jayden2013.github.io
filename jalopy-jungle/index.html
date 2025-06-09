@@ -84,7 +84,7 @@
       <!-- Inventory Table Tab -->
       <div class="tab-pane fade show active" id="tableTab">
         <div class="mb-3">
-          <label for="csvSelector" class="form-label">Select Inventory CSV</label>
+          <label for="csvSelector" class="form-label">Select Location</label>
           <select class="form-select" id="csvSelector"></select>
         </div>
         <div class="mb-3">
@@ -501,18 +501,62 @@ tr.querySelector('.mark-sold-btn').addEventListener('click', () => {
     let notes = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
     let selectedRowKey = null, currentData = [], sortDirection = {}, ageChart = null;
 
-    async function listCSVFiles() {
-      const res = await fetch('./inventory-csvs/index.json');
-      const files = await res.json();
-      populateSelector(files);
+
+  const LOCATION_NAMES = {
+    boise:        'Boise',
+    caldwell:     'Caldwell',
+    garden_city:  'Garden City',
+    nampa:        'Nampa',
+    twin_falls:   'Twin Falls'
+  };
+
+  async function listCSVFiles() {
+    try {
+      const res   = await fetch('./inventory-csvs/index.json');
+      const files = await res.json();                          // [ "inventory_boise_2025-06-08_07-17-49.csv", … ]
+
+      // only keep the inventory_ files, group to find the latest per location
+      const latest = {};
+      const re = /^inventory_(.+?)_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.csv$/;
+
+      files
+        .filter(f => f.startsWith('inventory_'))
+        .forEach(f => {
+          const m = f.match(re);
+          if (!m) return;
+          const [_, locKey, dt] = m;
+          // pick the lexicographically largest datetime string
+          if (!latest[locKey] || dt > latest[locKey].dt) {
+            latest[locKey] = { filename: f, dt };
+          }
+        });
+
+      const selector = document.getElementById('csvSelector');
+      selector.innerHTML = '';
+
+      // preserve the order of locations as in LOCATION_NAMES
+      Object.keys(LOCATION_NAMES).forEach(locKey => {
+        const entry = latest[locKey];
+        if (!entry) return;
+        const { filename, dt } = entry;
+        const opt = document.createElement('option');
+        opt.value       = 'inventory-csvs/' + filename;
+        // show "Location Name (YYYY-MM-DD HH:MM:SS)"
+        opt.textContent = `${LOCATION_NAMES[locKey]} (${dt.replace('_',' ')})`;
+        selector.appendChild(opt);
+      });
+
+      // load the first one by default
+      if (selector.options.length) {
+        loadCSV(selector.value);
+      }
+
+      selector.addEventListener('change', e => loadCSV(e.target.value));
+    } catch (err) {
+      console.error('Error loading inventory files:', err);
     }
-    function populateSelector(files) {
-      const sel = document.getElementById('csvSelector');
-      sel.innerHTML = '';
-      files.slice().reverse().forEach(f => sel.add(new Option(f, f)));
-      sel.onchange = () => loadCSV('inventory-csvs/' + sel.value);
-      applyHomeYardDefault();
-    }
+  }
+
     function applyHomeYardDefault() {
       const sel = document.getElementById('csvSelector');
       const opts = Array.from(sel.options).map(o => o.value);
