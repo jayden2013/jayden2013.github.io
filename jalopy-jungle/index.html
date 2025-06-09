@@ -748,7 +748,8 @@ window.addEventListener('DOMContentLoaded', () => {
 function getDataCode() {
   const inv = JSON.parse(localStorage.getItem('myInventoryData') || '[]');
   const sold = JSON.parse(localStorage.getItem('mySoldData')     || '[]');
-  const combined = JSON.stringify({ inventory: inv, sold: sold });
+  const homeYard = localStorage.getItem('homeYard') || '';
+  const combined = JSON.stringify({ inventory: inv, sold: sold, homeYard: homeYard });
   return LZString.compressToBase64(combined);
 }
 
@@ -759,6 +760,7 @@ function applyDataCode(code) {
     const obj  = JSON.parse(json);
     localStorage.setItem('myInventoryData', JSON.stringify(obj.inventory));
     localStorage.setItem('mySoldData',      JSON.stringify(obj.sold));
+	localStorage.setItem('homeYard',		obj.homeYard || '');
     loadMyInventory();
     loadMySoldData();
     alert('Data synced successfully!');
