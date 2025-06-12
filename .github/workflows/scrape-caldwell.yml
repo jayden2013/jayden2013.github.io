@@ -13,7 +13,8 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v4
-        with: { python-version: '3.x' }
+        with:
+          python-version: '3.x'
 
       - name: Install dependencies
         run: |
@@ -29,6 +30,7 @@ jobs:
           cd jalopy-jungle/ebay-sales
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
+          git pull origin main --rebase
           git add inventory_caldwell_*ebay_sales_*.csv
           git commit -m "Update Caldwell eBay sales CSV" || echo "No changes"
           git push
