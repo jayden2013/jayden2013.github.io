@@ -1031,8 +1031,7 @@ function addToPickList(row) {
     tr.appendChild(td);
   });
 
-  // 2) Compute the “key” and look up the note
-  const key   = Object.values(row).join('|');
+  // 2) look up the note
   const note  = notes[key] || '';
 
   // 3) Append the Note cell
