@@ -208,6 +208,7 @@
             <th>Model</th>
             <th>Row</th>
 			<th>Notes</th>
+			<th>Remove</th>
           </tr>
         </thead>
         <tbody id="pickListBody">
@@ -1021,23 +1022,46 @@ tr.innerHTML = `
 function addToPickList(row) {
   const tbody = document.getElementById('pickListBody');
   const tr    = document.createElement('tr');
-  const key   = Object.values(row).join('|');
+
+  // 1) Compute & set data-key for matching
+  const key = Object.values(row).join('|');
   tr.dataset.key = key;
 
-  // 1) Copy each CSV field
+  // 2) Copy each CSV field
   Object.values(row).forEach(val => {
     const td = document.createElement('td');
     td.textContent = val;
     tr.appendChild(td);
   });
 
-  // 2) look up the note
-  const note  = notes[key] || '';
-
-  // 3) Append the Note cell
+  // 3) Copy the note
   const noteTd = document.createElement('td');
-  noteTd.textContent = note;
+  noteTd.textContent = notes[key] || '';
   tr.appendChild(noteTd);
+
+  // 4) Add the Unpick button
+  const unpickTd = document.createElement('td');
+  const btn      = document.createElement('button');
+  btn.className   = 'btn btn-sm btn-outline-danger';
+  btn.textContent = '✕ Remove';
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    // remove from pick list
+    tbody.removeChild(tr);
+    // find and reset the original “Pick” button
+    const origRow = document.querySelector(`#tableBody tr[data-key="${key}"]`);
+    if (origRow) {
+      const pickBtn = origRow.querySelector('button.pick-btn');
+      if (pickBtn) {
+        pickBtn.textContent = '➕ Pick';
+        pickBtn.classList.replace('btn-success','btn-outline-primary');
+        pickBtn.disabled = false;
+        origRow.classList.remove('table-success');
+      }
+    }
+  });
+  unpickTd.appendChild(btn);
+  tr.appendChild(unpickTd);
 
   tbody.appendChild(tr);
 }
