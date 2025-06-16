@@ -341,9 +341,9 @@
 	const exportMyInvBtn = document.getElementById('exportMyInventory');
     const serialModal = new bootstrap.Modal(document.getElementById('serialModal'));
     const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
-	
+	const PREV_INV_KEY = 'prevInventorySnapshot';
 	const FAV_KEY = 'favoriteVehicles';
-const PREV_KEY = 'prevFavoriteSnapshot';
+	const PREV_KEY = 'prevFavoriteSnapshot';
 
 // helper: show a Bootstrap toast with arbitrary HTML content
 function showFavToast(htmlContent) {
@@ -366,6 +366,40 @@ function showFavToast(htmlContent) {
   toast.show();
   // remove from DOM after hidden
   toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
+
+function checkNewFavoriteVehicles(data = window.currentData) {
+  // — Load favorites
+  const favs = JSON.parse(localStorage.getItem(FAV_KEY) || '[]')
+    .map(v => `${v.year.trim()} / ${v.make.trim()} / ${v.model.trim()}`);
+
+  if (!favs.length) return;
+
+  // — Build today’s unique labels
+  const todayLabels = Array.from(new Set(
+    data.map(r =>
+      `${String(r.Year).trim()} / ${String(r.Make).trim()} / ${String(r.Model).trim()}`
+    )
+  ));
+
+  // — Load yesterday’s
+  const prevLabels = JSON.parse(localStorage.getItem(PREV_INV_KEY) || '[]');
+
+  // — Compute which labels are new today
+  const newLabels = todayLabels.filter(lbl => !prevLabels.includes(lbl));
+
+  // — Of those new labels, keep only the ones in your favorites
+  const hits = newLabels.filter(lbl => favs.includes(lbl));
+
+  // — Notify if any
+  if (hits.length) {
+    // build a little list
+    const html = hits.map(l => `• ${l}`).join('<br>');
+    showFavToast(html);
+  }
+
+  // — Save today’s labels for next time
+  localStorage.setItem(PREV_INV_KEY, JSON.stringify(todayLabels));
 }
 
     // Load & check serial keys
@@ -706,11 +740,9 @@ function applyHomeYardDefault() {
       document.getElementById('searchInput').value = '';
       Papa.parse(path, { download: true, header: true, complete(r) {
         currentData = r.data.filter(row => row.Year && row.Make && row.Model && row.Row);
-		checkNewFavorites(currentData);
+		checkNewFavoriteVehicles(currentData);
 		renderTable(currentData);
 		showStatistics(currentData);
-        renderTable(currentData);
-        showStatistics(currentData);
       }});
     }
     function renderTable(data) {
