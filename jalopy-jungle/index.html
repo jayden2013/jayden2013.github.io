@@ -341,6 +341,32 @@
 	const exportMyInvBtn = document.getElementById('exportMyInventory');
     const serialModal = new bootstrap.Modal(document.getElementById('serialModal'));
     const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+	
+	const FAV_KEY = 'favoriteVehicles';
+const PREV_KEY = 'prevFavoriteSnapshot';
+
+// helper: show a Bootstrap toast with arbitrary HTML content
+function showFavToast(htmlContent) {
+  const container = document.getElementById('favToastContainer');
+  // build the toast
+  const toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  toastEl.role      = 'alert';
+  toastEl.ariaLive  = 'assertive';
+  toastEl.ariaAtomic= 'true';
+  toastEl.innerHTML = `
+    <div class="toast-header">
+      <strong class="me-auto">🚨 New Favorite!</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body">${htmlContent}</div>
+  `;
+  container.appendChild(toastEl);
+  const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+  toast.show();
+  // remove from DOM after hidden
+  toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
 
     // Load & check serial keys
     fetch('json/serial-keys.json')
@@ -682,6 +708,9 @@ function applyHomeYardDefault() {
       document.getElementById('searchInput').value = '';
       Papa.parse(path, { download: true, header: true, complete(r) {
         currentData = r.data.filter(row => row.Year && row.Make && row.Model && row.Row);
+		checkNewFavorites(currentData);
+		renderTable(currentData);
+		showStatistics(currentData);
         renderTable(currentData);
         showStatistics(currentData);
       }});
@@ -1158,11 +1187,44 @@ function updateSoldCharts() {
   });
 }
 
+function checkNewFavorites(data) {
+  // 1) load the user’s favorites and snapshot of what we saw yesterday
+  const favs     = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+  const prevSnap = JSON.parse(localStorage.getItem(PREV_KEY)  || '[]');
+  if (!Array.isArray(favs) || favs.length === 0) return;  // nothing to do
+
+  // 2) determine which favorites are present in this data
+  const presentToday = favs.filter(v =>
+    data.some(r =>
+      r.Year  === v.year &&
+      r.Make  === v.make &&
+      r.Model === v.model
+    )
+  ).map(v => `${v.year} / ${v.make} / ${v.model}`);
+
+  // 3) and which were present yesterday
+  const presentYesterday = Array.isArray(prevSnap) ? prevSnap : [];
+
+  // 4) find the new ones
+  const newlyAdded = presentToday.filter(key => !presentYesterday.includes(key));
+
+  // 5) fire a toast if there are any new favorites
+  if (newlyAdded.length) {
+    const listHtml = newlyAdded.map(k => `<div>• ${k}</div>`).join('');
+    showFavToast(listHtml);
+  }
+
+  // 6) update the snapshot for next run
+  localStorage.setItem(PREV_KEY, JSON.stringify(presentToday));
+}
+
 // when the My Statistics pill is shown, redraw charts
 document.getElementById('inv-stats-pill').addEventListener('shown.bs.tab', () => {
   updateSoldCharts();
 });
 
   </script>
+    <!-- Toast container for favorite-vehicle alerts -->
+  <div id="favToastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 </body>
 </html>
