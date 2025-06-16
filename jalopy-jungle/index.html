@@ -207,7 +207,7 @@
             <th>Make</th>
             <th>Model</th>
             <th>Row</th>
-            <th><!-- any other columns… --></th>
+			<th>Notes</th>
           </tr>
         </thead>
         <tbody id="pickListBody">
@@ -816,7 +816,10 @@ tr.addEventListener('click', () => {
 		btn.className   = 'btn btn-sm btn-outline-primary';
 		btn.textContent = '➕ Pick';
 		// when clicked, push this row’s data into the pick-list
-		btn.onclick     = () => addToPickList(row);
+		btn.addEventListener('click', e => {
+        e.stopPropagation();      // ← prevent the row’s click handler
+        addToPickList(row);
++    });
 		pickTd.appendChild(btn);
 		tr.appendChild(pickTd);
         bd.append(tr);
