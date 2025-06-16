@@ -1099,7 +1099,7 @@ function loadPickListData() {
   tbody.innerHTML = '';  // clear any old rows
   pickList.forEach(row => {
     // use your existing UI-only renderer (not re-saving to storage)
-    renderPickListRow(row);
+    addToPickList(row);
   });
 }
 	
