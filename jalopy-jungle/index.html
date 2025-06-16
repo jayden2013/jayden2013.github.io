@@ -1003,12 +1003,21 @@ function addToPickList(row) {
   const tbody = document.getElementById('pickListBody');
   const tr    = document.createElement('tr');
 
-  // for each column in the Jalopy table (Year, Make, Model, etc)
+  // 1) Copy each CSV field
   Object.values(row).forEach(val => {
     const td = document.createElement('td');
     td.textContent = val;
     tr.appendChild(td);
   });
+
+  // 2) Compute the “key” and look up the note
+  const key   = Object.values(row).join('|');
+  const note  = notes[key] || '';
+
+  // 3) Append the Note cell
+  const noteTd = document.createElement('td');
+  noteTd.textContent = note;
+  tr.appendChild(noteTd);
 
   tbody.appendChild(tr);
 }
