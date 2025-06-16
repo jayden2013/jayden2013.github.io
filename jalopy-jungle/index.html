@@ -246,6 +246,19 @@
 		<label for="dataCodeInput" class="form-label">Paste Data Code to Sync:</label>
 		<textarea id="dataCodeInput" class="form-control mb-2" rows="3" placeholder="Paste someone’s data code here…"></textarea>
 		<button class="btn btn-primary w-100" id="importDataBtn">🔄 Import Data Code</button>
+		
+		  <!-- Favorites Management -->
+  <hr>
+  <div class="mb-3">
+    <h6>🎯 Favorite Vehicles</h6>
+    <div class="d-flex gap-2">
+      <input id="favYearInput"   type="number" class="form-control" placeholder="Year" />
+      <input id="favMakeInput"   type="text"   class="form-control" placeholder="Make" />
+      <input id="favModelInput"  type="text"   class="form-control" placeholder="Model" />
+      <button class="btn btn-sm btn-primary" id="addFavVehicleBtn">Add</button>
+    </div>
+    <ul id="favVehiclesList" class="list-group list-group-flush mt-2"></ul>
+  </div>
 
         </div>
         <div class="modal-footer">
