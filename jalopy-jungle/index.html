@@ -779,7 +779,7 @@ function renderTable(data) {
   bd.innerHTML  = '';
   if (!data.length) return;
 
-  // Build headers (add “Note” and “Pick” columns)
+  // Build headers including Note and Pick
   const cols = Object.keys(data[0]).concat('Note','Pick');
   cols.forEach(c => {
     const th = document.createElement('th');
@@ -788,13 +788,10 @@ function renderTable(data) {
     hdr.appendChild(th);
   });
 
-  // Prepare set of keys for already-picked rows
-  const storedPickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
-  const pickKeys = new Set(
-    storedPickList.map(r => Object.values(r).join('|'))
-  );
+  // Precompute picked keys
+  const storedPick = JSON.parse(localStorage.getItem('myPickList') || '[]');
+  const pickKeys   = new Set(storedPick.map(r => Object.values(r).join('|')));
 
-  // Populate rows
   data.forEach(row => {
     const tr  = document.createElement('tr');
     const key = Object.values(row).join('|');
@@ -813,35 +810,57 @@ function renderTable(data) {
     nt.style.cursor = 'pointer';
     nt.addEventListener('click', e => {
       e.stopPropagation();
-      // existing note modal logic...
+      selectedRowKey = key;
+      const ni = document.getElementById('noteInput');
+      ni.value = notes[key] || '';
+      document.getElementById('noteLengthFeedback').style.display = 'none';
+      if (isPremium) {
+        ni.removeAttribute('maxlength');
+        document.getElementById('noteLimitInfo').style.display = 'none';
+      } else {
+        ni.setAttribute('maxlength','20');
+        document.getElementById('noteLimitInfo').style.display = 'block';
+      }
+      new bootstrap.Modal(document.getElementById('noteModal')).show();
     });
     tr.appendChild(nt);
 
-    // Row click opens eBay modal
+    // Row click for eBay modal
     tr.addEventListener('click', () => openSoldModal(row));
 
     // Pick/Unpick toggle cell
     const pickTd = document.createElement('td');
     const btn    = document.createElement('button');
-    btn.classList.add('pick-btn','btn','btn-sm','btn-outline-primary');
+    btn.classList.add('pick-btn','btn','btn-sm');
 
-    // Initialize button state if previously picked
+    // Initialize button state and disable accordingly
     if (pickKeys.has(key)) {
       btn.textContent = '✓ Picked';
-      btn.classList.replace('btn-outline-primary','btn-success');
-      btn.disabled = true;
+      btn.classList.add('btn-success');
+      btn.disabled = false;
       tr.classList.add('table-success');
     } else {
       btn.textContent = '➕ Pick';
+      btn.classList.add('btn-outline-primary');
     }
 
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const isPicked = btn.classList.contains('btn-success');
       if (!isPicked) {
+        // PICK
         addToPickList(row);
+        btn.textContent = '✓ Picked';
+        btn.classList.replace('btn-outline-primary','btn-success');
+        btn.disabled = false;
+        tr.classList.add('table-success');
       } else {
+        // UNPICK
         removeFromPickList(key);
+        btn.textContent = '➕ Pick';
+        btn.classList.replace('btn-success','btn-outline-primary');
+        btn.disabled = false;
+        tr.classList.remove('table-success');
       }
     });
 
@@ -851,7 +870,7 @@ function renderTable(data) {
     bd.appendChild(tr);
   });
 
-  // Re-bind search filter
+  // Filter binding
   document.getElementById('searchInput').oninput = function() {
     const q = this.value.toLowerCase();
     const filtered = currentData.filter(r =>
@@ -861,6 +880,8 @@ function renderTable(data) {
     showStatistics(filtered);
   };
 }
+
+
 
 
     function sortTableByColumn(col) {
