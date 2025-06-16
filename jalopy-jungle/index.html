@@ -810,18 +810,28 @@ function applyHomeYardDefault() {
 tr.addEventListener('click', () => {
   openSoldModal(row);   // pass the row object { Year, Make, Model, … }
 });
-        tr.append(nt);
-		const pickTd = document.createElement('td');
-		const btn    = document.createElement('button');
-		btn.className   = 'btn btn-sm btn-outline-primary';
-		btn.textContent = '➕ Pick';
-		// when clicked, push this row’s data into the pick-list
-		btn.addEventListener('click', e => {
-			e.stopPropagation();      // ← prevent the row’s click handler
-			addToPickList(row);
-		});
-		pickTd.appendChild(btn);
-		tr.appendChild(pickTd);
+// — Pick button cell
+const pickTd = document.createElement('td');
+const btn    = document.createElement('button');
+btn.className   = 'btn btn-sm btn-outline-primary';
+btn.textContent = '➕ Pick';
+btn.addEventListener('click', e => {
+  e.stopPropagation();
+
+  // 1) Copy to the pick list
+  addToPickList(row);
+
+  // 2) Disable & restyle this button so it reads “Picked”
+  btn.textContent = '✓ Picked';
+  btn.classList.remove('btn-outline-primary');
+  btn.classList.add('btn-success');
+  btn.disabled = true;
+
+  // 3) (Optional) highlight the entire row
+  tr.classList.add('table-success');
+});
+pickTd.appendChild(btn);
+tr.appendChild(pickTd);
         bd.append(tr);
       });
       document.getElementById('searchInput').oninput = function() {
