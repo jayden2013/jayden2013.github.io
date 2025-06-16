@@ -1051,37 +1051,46 @@ function addToPickList(row) {
   noteTd.textContent = notes[key] || '';
   tr.appendChild(noteTd);
 
-  // 4) Add the Unpick button
-  const unpickTd = document.createElement('td');
-  const btn      = document.createElement('button');
-  btn.className   = 'btn btn-sm btn-outline-danger';
-  btn.textContent = '✕ Remove';
-  btn.addEventListener('click', e => {
-  e.stopPropagation();
-  // 1) remove from pick list
-  tbody.removeChild(tr);
+  // 4) Add the Remove button with full persistence logic
+  const rmTd = document.createElement('td');
+  const rmBtn = document.createElement('button');
+  rmBtn.className   = 'btn btn-sm btn-outline-danger';
+  rmBtn.textContent = '✕ Remove';
+  rmBtn.addEventListener('click', e => {
+    e.stopPropagation();
 
-  // 2) reset the original pick button
-  const origRow = document.querySelector(
-    `#tableBody tr[data-key="${key}"]`
-  );
-  if (origRow) {
-    const pickBtn = origRow.querySelector('button.pick-btn');
-    if (pickBtn) {
-      pickBtn.textContent = '➕ Pick';
-      pickBtn.classList.replace('btn-success','btn-outline-primary');
-      pickBtn.disabled = false;
-      origRow.classList.remove('table-success');
+    // 4a) Remove from the pick-list UI
+    tbody.removeChild(tr);
+
+    // 4b) Reset the original Pick button in the main table
+    const origRow = document.querySelector(`#tableBody tr[data-key="${key}"]`);
+    if (origRow) {
+      const pickBtn = origRow.querySelector('button.pick-btn');
+      if (pickBtn) {
+        pickBtn.textContent = '➕ Pick';
+        pickBtn.classList.replace('btn-success','btn-outline-primary');
+        pickBtn.disabled = false;
+        origRow.classList.remove('table-success');
+      }
     }
-  }
-});
-  unpickTd.appendChild(btn);
-  tr.appendChild(unpickTd);
+
+    // 4c) Persist removal from localStorage
+    let pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
+    pickList = pickList.filter(r => Object.values(r).join('|') !== key);
+    localStorage.setItem('myPickList', JSON.stringify(pickList));
+  });
+  rmTd.appendChild(rmBtn);
+  tr.appendChild(rmTd);
+
+  // 5) Append the new row to the pick-list UI
   tbody.appendChild(tr);
-  
-  let pickList = JSON.parse(localStorage.getItem('myPickList')||'[]');
-pickList.push(row);
-localStorage.setItem('myPickList', JSON.stringify(pickList));
+
+  // 6) Persist the addition (avoid duplicates)
+  let pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
+  if (!pickList.some(r => Object.values(r).join('|') === key)) {
+    pickList.push(row);
+    localStorage.setItem('myPickList', JSON.stringify(pickList));
+  }
 }
 
 function removeFromPickList(key) {
