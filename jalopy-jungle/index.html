@@ -817,9 +817,9 @@ tr.addEventListener('click', () => {
 		btn.textContent = '➕ Pick';
 		// when clicked, push this row’s data into the pick-list
 		btn.addEventListener('click', e => {
-        e.stopPropagation();      // ← prevent the row’s click handler
-        addToPickList(row);
-+    });
+			e.stopPropagation();      // ← prevent the row’s click handler
+			addToPickList(row);
+		});
 		pickTd.appendChild(btn);
 		tr.appendChild(pickTd);
         bd.append(tr);
