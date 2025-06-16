@@ -816,30 +816,21 @@ tr.addEventListener('click', () => {
 // PICK button cell
 const pickTd = document.createElement('td');
 const btn    = document.createElement('button');
-btn.className   = 'btn btn-sm btn-outline-primary';
-btn.textContent = '➕ Pick';
 
+// add these two lines (or just append “pick-btn” to your className)
+btn.classList.add('pick-btn');  
+btn.className += ' btn btn-sm btn-outline-primary';
+
+btn.textContent = '➕ Pick';
 btn.addEventListener('click', e => {
   e.stopPropagation();
-
-  const key = tr.dataset.key;
-  const isPicked = btn.classList.contains('btn-success');
-
-  if (!isPicked) {
-    // — pick it
-    addToPickList(row);
-    btn.textContent = '✓ Picked';
-    btn.classList.replace('btn-outline-primary','btn-success');
-    tr.classList.add('table-success');
-  } else {
-    // — unpick it
-    removeFromPickList(key);
-    btn.textContent = '➕ Pick';
-    btn.classList.replace('btn-success','btn-outline-primary');
-    tr.classList.remove('table-success');
-  }
+  addToPickList(row);
+  // toggle to “picked”
+  btn.textContent = '✓ Picked';
+  btn.classList.replace('btn-outline-primary','btn-success');
+  btn.disabled = true;
+  tr.classList.add('table-success');
 });
-
 pickTd.appendChild(btn);
 tr.appendChild(pickTd);
         bd.append(tr);
@@ -1045,21 +1036,24 @@ function addToPickList(row) {
   btn.className   = 'btn btn-sm btn-outline-danger';
   btn.textContent = '✕ Remove';
   btn.addEventListener('click', e => {
-    e.stopPropagation();
-    // remove from pick list
-    tbody.removeChild(tr);
-    // find and reset the original “Pick” button
-    const origRow = document.querySelector(`#tableBody tr[data-key="${key}"]`);
-    if (origRow) {
-      const pickBtn = origRow.querySelector('button.pick-btn');
-      if (pickBtn) {
-        pickBtn.textContent = '➕ Pick';
-        pickBtn.classList.replace('btn-success','btn-outline-primary');
-        pickBtn.disabled = false;
-        origRow.classList.remove('table-success');
-      }
+  e.stopPropagation();
+  // 1) remove from pick list
+  tbody.removeChild(tr);
+
+  // 2) reset the original pick button
+  const origRow = document.querySelector(
+    `#tableBody tr[data-key="${key}"]`
+  );
+  if (origRow) {
+    const pickBtn = origRow.querySelector('button.pick-btn');
+    if (pickBtn) {
+      pickBtn.textContent = '➕ Pick';
+      pickBtn.classList.replace('btn-success','btn-outline-primary');
+      pickBtn.disabled = false;
+      origRow.classList.remove('table-success');
     }
-  });
+  }
+});
   unpickTd.appendChild(btn);
   tr.appendChild(unpickTd);
 
