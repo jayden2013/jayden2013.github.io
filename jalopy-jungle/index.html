@@ -1077,14 +1077,28 @@ function addToPickList(row) {
 });
   unpickTd.appendChild(btn);
   tr.appendChild(unpickTd);
-
   tbody.appendChild(tr);
+  
+  let pickList = JSON.parse(localStorage.getItem('myPickList')||'[]');
+pickList.push(row);
+localStorage.setItem('myPickList', JSON.stringify(pickList));
 }
 
 function removeFromPickList(key) {
   const tbody = document.getElementById('pickListBody');
   const rowEl = tbody.querySelector(`tr[data-key="${key}"]`);
   if (rowEl) tbody.removeChild(rowEl);
+  let pickList = JSON.parse(localStorage.getItem('myPickList')||'[]');
+  pickList = pickList.filter(r => Object.values(r).join('|') !== key);
+  localStorage.setItem('myPickList', JSON.stringify(pickList));
+}
+
+function loadPickListData() {
+  const pickList = JSON.parse(localStorage.getItem('myPickList')||'[]');
+  pickList.forEach(row => {
+    // use your existing UI-only renderer (not re-saving to storage)
+    renderPickListRow(row);
+  });
 }
 	
 	function updateMySoldStats() {
@@ -1141,10 +1155,11 @@ window.addEventListener('DOMContentLoaded', () => {
 function getDataCode() {
   const inv = JSON.parse(localStorage.getItem('myInventoryData') || '[]');
   const sold = JSON.parse(localStorage.getItem('mySoldData')     || '[]');
+  const pickList   = JSON.parse(localStorage.getItem('myPickList')    || '[]');
   const homeYard = localStorage.getItem('homeYard') || '';
   const darkMode = localStorage.getItem('darkMode') || 'false';
   const calcEbayFees = localStorage.getItem('calcEbayFees')	|| 'false';
-  const combined = JSON.stringify({ inventory: inv, sold: sold, homeYard: homeYard, darkMode: darkMode, calcEbayFees: calcEbayFees });
+  const combined = JSON.stringify({ inventory: inv, sold: sold, pickList: pickList, homeYard: homeYard, darkMode: darkMode, calcEbayFees: calcEbayFees });
   return LZString.compressToBase64(combined);
 }
 
@@ -1155,11 +1170,16 @@ function applyDataCode(code) {
     const obj  = JSON.parse(json);
     localStorage.setItem('myInventoryData', JSON.stringify(obj.inventory));
     localStorage.setItem('mySoldData',      JSON.stringify(obj.sold));
+	localStorage.setItem('myPickList',     JSON.stringify(obj.pickList || []));
 	localStorage.setItem('homeYard',		obj.homeYard || '');
 	localStorage.setItem('darkMode',		obj.darkMode || 'false');
 	localStorage.setItem('calcEbayFees',	obj.calcEbayFees || 'false');
     loadMyInventory();
     loadMySoldData();
+	// now repopulate the Pick List UI
+    // first clear existing UI:
+    document.getElementById('pickListBody').innerHTML = '';
+    loadPickListData();
     alert('Data synced successfully!');
   } catch(e) {
     alert('Invalid Data Code.');
@@ -1210,6 +1230,7 @@ document.getElementById('importDataBtn').onclick = () => {
 if (localStorage.getItem('darkMode') === 'true') {
   document.body.classList.add('dark-mode');
 }
+loadPickListData();
 
 });
 
