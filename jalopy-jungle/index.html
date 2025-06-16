@@ -810,6 +810,7 @@ function applyHomeYardDefault() {
 tr.addEventListener('click', () => {
   openSoldModal(row);   // pass the row object { Year, Make, Model, … }
 });
+        tr.append(nt);
 // — Pick button cell
 const pickTd = document.createElement('td');
 const btn    = document.createElement('button');
