@@ -1185,34 +1185,42 @@ function updateSoldCharts() {
   });
 }
 
-function checkNewFavorites(data) {
-  // 1) load the user’s favorites and snapshot of what we saw yesterday
-  const favs     = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
-  const prevSnap = JSON.parse(localStorage.getItem(PREV_KEY)  || '[]');
-  if (!Array.isArray(favs) || favs.length === 0) return;  // nothing to do
+function checkNewFavorites(data = window.currentData) {
+  // 1) grab and normalize favorites
+  const rawFavs = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+  if (!Array.isArray(rawFavs) || rawFavs.length === 0) return;
 
-  // 2) determine which favorites are present in this data
-  const presentToday = favs.filter(v =>
-    data.some(r =>
-      r.Year  === v.year &&
-      r.Make  === v.make &&
-      r.Model === v.model
+  const favs = rawFavs.map(v => ({
+    year:  String(v.year).trim(),
+    make:  String(v.make).trim().toLowerCase(),
+    model: String(v.model).trim().toLowerCase(),
+    label: `${v.year.trim()} / ${v.make.trim()} / ${v.model.trim()}`
+  }));
+
+  // 2) pull yesterday’s snapshot
+  const prevSnap = JSON.parse(localStorage.getItem(PREV_KEY) || '[]');
+
+  // 3) find which favorites actually appear in today’s data
+  const presentToday = favs
+    .filter(fav =>
+      data.some(r =>
+        String(r.Year).trim()  === fav.year &&
+        String(r.Make).trim().toLowerCase() === fav.make &&
+        String(r.Model).trim().toLowerCase()=== fav.model
+      )
     )
-  ).map(v => `${v.year} / ${v.make} / ${v.model}`);
+    .map(fav => fav.label);
 
-  // 3) and which were present yesterday
-  const presentYesterday = Array.isArray(prevSnap) ? prevSnap : [];
+  // 4) diff against what was there yesterday
+  const newlyAdded = presentToday.filter(x => !prevSnap.includes(x));
 
-  // 4) find the new ones
-  const newlyAdded = presentToday.filter(key => !presentYesterday.includes(key));
-
-  // 5) fire a toast if there are any new favorites
+  // 5) toast them if you’ve got any
   if (newlyAdded.length) {
-    const listHtml = newlyAdded.map(k => `<div>• ${k}</div>`).join('');
+    const listHtml = newlyAdded.map(k => `• ${k}`).join('<br>'); 
     showFavToast(listHtml);
   }
 
-  // 6) update the snapshot for next run
+  // 6) save today’s snapshot for next run
   localStorage.setItem(PREV_KEY, JSON.stringify(presentToday));
 }
 
