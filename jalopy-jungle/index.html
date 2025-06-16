@@ -1094,7 +1094,9 @@ function removeFromPickList(key) {
 }
 
 function loadPickListData() {
-  const pickList = JSON.parse(localStorage.getItem('myPickList')||'[]');
+  const pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
+  const tbody    = document.getElementById('pickListBody');
+  tbody.innerHTML = '';  // clear any old rows
   pickList.forEach(row => {
     // use your existing UI-only renderer (not re-saving to storage)
     renderPickListRow(row);
