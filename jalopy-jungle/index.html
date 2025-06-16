@@ -405,6 +405,49 @@
       settingsModal.hide();
       applyHomeYardDefault();
     };
+	
+	const FAV_KEY = 'favoriteVehicles';
+
+// Load saved favorites whenever Settings opens
+document.getElementById('settingsModal')
+  .addEventListener('shown.bs.modal', renderFavoriteVehicles);
+
+// Add new favorite on button click
+document.getElementById('addFavVehicleBtn').onclick = () => {
+  const year  = document.getElementById('favYearInput').value.trim();
+  const make  = document.getElementById('favMakeInput').value.trim();
+  const model = document.getElementById('favModelInput').value.trim();
+  if (!year || !make || !model) return alert('Please fill in all three fields.');
+  const list = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+  list.push({ year, make, model });
+  localStorage.setItem(FAV_KEY, JSON.stringify(list));
+  document.getElementById('favYearInput').value = '';
+  document.getElementById('favMakeInput').value = '';
+  document.getElementById('favModelInput').value = '';
+  renderFavoriteVehicles();
+};
+
+// Render the UL of favorites
+function renderFavoriteVehicles() {
+  const ul = document.getElementById('favVehiclesList');
+  ul.innerHTML = '';
+  const list = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+  list.forEach((v, idx) => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-center p-2';
+    li.innerHTML = `
+      <span>${v.year} / ${v.make} / ${v.model}</span>
+      <button class="btn btn-sm btn-outline-danger">✕</button>
+    `;
+    // remove handler
+    li.querySelector('button').onclick = () => {
+      list.splice(idx, 1);
+      localStorage.setItem(FAV_KEY, JSON.stringify(list));
+      renderFavoriteVehicles();
+    };
+    ul.appendChild(li);
+  });
+}
 
     // Export CSV
     exportBtn.onclick = () => {
