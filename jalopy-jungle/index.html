@@ -785,6 +785,7 @@ function applyHomeYardDefault() {
       data.forEach(row => {
         const tr = document.createElement('tr');
         const key = Object.values(row).join('|');
+		tr.dataset.key = key;
         Object.values(row).forEach(v => {
           const td = document.createElement('td');
           td.textContent = v; tr.append(td);
@@ -811,26 +812,33 @@ tr.addEventListener('click', () => {
   openSoldModal(row);   // pass the row object { Year, Make, Model, … }
 });
         tr.append(nt);
-// — Pick button cell
+// PICK button cell
 const pickTd = document.createElement('td');
 const btn    = document.createElement('button');
 btn.className   = 'btn btn-sm btn-outline-primary';
 btn.textContent = '➕ Pick';
+
 btn.addEventListener('click', e => {
   e.stopPropagation();
 
-  // 1) Copy to the pick list
-  addToPickList(row);
+  const key = tr.dataset.key;
+  const isPicked = btn.classList.contains('btn-success');
 
-  // 2) Disable & restyle this button so it reads “Picked”
-  btn.textContent = '✓ Picked';
-  btn.classList.remove('btn-outline-primary');
-  btn.classList.add('btn-success');
-  btn.disabled = true;
-
-  // 3) (Optional) highlight the entire row
-  tr.classList.add('table-success');
+  if (!isPicked) {
+    // — pick it
+    addToPickList(row);
+    btn.textContent = '✓ Picked';
+    btn.classList.replace('btn-outline-primary','btn-success');
+    tr.classList.add('table-success');
+  } else {
+    // — unpick it
+    removeFromPickList(key);
+    btn.textContent = '➕ Pick';
+    btn.classList.replace('btn-success','btn-outline-primary');
+    tr.classList.remove('table-success');
+  }
 });
+
 pickTd.appendChild(btn);
 tr.appendChild(pickTd);
         bd.append(tr);
@@ -1013,6 +1021,8 @@ tr.innerHTML = `
 function addToPickList(row) {
   const tbody = document.getElementById('pickListBody');
   const tr    = document.createElement('tr');
+  const key   = Object.values(row).join('|');
+  tr.dataset.key = key;
 
   // 1) Copy each CSV field
   Object.values(row).forEach(val => {
@@ -1031,6 +1041,12 @@ function addToPickList(row) {
   tr.appendChild(noteTd);
 
   tbody.appendChild(tr);
+}
+
+function removeFromPickList(key) {
+  const tbody = document.getElementById('pickListBody');
+  const rowEl = tbody.querySelector(`tr[data-key="${key}"]`);
+  if (rowEl) tbody.removeChild(rowEl);
 }
 	
 	function updateMySoldStats() {
