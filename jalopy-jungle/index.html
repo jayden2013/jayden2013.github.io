@@ -1212,6 +1212,7 @@ document.getElementById('importDataBtn').onclick = () => {
     listCSVFiles();
 	loadMyInventory();
 	loadMySoldData();
+	loadPickListData();
 	
 	const calcFeesCheckbox = document.getElementById('calcEbayFeesToggle');
 	// load saved preference (default = false)
@@ -1233,7 +1234,6 @@ document.getElementById('importDataBtn').onclick = () => {
 if (localStorage.getItem('darkMode') === 'true') {
   document.body.classList.add('dark-mode');
 }
-loadPickListData();
 
 });
 
