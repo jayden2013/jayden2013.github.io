@@ -1,25 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<link rel = "stylesheet" href = "sublux/design.css">
-<title>jayden2013.github.io</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cars & Collectibles</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom Animations -->
+  <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .fade-in-up {
+      animation: fadeInUp 1s ease-out forwards;
+      opacity: 0;
+    }
+
+    body {
+      background-color: #0b0b0b;
+    }
+
+    /* Ensure background shows even if image fails */
+    .bg-fallback {
+      background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+    }
+  </style>
 </head>
+<body class="text-white font-sans min-h-screen flex flex-col justify-center items-center text-center px-6 relative overflow-hidden bg-fallback">
 
-<body>
-<center>
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<script>
-  (adsbygoogle = window.adsbygoogle || []).push({
-    google_ad_client: "ca-pub-5978349780180432",
-    enable_page_level_ads: true
-  });
-</script>
+  <!-- Background image layer -->
+  <div style="background-image: url('images/hero-car.jpg');"
+       class="absolute inset-0 bg-cover bg-center opacity-20 blur-sm -z-10">
+  </div>
 
-<h1>jayden2013.github.io</h1>
-<img src = "images/avatar.jpg"></img>
-</br>
-<a href = "sublux/index.html">sublux</a>
+<!-- Main content -->
+<main class="fade-in-up max-w-2xl pt-10">
+  <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest drop-shadow-xl mb-4">
+    Cars and Collectibles
+  </h1>
+  <p class="text-gray-300 text-xl md:text-2xl mb-2">
+    From Concept to Concrete
+  </p>
+  <p class="text-gray-400 text-base md:text-lg mb-10">
+    We restore the past, design what’s missing, and drive the future of performance.
+  </p>
+  <div class="flex flex-wrap justify-center items-center gap-4">
+    <a href="https://www.etsy.com/shop/CarsNCollectibles"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg transition-transform transform hover:scale-105">
+      Shop Shirts, Stickers & More
+    </a>
+    <a href="https://www.ebay.com/usr/weaverfever69"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg transition-transform transform hover:scale-105">
+      Shop Car Parts & Collectibles
+    </a>
+  </div>
+</main>
 
-</center>
+
+
+  <!-- Footer -->
+  <footer class="mt-20 py-6 text-sm text-gray-400 fade-in-up">
+    © 2025 Cars & Collectibles LLC. All rights reserved.
+  </footer>
+
 </body>
 </html>
