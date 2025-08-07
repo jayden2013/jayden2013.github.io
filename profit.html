@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PROFIT - Parts Resale Optimization & Field Inventory Tool</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity: 0; }
+    body { background-color: #0b0b0b; }
+    .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
+    /* Table styling */
+    .feature-table th, .feature-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #2c2c2c; }
+    .feature-table th { font-weight: 700; background: #191919; }
+    .feature-table tr:last-child td { border-bottom: 0; }
+  </style>
+</head>
+<body class="text-white font-sans min-h-screen text-center px-6 relative bg-fallback">
+  <!-- Background image layer -->
+  <div style="background-image: url('images/hero-car.jpg');"
+       class="absolute inset-0 bg-cover bg-center opacity-20 blur-sm -z-10"></div>
+
+  <main class="fade-in-up max-w-2xl mx-auto mt-12">
+    <a href="index.html" class="inline-block mb-6 text-red-400 hover:text-red-500 text-lg underline">
+      ← Back to Home
+    </a>
+    <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest drop-shadow-xl mb-2">
+      PROFIT
+    </h1>
+    <p class="text-xl md:text-2xl font-semibold text-gray-300 mb-4">Parts Resale Optimization & Field Inventory Tool</p>
+    <p class="text-gray-400 text-base md:text-lg mb-8">
+      The all-in-one dashboard for junkyard, parts, and eBay sellers.<br>
+      Track inventory, research part prices, add notes, and manage your reselling business like a pro—right from your browser.
+    </p>
+    <div class="flex flex-wrap justify-center gap-4 mb-10">
+      <a href="jalopy-jungle/index.html"
+         class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-7 py-3 rounded-full shadow-lg transition-transform transform hover:scale-105">
+        Launch PROFIT
+      </a>
+	  <a href=""
+         class="bg-green-600 hover:bg-green-700 text-white font-bold text-lg px-7 py-3 rounded-full shadow-lg transition-transform transform hover:scale-105">
+        Upgrade to Premium
+      </a>
+    </div>
+
+    <!-- Feature Breakdown Section -->
+    <section class="bg-black bg-opacity-60 rounded-2xl shadow-xl p-8 mb-8">
+      <h2 class="text-3xl md:text-4xl font-bold mb-3 tracking-wide">Free vs Premium Features</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-8">
+        <!-- Free Features -->
+        <div class="bg-zinc-900 bg-opacity-60 rounded-xl p-6">
+          <h3 class="text-xl font-bold text-green-400 mb-2">Free Features</h3>
+          <ul class="list-disc ml-6 text-gray-300 space-y-1">
+            <li>View junkyard inventory with search/filter</li>
+            <li>See eBay sold prices for any part/vehicle</li>
+            <li>Add notes (20 character limit per note)</li>
+            <li>Use Pick List for on-site tracking</li>
+            <li>Track up to 5 of your own inventory items</li>
+            <li>Mark items as sold and view profits/dates</li>
+            <li>Basic profit calculation (no eBay fee deduction)</li>
+            <li>View statistics and basic charts</li>
+            <li>CSV import for yard inventory</li>
+            <li>Local browser storage (no cloud sync)</li>
+          </ul>
+        </div>
+        <!-- Premium Features -->
+        <div class="bg-zinc-900 bg-opacity-60 rounded-xl p-6">
+          <h3 class="text-xl font-bold text-yellow-400 mb-2">Premium Features</h3>
+          <ul class="list-disc ml-6 text-gray-300 space-y-1">
+            <li>Unlimited notes (no character limit)</li>
+            <li>Export inventory and "My Inventory" tables to CSV</li>
+            <li>Add unlimited inventory rows</li>
+            <li>eBay fee calculator for accurate profit</li>
+            <li>Enable Dark Mode</li>
+            <li>Full access to settings panel</li>
+            <li>Save unlimited favorite vehicles</li>
+            <li>Sync/export all data via Data Code</li>
+            <li>Bulk editing (via import/export features)</li>
+            <li>Early access to new features</li>
+          </ul>
+        </div>
+      </div>
+      <!-- Comparison Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full feature-table text-base text-left mt-2 mb-2">
+          <thead>
+            <tr>
+              <th class="text-gray-300 font-semibold">Feature</th>
+              <th class="text-green-400 font-semibold">Free</th>
+              <th class="text-yellow-400 font-semibold">Premium</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>View Junkyard Inventory</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>View eBay Sold Prices</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Add Notes</td>
+              <td>20 character limit</td>
+              <td>Unlimited</td>
+            </tr>
+            <tr>
+              <td>Pick List</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>My Inventory Rows</td>
+              <td>Up to 5</td>
+              <td>Unlimited</td>
+            </tr>
+            <tr>
+              <td>Export Inventory/CSV</td>
+              <td>❌</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>eBay Fee Calculator</td>
+              <td>❌</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Dark Mode</td>
+              <td>❌</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Settings Panel</td>
+              <td>❌</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Manage Favorites</td>
+              <td>❌</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Data Sync/Transfer</td>
+              <td>❌</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Bulk Editing</td>
+              <td>❌</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Early Feature Access</td>
+              <td>❌</td>
+              <td>✅</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-gray-400 mt-6 text-center">
+        Start free and upgrade anytime to unlock premium power features.
+      </p>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-2xl md:text-3xl font-bold mb-3">Who is PROFIT for?</h2>
+      <p class="text-gray-300 text-base md:text-lg mb-4">
+        Whether you’re a hobbyist or a full-time reseller, PROFIT is built for anyone who:
+      </p>
+      <ul class="list-disc ml-6 text-gray-300 space-y-1 text-left inline-block">
+        <li>Sources car parts from junkyards, auctions, or private sellers</li>
+        <li>Sells on eBay, Facebook Marketplace, or locally</li>
+        <li>Wants to keep track of inventory and see what’s profitable</li>
+        <li>Loves organization and hates leaving money on the table</li>
+      </ul>
+    </section>
+    <div class="mt-10">
+      <a href="jalopy-jungle/index.html"
+         class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-4 rounded-full shadow-lg transition-transform transform hover:scale-105 text-lg">
+        Try PROFIT Now
+      </a>
+    </div>
+  </main>
+  <footer class="mt-20 py-6 text-sm text-gray-400 fade-in-up">
+    © 2025 Cars & Collectibles LLC. All rights reserved.
+  </footer>
+</body>
+</html>
