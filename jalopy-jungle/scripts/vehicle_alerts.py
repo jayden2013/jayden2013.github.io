@@ -8,7 +8,7 @@ import os
 
 # Load Resend API key and GitHub token
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_TOKEN = os.getenv("GH_ALERT_TOKEN")
 REPO_NAME = "jayden2013.github.io"
 ALERT_LABEL = "alert"
 
