@@ -296,10 +296,10 @@ if __name__ == "__main__":
                 changed is not None and not changed.empty
             ])
 
-            subject = f"🔔 [{yard}] Inventory Alert for issue #{a['issue'].number}"
+            subject = f"🔔 [{yard}] Inventory Alert for "
             html = [
                 f"<h2>Inventory report for <strong>{yard}</strong></h2>",
-                f"<p><strong>Issue:</strong> <a href='{a['issue'].html_url}'>#{a['issue'].number} {a['issue'].title}</a></p>"
+                f"<p><strong>Vehicle:</strong> {a['issue'].title}</p>"
             ]
 
             # brief filter summary
