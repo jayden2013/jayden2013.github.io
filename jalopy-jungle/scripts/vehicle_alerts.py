@@ -21,10 +21,10 @@ def list_inventory_files():
     files = os.listdir(CSV_DIR)
     yard_files = defaultdict(list)
     for file in files:
-        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\\.csv", file)
+        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})\.csv", file)
         if match:
             yard = match.group(1)
-            timestamp = datetime.strptime(match.group(2), "%Y-%m-%d-%H-%M-%S")
+            timestamp = datetime.strptime(f"{match.group(2)} {match.group(3)}", "%Y-%m-%d %H-%M-%S")
             yard_files[yard].append((timestamp, file))
     for yard in yard_files:
         yard_files[yard] = sorted(yard_files[yard], reverse=True)[:2]
