@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vehicle Alert Signup</title>
+</head>
+<body>
+  <h1>Sign Up for Vehicle Alerts</h1>
+  <form id="alert-form">
+    <input name="email" type="email" required placeholder="you@example.com"><br><br>
+    <input name="makes" placeholder="Ford"><br><br>
+    <input name="models" placeholder="Thunderbird"><br><br>
+    <input name="years" placeholder="1994-1997"><br><br>
+    <select name="yards">
+      <option>Any</option>
+      <option>Jalopy Jungle (Boise)</option>
+      <option>Trusty Pick-A-Part (Caldwell)</option>
+    </select><br><br>
+    <button type="submit">Create Alert</button>
+  </form>
+  <p id="alert-msg"></p>
+
+  <script>
+    document.getElementById('alert-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      document.getElementById('alert-msg').textContent = "Submitting...";
+
+      const res = await fetch("https://profit-alerts.profit-alerts.workers.dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      document.getElementById('alert-msg').textContent = result.ok
+        ? "✅ Alert created!"
+        : "❌ Error creating alert.";
+    });
+  </script>
+</body>
+</html>
