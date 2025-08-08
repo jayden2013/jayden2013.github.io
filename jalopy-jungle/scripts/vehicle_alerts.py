@@ -296,7 +296,7 @@ if __name__ == "__main__":
                 changed is not None and not changed.empty
             ])
 
-            subject = f"🔔 [{yard}] Inventory Alert for "
+            subject = f"🔔 {a['issue'].title} Inventory Alert for {yard}"
             html = [
                 f"<h2>Inventory report for <strong>{yard}</strong></h2>",
                 f"<p><strong>Vehicle:</strong> {a['issue'].title}</p>"
