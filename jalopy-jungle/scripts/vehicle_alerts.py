@@ -5,6 +5,10 @@ from datetime import datetime
 from collections import defaultdict
 from github import Github
 import os
+import sys
+
+# Force stdout flush for GitHub Actions logs
+sys.stdout.reconfigure(line_buffering=True)
 
 # Load Resend API key and GitHub token
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
@@ -18,6 +22,7 @@ CSV_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "inventory-csvs"))
 
 # 1. Get the two most recent CSVs per yard
 def list_inventory_files():
+    print("Listing inventory files...")
     files = os.listdir(CSV_DIR)
     yard_files = defaultdict(list)
     for file in files:
@@ -28,20 +33,26 @@ def list_inventory_files():
             yard_files[yard].append((timestamp, file))
     for yard in yard_files:
         yard_files[yard] = sorted(yard_files[yard], reverse=True)[:2]
+    print(f"Yard files found: {dict(yard_files)}")
     return yard_files
 
 # 2. Load CSV rows
 def load_csv(filepath):
+    print(f"Loading CSV: {filepath}")
     with open(os.path.join(CSV_DIR, filepath), newline="") as f:
         return list(csv.DictReader(f))
 
 # 3. Compare latest vs previous
 def get_new_vehicles(old, new):
+    print("Comparing CSVs for new vehicles...")
     old_set = {tuple(row.items()) for row in old}
-    return [row for row in new if tuple(row.items()) not in old_set]
+    new_rows = [row for row in new if tuple(row.items()) not in old_set]
+    print(f"New vehicles found: {new_rows}")
+    return new_rows
 
 # 4. Get open alerts from GitHub Issues
 def get_alerts():
+    print("Fetching alerts from GitHub Issues...")
     g = Github(GITHUB_TOKEN)
     repo = g.get_repo(REPO_NAME)
     alerts = []
@@ -58,7 +69,10 @@ def get_alerts():
                 "models": [m.strip().lower() for m in models.group(1).split(",")],
                 "years": [int(y) for y in re.findall(r"\d{4}", years.group(1))],
             }
+            print(f"Loaded alert: {alert}")
             alerts.append(alert)
+        else:
+            print(f"Skipping malformed alert: {body}")
     print(f"Loaded {len(alerts)} alerts from GitHub")
     return alerts
 
@@ -68,11 +82,13 @@ def matches_alert(vehicle, alert):
         year = int(vehicle["year"].strip())
         make = vehicle["make"].strip().lower()
         model = vehicle["model"].strip().lower()
-        return (
+        result = (
             year in alert["years"] and
             make in alert["makes"] and
             model in alert["models"]
         )
+        print(f"    Match result: {result} for year={year}, make={make}, model={model}")
+        return result
     except Exception as e:
         print(f"Matching error: {e}")
         return False
@@ -121,7 +137,9 @@ def main():
             continue
         _, latest = files[0]
         _, previous = files[1]
-        print(f"Comparing files for {yard}:\n  New: {latest}\n  Old: {previous}")
+        print(f"Comparing files for {yard}:
+  New: {latest}
+  Old: {previous}")
         latest_data = load_csv(latest)
         previous_data = load_csv(previous)
         new_vehicles = get_new_vehicles(previous_data, latest_data)
