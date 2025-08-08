@@ -2,43 +2,89 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vehicle Alert Signup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sign up for custom vehicle alerts from Cars & Collectibles. Get notified when a vehicle you're interested in hits the junkyard.">
+  <title>Vehicle Alerts - Cars & Collectibles</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in-up { animation: fadeInUp 1s ease-out; }
+  </style>
 </head>
-<body>
-  <h1>Sign Up for Vehicle Alerts</h1>
-  <form id="alert-form">
-    <input name="email" type="email" required placeholder="you@example.com"><br><br>
-    <input name="makes" placeholder="Ford"><br><br>
-    <input name="models" placeholder="Thunderbird"><br><br>
-    <input name="years" placeholder="1994-1997"><br><br>
-    <select name="yards">
-      <option>Any</option>
-      <option>Jalopy Jungle (Boise)</option>
-      <option>Trusty Pick-A-Part (Caldwell)</option>
-    </select><br><br>
-    <button type="submit">Create Alert</button>
-  </form>
-  <p id="alert-msg"></p>
+<body class="bg-zinc-900 text-white min-h-screen flex flex-col items-center justify-start px-4 py-10">
+
+  <div class="max-w-xl w-full fade-in-up">
+    <h1 class="text-4xl font-bold text-center mb-6">📬 Vehicle Alert Signup</h1>
+    <p class="text-center text-zinc-400 mb-8">Get notified when vehicles you care about show up at Jalopy Jungle!</p>
+
+    <form id="alertForm" class="space-y-4 bg-zinc-800 p-6 rounded-xl shadow-xl">
+      <div>
+        <label class="block mb-1 text-sm text-zinc-400">Email</label>
+        <input type="email" name="email" required class="w-full p-2 rounded bg-zinc-700 text-white border border-zinc-600" />
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm text-zinc-400">Make(s)</label>
+        <input type="text" name="makes" placeholder="e.g., Ford" class="w-full p-2 rounded bg-zinc-700 text-white border border-zinc-600" />
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm text-zinc-400">Model(s)</label>
+        <input type="text" name="models" placeholder="e.g., Thunderbird" class="w-full p-2 rounded bg-zinc-700 text-white border border-zinc-600" />
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm text-zinc-400">Year Range</label>
+        <input type="text" name="years" placeholder="e.g., 1994-1997" class="w-full p-2 rounded bg-zinc-700 text-white border border-zinc-600" />
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm text-zinc-400">Preferred Yard</label>
+        <select name="yards" class="w-full p-2 rounded bg-zinc-700 text-white border border-zinc-600">
+          <option value="">Any</option>
+          <option>Jalopy Jungle (Boise)</option>
+          <option>Jalopy Jungle (Nampa)</option>
+          <option>Jalopy Jungle (Caldwell)</option>
+          <option>Trusty Pick-A-Part</option>
+        </select>
+      </div>
+
+      <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded transition-all">
+        Submit Alert
+      </button>
+    </form>
+
+    <p id="statusMsg" class="text-center mt-4 text-sm text-zinc-400"></p>
+  </div>
 
   <script>
-    document.getElementById('alert-form').addEventListener('submit', async (e) => {
+    const form = document.getElementById("alertForm");
+    const statusMsg = document.getElementById("statusMsg");
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const form = e.target;
-      const data = Object.fromEntries(new FormData(form).entries());
+      statusMsg.textContent = "Submitting...";
 
-      document.getElementById('alert-msg').textContent = "Submitting...";
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
 
-      const res = await fetch("https://profit-alerts.profit-alerts.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      try {
+        const res = await fetch("https://profit-alerts.profit-alerts.workers.dev", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      const result = await res.json();
-      document.getElementById('alert-msg').textContent = result.ok
-        ? "✅ Alert created!"
-        : "❌ Error creating alert.";
+        const result = await res.json();
+        if (result.ok) {
+          statusMsg.textContent = "✅ Alert created!";
+          form.reset();
+        } else {
+          statusMsg.textContent = "❌ Error creating alert.";
+        }
+      } catch (err) {
+        statusMsg.textContent = "❌ Network error.";
+      }
     });
   </script>
 </body>
