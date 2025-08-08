@@ -21,29 +21,26 @@ def list_inventory_files():
     files = os.listdir(CSV_DIR)
     yard_files = defaultdict(list)
     for file in files:
-        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2})\.csv", file)
+        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\\.csv", file)
         if match:
             yard = match.group(1)
-            timestamp = datetime.strptime(f"{match.group(2)} {match.group(3)}", "%Y-%m-%d %H-%M-%S")
+            timestamp = datetime.strptime(match.group(2), "%Y-%m-%d-%H-%M-%S")
             yard_files[yard].append((timestamp, file))
     for yard in yard_files:
         yard_files[yard] = sorted(yard_files[yard], reverse=True)[:2]
     return yard_files
 
 # 2. Load CSV rows
-
 def load_csv(filepath):
     with open(os.path.join(CSV_DIR, filepath), newline="") as f:
         return list(csv.DictReader(f))
 
 # 3. Compare latest vs previous
-
 def get_new_vehicles(old, new):
     old_set = {tuple(row.items()) for row in old}
     return [row for row in new if tuple(row.items()) not in old_set]
 
 # 4. Get open alerts from GitHub Issues
-
 def get_alerts():
     g = Github(GITHUB_TOKEN)
     repo = g.get_repo(REPO_NAME)
@@ -62,23 +59,26 @@ def get_alerts():
                 "years": [int(y) for y in re.findall(r"\d{4}", years.group(1))],
             }
             alerts.append(alert)
+    print(f"Loaded {len(alerts)} alerts from GitHub")
     return alerts
 
 # 5. Match and email alerts
-
 def matches_alert(vehicle, alert):
     try:
-        year = int(vehicle["year"])
+        year = int(vehicle["year"].strip())
+        make = vehicle["make"].strip().lower()
+        model = vehicle["model"].strip().lower()
         return (
             year in alert["years"] and
-            vehicle["make"].lower() in alert["makes"] and
-            vehicle["model"].lower() in alert["models"]
+            make in alert["makes"] and
+            model in alert["models"]
         )
-    except:
+    except Exception as e:
+        print(f"Matching error: {e}")
         return False
 
-
 def send_email(to, vehicle):
+    print(f"Sending match email to {to} for {vehicle}")
     requests.post(
         "https://api.resend.com/emails",
         headers={
@@ -94,6 +94,7 @@ def send_email(to, vehicle):
     )
 
 def send_no_matches_email(to):
+    print(f"Sending no-match email to {to}")
     requests.post(
         "https://api.resend.com/emails",
         headers={
@@ -116,20 +117,24 @@ def main():
 
     for yard, files in yard_files.items():
         if len(files) < 2:
+            print(f"Skipping yard {yard}: not enough files")
             continue
         _, latest = files[0]
         _, previous = files[1]
+        print(f"Comparing files for {yard}:\n  New: {latest}\n  Old: {previous}")
         latest_data = load_csv(latest)
         previous_data = load_csv(previous)
         new_vehicles = get_new_vehicles(previous_data, latest_data)
+        print(f"Found {len(new_vehicles)} new vehicles in {yard}")
 
         for vehicle in new_vehicles:
+            print(f"Checking new vehicle: {vehicle}")
             for alert in alerts:
+                print(f"  Against alert: {alert}")
                 if matches_alert(vehicle, alert):
                     send_email(alert["email"], vehicle)
                     matched_alerts.add(alert["email"])
 
-    # Send "no match" email to alerts not matched
     for alert in alerts:
         if alert["email"] not in matched_alerts:
             send_no_matches_email(alert["email"])
