@@ -25,4 +25,5 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RESEND_FROM: alerts@carsandcollectibles.com
         run: python jalopy-jungle/scripts/vehicle_alerts.py
