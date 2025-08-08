@@ -3,17 +3,11 @@ name: Send Vehicle Alerts
 on:
   schedule:
     - cron: '0 13 * * *'  # Runs daily at 7am MT (13:00 UTC)
-  workflow_dispatch:
+  workflow_dispatch:      # Allows manual runs too
 
 jobs:
   run-alerts:
     runs-on: ubuntu-latest
-    env:
-      # Force Python to flush stdout immediately
-      PYTHONUNBUFFERED: 1
-      # Make sure your script sees GH_ALERT_TOKEN
-      GH_ALERT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RESEND_API_KEY:   ${{ secrets.RESEND_API_KEY }}
 
     steps:
       - name: Checkout repo
@@ -27,13 +21,8 @@ jobs:
       - name: Install dependencies
         run: pip install PyGithub requests
 
-      - name: Debug: show workspace
-        run: |
-          echo "→ Working dir: $(pwd)"
-          echo "→ Repo contents:"
-          ls -l
-          echo "→ Inventory folder contents:"
-          ls -l jalopy-jungle/inventory-csvs
-
       - name: Run alert script
-        run: python -u jalopy-jungle/scripts/vehicle_alerts.py
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python jalopy-jungle/scripts/vehicle_alerts.py
