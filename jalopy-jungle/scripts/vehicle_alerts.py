@@ -26,7 +26,7 @@ def list_inventory_files():
     files = os.listdir(CSV_DIR)
     yard_files = defaultdict(list)
     for file in files:
-        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\\.csv", file)
+        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\.csv", file)
         if match:
             yard = match.group(1)
             timestamp = datetime.strptime(match.group(2), "%Y-%m-%d-%H-%M-%S")
@@ -40,7 +40,9 @@ def list_inventory_files():
 def load_csv(filepath):
     print(f"Loading CSV: {filepath}")
     with open(os.path.join(CSV_DIR, filepath), newline="") as f:
-        return list(csv.DictReader(f))
+        data = list(csv.DictReader(f))
+        print(f"Loaded {len(data)} rows from {filepath}")
+        return data
 
 # 3. Compare latest vs previous
 def get_new_vehicles(old, new):
@@ -142,6 +144,15 @@ def main():
         print(f"  Old: {previous}")
         latest_data = load_csv(latest)
         previous_data = load_csv(previous)
+
+        # Dump CSV content for debugging
+        print("Latest CSV content:")
+        for row in latest_data:
+            print(row)
+        print("Previous CSV content:")
+        for row in previous_data:
+            print(row)
+
         new_vehicles = get_new_vehicles(previous_data, latest_data)
         print(f"Found {len(new_vehicles)} new vehicles in {yard}")
 
