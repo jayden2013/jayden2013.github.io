@@ -299,7 +299,7 @@ if __name__ == "__main__":
             subject = f"🔔 [{yard}] Inventory Alert for "
             html = [
                 f"<h2>Inventory report for <strong>{yard}</strong></h2>",
-                f"<p><strong>Vehicle:</strong> {a['issue'].title}</p>"
+                f"<p><strong>Vehicle:</strong> {re.sub(r'^\\s*alert\\s*[:\\-–]\\s*','',(a['issue'].title or ''), flags=re.IGNORECASE)}</p>"
             ]
 
             # brief filter summary
