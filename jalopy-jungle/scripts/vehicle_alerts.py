@@ -59,7 +59,7 @@ def get_alerts():
                 "email": email.group(1).strip(),
                 "makes": [m.strip().lower() for m in makes.group(1).split(",")],
                 "models": [m.strip().lower() for m in models.group(1).split(",")],
-                "years": [int(y) for y in re.findall(r"\\d{4}", years.group(1))],
+                "years": [int(y) for y in re.findall(r"\d{4}", years.group(1))],
             }
             alerts.append(alert)
     return alerts
