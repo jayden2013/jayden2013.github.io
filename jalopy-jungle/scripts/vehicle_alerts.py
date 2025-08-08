@@ -137,9 +137,9 @@ def main():
             continue
         _, latest = files[0]
         _, previous = files[1]
-        print(f"Comparing files for {yard}:
-  New: {latest}
-  Old: {previous}")
+        print(f"Comparing files for {yard}:")
+        print(f"  New: {latest}")
+        print(f"  Old: {previous}")
         latest_data = load_csv(latest)
         previous_data = load_csv(previous)
         new_vehicles = get_new_vehicles(previous_data, latest_data)
