@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install PyGithub requests
+        run: pip install pandas PyGithub requests
 
       - name: Run alert script
         env:
