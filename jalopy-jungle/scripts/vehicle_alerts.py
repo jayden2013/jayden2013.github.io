@@ -8,12 +8,11 @@ import requests
 # ——— Configuration ———
 INVENTORY_DIR  = "jalopy-jungle/inventory-csvs"
 GITHUB_REPO    = "jayden2013/jayden2013.github.io"
-# keys we diff on; will lowercase to match normalized columns
 KEY_COLUMNS    = ['year', 'make', 'model', 'row']
 YARD_NAMES     = ['caldwell', 'nampa', 'boise', 'twin_falls', 'garden_city']
-MONITOR_EMAIL  = "user@example.com"           # ← replace with the real recipient
-GITHUB_TOKEN   = os.getenv("GITHUB_TOKEN")    # ← set in your Action secrets
-RESEND_API_KEY = os.getenv("RESEND_API_KEY")  # ← set in your Action secrets
+MONITOR_EMAIL  = "user@example.com"           # ← replace with real recipient
+GITHUB_TOKEN   = os.getenv("GITHUB_TOKEN")    # ← set in GitHub Action secrets
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")  # ← set in GitHub Action secrets
 
 def get_csv_paths_by_date(directory, yard_name):
     """
@@ -36,9 +35,8 @@ def get_csv_paths_by_date(directory, yard_name):
     return yesterday_csv, today_csv
 
 def load_csv(path):
-    """Reads a CSV into a pandas DataFrame and normalizes its column names."""
+    """Reads a CSV into pandas and normalizes column names to lowercase."""
     df = pd.read_csv(path)
-    # strip whitespace & lowercase column names
     df.columns = df.columns.str.strip().str.lower()
     return df
 
@@ -49,27 +47,39 @@ def diff_dataframes(df_old, df_new, key_cols):
       - removed: rows in df_old not in df_new
       - changed: rows present in both where any non-key column differs
     """
-    merged = df_old.merge(df_new, on=key_cols, how='outer',
-                          indicator=True, suffixes=('_old','_new'))
+    merged = df_old.merge(
+        df_new,
+        on=key_cols,
+        how='outer',
+        indicator=True,
+        suffixes=('_old','_new')
+    )
     added   = merged[merged['_merge']=='right_only']
     removed = merged[merged['_merge']=='left_only']
+    common  = merged[merged['_merge']=='both'].copy()
 
-    idx_old = df_old.set_index(key_cols)
-    idx_new = df_new.set_index(key_cols)
-    changed = idx_old.compare(idx_new).reset_index()
+    # Find non-key columns to compare
+    non_key_cols = [c for c in df_old.columns if c not in key_cols]
+    if non_key_cols:
+        mask = pd.Series(False, index=common.index)
+        for col in non_key_cols:
+            mask |= common[f'{col}_old'] != common[f'{col}_new']
+        changed = common[mask]
+    else:
+        changed = pd.DataFrame(columns=key_cols)
 
     return added, removed, changed
 
 def fetch_open_issues(repo_name, github_token):
-    """Returns a list of all open issues in the given GitHub repo."""
+    """Returns all open issues in the given GitHub repo."""
     gh   = Github(github_token)
     repo = gh.get_repo(repo_name)
     return list(repo.get_issues(state='open'))
 
 def find_matching_issues(diffs, issues, match_fn):
     """
-    Returns all issues for which match_fn(diffs, issue) is True.
-    diffs is the tuple (added, removed, changed).
+    Returns issues for which match_fn(diffs, issue) is True.
+    diffs is (added, removed, changed).
     """
     matched = []
     for issue in issues:
@@ -94,33 +104,31 @@ def send_email(resend_api_key, to_email, subject, html_body):
     resp.raise_for_status()
 
 if __name__ == "__main__":
-    # lowercase the key columns to match normalized DataFrame columns
+    # Lowercase key columns to match normalized DataFrame columns
     key_cols = [c.lower() for c in KEY_COLUMNS]
 
-    # 1) fetch all open GitHub issues
+    # 1) Fetch all open GitHub issues
     issues = fetch_open_issues(GITHUB_REPO, GITHUB_TOKEN)
 
-    # 2) loop through each yard
+    # 2) Loop through each yard
     for yard in YARD_NAMES:
         old_csv, new_csv = get_csv_paths_by_date(INVENTORY_DIR, yard)
         if not old_csv or not new_csv:
             print(f"[{yard}] missing CSV for yesterday or today, skipping.")
             continue
 
-        # debug: show which files we're comparing
         print(f"[{yard}] Comparing:\n  yesterday → {old_csv}\n  today     → {new_csv}")
 
         df_old = load_csv(old_csv)
         df_new = load_csv(new_csv)
 
-        # debug: verify column names
         print(f"[{yard}] old columns: {df_old.columns.tolist()}")
         print(f"[{yard}] new columns: {df_new.columns.tolist()}")
 
-        # 3) diff the two DataFrames
+        # 3) Diff the two DataFrames
         added, removed, changed = diff_dataframes(df_old, df_new, key_cols)
 
-        # base email
+        # Base email subject/body
         subject = f"🔔 [{yard}] Inventory Alert"
         html    = f"<h2>Inventory report for <strong>{yard}</strong> yard</h2>"
 
@@ -132,7 +140,7 @@ if __name__ == "__main__":
             print(f"[{yard}] emailed: no changes.")
             continue
 
-        # list diffs
+        # List added/removed/changed
         if not added.empty:
             html += "<h3>Added:</h3><ul>"
             for _, r in added.iterrows():
@@ -149,13 +157,13 @@ if __name__ == "__main__":
                 html += f"<li>Row {r['row']}: values changed</li>"
             html += "</ul>"
 
-        # define matching logic
+        # 4) Define matching logic
         def match_fn(diffs, issue):
-            added, _, _ = diffs
+            added_diff, _, _ = diffs
             text = (issue.title or "") + "\n" + (issue.body or "")
             if yard in text.lower():
                 return True
-            for _, row in added.iterrows():
+            for _, row in added_diff.iterrows():
                 if str(row['row']) in text:
                     return True
             return False
@@ -175,7 +183,7 @@ if __name__ == "__main__":
         html    += "<h3>Matching GitHub Issues:</h3><ul>"
         for issue in matched:
             html += f"<li><a href='{issue.html_url}'>#{issue.number} {issue.title}</a></li>"
-        html += "</ul>"
+        html    += "</ul>"
 
         send_email(RESEND_API_KEY, MONITOR_EMAIL, subject, html)
         print(f"[{yard}] emailed: {len(matched)} match(es).")
