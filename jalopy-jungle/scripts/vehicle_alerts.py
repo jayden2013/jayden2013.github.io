@@ -9,7 +9,7 @@ import os
 # Load Resend API key and GitHub token
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 GITHUB_TOKEN = os.getenv("GH_ALERT_TOKEN")
-REPO_NAME = "jayden2013.github.io"
+REPO_NAME = "jayden2013/jayden2013.github.io"
 ALERT_LABEL = "alert"
 
 # Resolve the CSV directory relative to this script file
@@ -21,7 +21,7 @@ def list_inventory_files():
     files = os.listdir(CSV_DIR)
     yard_files = defaultdict(list)
     for file in files:
-        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\\.csv", file)
+        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\.csv", file)
         if match:
             yard = match.group(1)
             timestamp = datetime.strptime(match.group(2), "%Y-%m-%d-%H-%M-%S")
@@ -31,19 +31,16 @@ def list_inventory_files():
     return yard_files
 
 # 2. Load CSV rows
-
 def load_csv(filepath):
     with open(os.path.join(CSV_DIR, filepath), newline="") as f:
         return list(csv.DictReader(f))
 
 # 3. Compare latest vs previous
-
 def get_new_vehicles(old, new):
     old_set = {tuple(row.items()) for row in old}
     return [row for row in new if tuple(row.items()) not in old_set]
 
 # 4. Get open alerts from GitHub Issues
-
 def get_alerts():
     g = Github(GITHUB_TOKEN)
     repo = g.get_repo(REPO_NAME)
@@ -65,7 +62,6 @@ def get_alerts():
     return alerts
 
 # 5. Match and email alerts
-
 def matches_alert(vehicle, alert):
     try:
         year = int(vehicle["year"])
@@ -76,7 +72,6 @@ def matches_alert(vehicle, alert):
         )
     except:
         return False
-
 
 def send_email(to, vehicle):
     requests.post(
