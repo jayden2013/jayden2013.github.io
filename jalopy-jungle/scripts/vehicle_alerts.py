@@ -21,7 +21,7 @@ def list_inventory_files():
     files = os.listdir(CSV_DIR)
     yard_files = defaultdict(list)
     for file in files:
-        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\.csv", file)
+        match = re.match(r"inventory_(.+?)_(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\\.csv", file)
         if match:
             yard = match.group(1)
             timestamp = datetime.strptime(match.group(2), "%Y-%m-%d-%H-%M-%S")
@@ -31,16 +31,19 @@ def list_inventory_files():
     return yard_files
 
 # 2. Load CSV rows
+
 def load_csv(filepath):
     with open(os.path.join(CSV_DIR, filepath), newline="") as f:
         return list(csv.DictReader(f))
 
 # 3. Compare latest vs previous
+
 def get_new_vehicles(old, new):
     old_set = {tuple(row.items()) for row in old}
     return [row for row in new if tuple(row.items()) not in old_set]
 
 # 4. Get open alerts from GitHub Issues
+
 def get_alerts():
     g = Github(GITHUB_TOKEN)
     repo = g.get_repo(REPO_NAME)
@@ -62,6 +65,7 @@ def get_alerts():
     return alerts
 
 # 5. Match and email alerts
+
 def matches_alert(vehicle, alert):
     try:
         year = int(vehicle["year"])
@@ -72,6 +76,7 @@ def matches_alert(vehicle, alert):
         )
     except:
         return False
+
 
 def send_email(to, vehicle):
     requests.post(
@@ -88,10 +93,26 @@ def send_email(to, vehicle):
         }
     )
 
+def send_no_matches_email(to):
+    requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": f"Bearer {RESEND_API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "from": "alerts@carsandcollectibles.com",
+            "to": to,
+            "subject": "No matching vehicles found today",
+            "text": "We didn’t find any new vehicles that match your alert criteria today. We’ll keep checking each day!"
+        }
+    )
+
 # Main execution
 def main():
     yard_files = list_inventory_files()
     alerts = get_alerts()
+    matched_alerts = set()
 
     for yard, files in yard_files.items():
         if len(files) < 2:
@@ -106,6 +127,12 @@ def main():
             for alert in alerts:
                 if matches_alert(vehicle, alert):
                     send_email(alert["email"], vehicle)
+                    matched_alerts.add(alert["email"])
+
+    # Send "no match" email to alerts not matched
+    for alert in alerts:
+        if alert["email"] not in matched_alerts:
+            send_no_matches_email(alert["email"])
 
 if __name__ == "__main__":
     main()
