@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Automotive photography in Idaho — stills, rollers, night, and detail shots. Book enthusiast-grade photos for your ride." />
+  <meta name="keywords" content="Idaho car photography, Boise rollers, car photoshoot, automotive photography, Treasure Valley" />
+  <title>Automotive Photography — Cars & Collectibles</title>
+
+  <!-- Tailwind to match homepage -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity: 0; }
+    body { background-color: #0b0b0b; overflow-y: auto; position: relative; }
+    body.no-scroll { overflow: hidden; }
+    html, body { height: 100%; }
+    .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
+    /* Full-screen dim overlay that blocks clicks */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9999; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+    .overlay h1 { font-size: 3rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: .2em; text-shadow: 0 2px 6px rgba(0,0,0,.8); padding: 1rem 2rem; border: 3px solid white; border-radius: 0.5rem; background-color: rgba(0,0,0,0.5); }
+  </style>
+</head>
+<body class="text-white font-sans min-h-screen flex flex-col bg-fallback">
+  <!-- Background image layer (same treatment as homepage) -->
+  <div style="background-image: url('images/hero-car.jpg');" class="fixed inset-0 bg-cover bg-center opacity-20 blur-sm -z-10"></div>
+
+  <!-- Semi-transparent overlay -->
+  <div class="overlay"><h1>Page Coming Soon</h1></div>
+
+  <main class="flex-1 w-full">
+    <!-- Hero -->
+    <section class="fade-in-up max-w-2xl mx-auto pt-14 text-center px-6">
+      <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest drop-shadow-xl mb-4">Automotive Photography</h1>
+      <p class="text-gray-300 text-xl md:text-2xl mb-2">From clean stills to cinematic rollers</p>
+      <p class="text-gray-400 text-base md:text-lg mb-10">Serving the Treasure Valley and surrounding Idaho areas. We plan routes, shoot safely, and deliver edit‑ready files.</p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="#packages" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg transition-transform hover:scale-105">See Packages</a>
+        <a href="#book" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg transition-transform hover:scale-105">Book Now</a>
+      </div>
+    </section>
+
+    <!-- Recent Work -->
+    <section class="fade-in-up max-w-6xl mx-auto w-full mt-16 px-6">
+      <h2 class="text-3xl font-extrabold mb-6">Recent Work</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <img src="/images/photography/sample1.jpg" alt="Sample 1" class="w-full h-56 object-cover rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+        <img src="/images/photography/sample2.jpg" alt="Sample 2" class="w-full h-56 object-cover rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+        <img src="/images/photography/sample3.jpg" alt="Sample 3" class="w-full h-56 object-cover rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+        <img src="/images/photography/sample4.jpg" alt="Sample 4" class="w-full h-56 object-cover rounded-xl shadow-md transition-transform hover:scale-[1.02]">
+      </div>
+    </section>
+
+    <!-- Packages -->
+    <section id="packages" class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left px-6">
+      <h2 class="text-3xl font-extrabold mb-6">Packages</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-center">
+          <h3 class="text-xl font-bold mb-2">Still Session</h3>
+          <p class="text-gray-300 mb-4">Up to 60 minutes, 12–18 edited photos.</p>
+          <div class="text-3xl font-extrabold mb-6">$100</div>
+        </div>
+        <div class="rounded-2xl bg-[#131313]/90 border border-red-500/30 p-6 text-center shadow-[0_0_0_1px_rgba(239,68,68,0.2)]">
+          <div class="text-xs uppercase tracking-wider text-red-300 mb-1">Most Popular</div>
+          <h3 class="text-xl font-bold mb-2">Roller Session</h3>
+          <p class="text-gray-300 mb-4">Up to 60 minutes, 10–14 edited rollers.</p>
+          <div class="text-3xl font-extrabold mb-6">$150</div>
+        </div>
+        <div class="rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-center">
+          <h3 class="text-xl font-bold mb-2">Full Feature</h3>
+          <p class="text-gray-300 mb-4">Stills + rollers + 20–30s cinematic short.</p>
+          <div class="text-3xl font-extrabold mb-6">$250</div>
+        </div>
+      </div>
+      <p class="text-sm text-gray-400 mt-4">Add‑ons: extra locations, out‑of‑area travel, rolling rig, raw set delivery.</p>
+    </section>
+
+    <!-- How it works -->
+    <section class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left px-6">
+      <h2 class="text-3xl font-extrabold mb-6">How It Works</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="rounded-xl bg-[#131313]/90 border border-white/10 p-5">
+          <div class="text-sm text-gray-400">01</div>
+          <h4 class="font-bold mt-1">Plan</h4>
+          <p class="text-gray-300 mt-1">Pick a package, lock the date, share your car + vibe refs.</p>
+        </div>
+        <div class="rounded-xl bg-[#131313]/90 border border-white/10 p-5">
+          <div class="text-sm text-gray-400">02</div>
+          <h4 class="font-bold mt-1">Scout</h4>
+          <p class="text-gray-300 mt-1">We propose routes/locations tailored to your car.</p>
+        </div>
+        <div class="rounded-xl bg-[#131313]/90 border border-white/10 p-5">
+          <div class="text-sm text-gray-400">03</div>
+          <h4 class="font-bold mt-1">Shoot</h4>
+          <p class="text-gray-300 mt-1">Guided posing, safe rolling techniques, clean framing.</p>
+        </div>
+        <div class="rounded-xl bg-[#131313]/90 border border-white/10 p-5">
+          <div class="text-sm text-gray-400">04</div>
+          <h4 class="font-bold mt-1">Deliver</h4>
+          <p class="text-gray-300 mt-1">Online gallery within 3–5 days, web + print files.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Booking (form-only; no visible email) -->
+    <section id="book" class="fade-in-up max-w-3xl mx-auto w-full mt-16 text-left px-6">
+      <h2 class="text-3xl font-extrabold mb-6">Book a Session</h2>
+      <form id="booking-form" class="grid gap-4" method="post" data-endpoint="/api/contact" novalidate>
+        <!-- Honeypot -->
+        <div class="hidden"><label>Do not fill<input type="text" name="website" autocomplete="off" tabindex="-1" /></label></div>
+        <label class="block">Name
+          <input class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="name" required />
+        </label>
+        <label class="block">Email
+          <input type="email" class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="email" required />
+        </label>
+        <label class="block">Car
+          <input class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="car" placeholder="Year Make Model" />
+        </label>
+        <label class="block">Package
+          <select class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="package">
+            <option>Still Session — $100</option>
+            <option>Roller Session — $150</option>
+            <option>Full Feature — $250</option>
+          </select>
+        </label>
+        <label class="block">Message
+          <textarea rows="4" class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="message" placeholder="Preferred dates, locations, references…"></textarea>
+        </label>
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg transition-transform hover:scale-[1.02]">Send Request</button>
+        <p id="form-status" class="text-sm text-gray-400" hidden>Sending…</p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="mt-20 py-6 text-sm text-gray-400 fade-in-up text-center">© 2025 Cars & Collectibles LLC. All rights reserved.</footer>
+
+  <!-- Disable scroll while overlay is visible + form handler -->
+  <script>
+    (function(){
+      const overlay = document.querySelector('.overlay');
+      if (overlay) { document.body.classList.add('no-scroll'); }
+      // Helper to remove overlay later
+      window.removeComingSoonOverlay = function(){
+        const ov = document.querySelector('.overlay');
+        if (ov) ov.remove();
+        document.body.classList.remove('no-scroll');
+      };
+      // Form handler
+      const form = document.getElementById('booking-form');
+      const statusEl = document.getElementById('form-status');
+      if(!form) return;
+      function setStatus(msg, cls){ if(!statusEl) return; statusEl.textContent = msg; statusEl.hidden = false; statusEl.className = 'text-sm ' + (cls||''); }
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const hp = form.querySelector('input[name="website"]');
+        if(hp && hp.value.trim() !== ''){ setStatus('Thanks! We\'ll be in touch shortly.', 'text-green-400'); form.reset(); return; }
+        const data = Object.fromEntries(new FormData(form).entries());
+        if(!data.name || !data.email){ setStatus('Please provide your name and a valid email.', 'text-red-400'); return; }
+        setStatus('Sending…', 'text-gray-400');
+        const endpoint = form.getAttribute('data-endpoint') || '/api/contact';
+        try{
+          const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ source:'photography', payload:data }) });
+          if(!res.ok) throw new Error('Request failed');
+          setStatus('Thanks! We\'ll get back to you shortly.', 'text-green-400');
+          form.reset();
+        }catch(err){ setStatus('Something went wrong. Please try again in a minute.', 'text-red-400'); }
+      });
+    })();
+  </script>
+</body>
+</html>
