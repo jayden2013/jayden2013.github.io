@@ -37,16 +37,29 @@
       </div>
     </section>
 
-    <!-- Recent Work -->
-    <section class="fade-in-up max-w-6xl mx-auto w-full mt-16">
-      <h2 class="text-3xl font-extrabold mb-6">Recent Work</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <img src="/images/photography/sample1.jpg" alt="Sample 1" class="w-full h-56 object-cover rounded-xl shadow-md transition-transform hover:scale-[1.02]">
-        <img src="/images/photography/sample2.jpg" alt="Sample 2" class="w-full h-56 object-cover rounded-xl shadow-md transition-transform hover:scale-[1.02]">
-        <img src="/images/photography/sample3.jpg" alt="Sample 3" class="w-full h-56 object-cover rounded-xl shadow-md transition-transform hover:scale-[1.02]">
-        <img src="/images/photography/sample4.jpg" alt="Sample 4" class="w-full h-56 object-cover rounded-xl shadow-md transition-transform hover:scale-[1.02]">
-      </div>
-    </section>
+<!-- Recent Work (Coming Soon overlay) -->
+<section class="fade-in-up max-w-6xl mx-auto w-full mt-16 relative">
+  <h2 class="text-3xl font-extrabold mb-6 text-center">Recent Work</h2>
+
+  <!-- Image grid (dimmed/disabled) -->
+  <div aria-hidden="true"
+       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 filter grayscale opacity-60 blur-[1px] pointer-events-none select-none">
+    <img src="/images/photography/sample1.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
+    <img src="/images/photography/sample2.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
+    <img src="/images/photography/sample3.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
+    <img src="/images/photography/sample4.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
+  </div>
+
+  <!-- Overlay -->
+  <div class="absolute inset-0 flex items-center justify-center">
+    <div class="bg-black/70 backdrop-blur-sm border border-white/10 rounded-2xl px-8 py-6 text-center shadow-xl">
+      <div class="text-2xl md:text-3xl font-extrabold tracking-wide">Coming Soon</div>
+      <p class="text-gray-300 mt-2 max-w-md">
+        We’re curating the gallery. Check back shortly for fresh stills and rollers.
+      </p>
+    </div>
+  </div>
+</section>
 
     <!-- Packages -->
     <section id="packages" class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left">
