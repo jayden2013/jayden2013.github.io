@@ -18,7 +18,6 @@
     body { background-color: #0b0b0b; }
     .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
 
-    /* Slow hero pan */
     @keyframes heroPan {
       0%   { transform: scale(1.04) translateY(0); }
       50%  { transform: scale(1.08) translateY(-8px); }
@@ -26,7 +25,6 @@
     }
     .animate-hero-pan { animation: heroPan 22s ease-in-out infinite; }
 
-    /* Gradient title */
     .title-gradient {
       background: linear-gradient(90deg,#bfdbfe 0%,#60a5fa 25%,#34d399 50%,#22c55e 75%,#a7f3d0 100%);
       background-size: 200% 100%;
@@ -37,14 +35,12 @@
     }
     @keyframes titleGradientSlide { 0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%} }
 
-    /* Respect reduced motion */
     @media (prefers-reduced-motion: reduce) {
       .animate-hero-pan, .transition-all, .hover\:-translate-y-0\.5, .title-gradient {
         animation: none !important; transition: none !important; transform: none !important;
       }
     }
 
-    /* Mobile text override (keep gradient title intact) */
     @media (max-width: 640px) {
       body { color: black !important; }
       body *:not(.title-gradient) { color: black !important; }
@@ -75,17 +71,17 @@
   <main class="fade-in-up w-full max-w-3xl pt-10">
     <!-- Glass Pane: Hero -->
     <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-center mb-8">
-      <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest mb-3">
+      <h1 class="text-3xl sm:text-4xl md:text-6xl font-extrabold uppercase tracking-widest mb-3 break-words">
         <span class="title-gradient">Cars and Collectibles</span>
       </h1>
       <div class="mx-auto h-1.5 w-28 rounded-full bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400 shadow-[0_0_24px_rgba(16,185,129,0.35)] mb-4"></div>
-      <p class="text-gray-200 text-xl md:text-2xl mb-2">From Concept to Concrete</p>
-      <p class="text-gray-300 text-base md:text-lg">
+      <p class="text-gray-200 text-lg sm:text-xl md:text-2xl mb-2">From Concept to Concrete</p>
+      <p class="text-gray-300 text-sm sm:text-base md:text-lg">
         We restore the past, design what’s missing, and drive the future of performance.
       </p>
     </div>
 
-    <!-- Glass Pane: Buttons (preserved) -->
+    <!-- Glass Pane: Buttons -->
     <div class="mt-8 mx-auto max-w-3xl rounded-2xl bg-white/10 backdrop-blur border border-white/20 shadow-xl">
       <div class="flex flex-wrap justify-center items-center gap-4 p-5">
         <a href="photography.html" rel="noopener noreferrer"
