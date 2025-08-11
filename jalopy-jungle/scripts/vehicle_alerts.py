@@ -31,6 +31,19 @@ YARD_CANON = {
     "garden_city": {"garden_city", "garden city", "jalopy jungle (garden city)", "jalopy jungle garden city"},
 }
 
+# ---------- Helpers for issues ----------
+def is_alert_issue(issue) -> bool:
+    """True if issue title starts with 'Alert' (case-insensitive)."""
+    if not issue or not issue.title:
+        return False
+    return issue.title.strip().lower().startswith("alert")
+
+def strip_alert_prefix(title: str) -> str:
+    """Remove leading 'Alert', 'Alert:', 'ALERT -', etc., from a title."""
+    if not title:
+        return ""
+    return re.sub(r'^\s*alert\s*[:\-–]*\s*', '', title, flags=re.IGNORECASE)
+
 # ---------- File helpers ----------
 def get_csv_paths_by_date(directory, yard_name):
     """Return (yesterday_csv, today_csv) for a yard; time-of-day ignored."""
@@ -256,8 +269,11 @@ def send_email(resend_api_key, from_email, to_email, subject, html_body):
 if __name__ == "__main__":
     key_cols = [c.lower() for c in KEY_COLUMNS]
 
-    # Pull and parse all open issues into alert definitions
-    issues = fetch_open_issues(GITHUB_REPO, GITHUB_TOKEN)
+    # Pull all open issues, then FILTER to only those whose titles start with "Alert"
+    raw_issues = fetch_open_issues(GITHUB_REPO, GITHUB_TOKEN)
+    issues = [iss for iss in raw_issues if is_alert_issue(iss)]
+
+    # Parse alert definitions
     alerts = [parse_issue_alert(iss) for iss in issues]
 
     # warn if any issue lacks an email
@@ -296,10 +312,13 @@ if __name__ == "__main__":
                 changed is not None and not changed.empty
             ])
 
-            subject = f"🔔 {a['issue'].title} Inventory Report for {yard}"
+            # Use cleaned title (without 'Alert' prefix) for email text/subject
+            clean_title = strip_alert_prefix(a['issue'].title)
+
+            subject = f"🔔 {clean_title} Inventory Report for {yard}"
             html = [
                 f"<h2>Inventory report for <strong>{yard}</strong></h2>",
-                f"<p><strong>Vehicle:</strong> {a['issue'].title}</p>"
+                f"<p><strong>Vehicle:</strong> {clean_title}</p>"
             ]
 
             # brief filter summary
