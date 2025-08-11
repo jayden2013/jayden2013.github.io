@@ -6,7 +6,9 @@
   <meta name="description" content="Cars & Collectibles specializes in car parts, collectibles, and in-house software like PROFIT for Jalopy Jungle junkyards in Idaho. Find inventory, tips, and unique auto-themed merch.">
   <meta name="keywords" content="Jalopy Jungle, Idaho, junkyard, car parts, parts inventory, eBay flipping, automotive software, collectibles, car merch, auto stickers">
   <title>PROFIT - Parts Resale Optimization & Field Inventory Tool</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity: 0; }
@@ -40,15 +42,11 @@
     @media (prefers-reduced-motion: reduce) {
       .animate-hero-pan, .fade-in-up, .title-gradient { animation: none !important; transition: none !important; }
     }
-	
-	    /* Mobile-only text color override */
+
+    /* Mobile-only text color override — keep gradient title intact */
     @media (max-width: 640px) {
-      body {
-        color: black !important;
-      }
-      body * {
-        color: black !important;
-      }
+      body { color: black !important; }
+      body *:not(.title-gradient) { color: black !important; }
     }
   </style>
 </head>
@@ -78,32 +76,34 @@
       ← Back to Software Solutions
     </a>
 
-    <!-- Animated heading + accent bar -->
-    <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest mb-3">
-      <span class="title-gradient">PROFIT</span>
-    </h1>
-    <div class="mx-auto mb-6 h-1.5 w-28 rounded-full
-                bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
-                shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
+    <!-- Glass Pane: PROFIT + description + CTA -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl px-6 py-6 md:px-8 md:py-8 mb-8">
+      <h1 class="text-3xl sm:text-4xl md:text-6xl font-extrabold uppercase tracking-widest mb-3 break-words">
+        <span class="title-gradient">PROFIT</span>
+      </h1>
+      <div class="mx-auto mb-6 h-1.5 w-28 rounded-full
+                  bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
+                  shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
 
-    <p class="text-gray-200 text-base md:text-lg mb-8">
-      The all-in-one dashboard for junkyard, parts, and eBay sellers,
-      <span class="font-semibold text-yellow-300">built for Jalopy Jungle yards in Idaho.</span>
-      Track inventory, research part prices, add notes, and manage your reselling business like a pro—right from your browser.
-    </p>
+      <p class="text-gray-200 text-base sm:text-lg md:text-lg mb-6">
+        The all-in-one dashboard for junkyard, parts, and eBay sellers,
+        <span class="font-semibold text-yellow-300">built for Jalopy Jungle yards in Idaho.</span>
+        Track inventory, research part prices, add notes, and manage your reselling business like a pro—right from your browser.
+      </p>
 
-    <div class="flex flex-wrap justify-center gap-4 mb-10">
-      <a href="jalopy-jungle/index.html"
-         class="inline-flex items-center justify-center rounded-full px-7 py-3 text-lg font-semibold
-                text-white bg-white/10 backdrop-blur border border-white/20
-                hover:bg-emerald-600/20 hover:border-emerald-500/50
-                transition-all duration-200 hover:-translate-y-0.5
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-        Launch PROFIT
-      </a>
-    </div>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="jalopy-jungle/index.html"
+           class="inline-flex items-center justify-center rounded-full px-7 py-3 text-lg font-semibold
+                  text-white bg-white/10 backdrop-blur border border-white/20
+                  hover:bg-emerald-600/20 hover:border-emerald-500/50
+                  transition-all duration-200 hover:-translate-y-0.5
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+          Launch PROFIT
+        </a>
+      </div>
+    </section>
 
-    <!-- Pricing Section (equal-height cards) -->
+    <!-- Pricing Section (glass card, equal-height cards) -->
     <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mt-8 mb-10">
       <h2 class="text-2xl font-bold mb-4 text-yellow-300">Upgrade to Premium</h2>
 
@@ -211,30 +211,28 @@
       </p>
     </section>
 
-<section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mb-10">
-  <h2 class="text-2xl md:text-3xl font-bold mb-3">Who is PROFIT for?</h2>
-  <p class="text-gray-200 text-base md:text-lg mb-4">
-    Whether you’re a hobbyist or a full-time reseller, PROFIT is built for anyone who:
-  </p>
-  <ul class="list-disc ml-6 text-gray-200 space-y-1 text-left">
-    <li>Sources car parts from junkyards, auctions, or private sellers</li>
-    <li>Sells on eBay, Facebook Marketplace, or locally</li>
-    <li>Wants to keep track of inventory and see what’s profitable</li>
-    <li>Loves organization and hates leaving money on the table</li>
-  </ul>
-  </br>
-<a href="jalopy-jungle/index.html"
-   class="inline-flex items-center justify-center rounded-full px-8 py-4 text-lg font-semibold
-          text-white bg-white/10 backdrop-blur border border-white/20
-          hover:bg-emerald-600/20 hover:border-emerald-500/50
-          transition-all duration-200 hover:-translate-y-0.5
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-  Try PROFIT Now
-</a>
-
-</section>
-
-
+    <!-- Who is PROFIT for? (kept as its own glass pane) -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mb-10">
+      <h2 class="text-2xl md:text-3xl font-bold mb-3">Who is PROFIT for?</h2>
+      <p class="text-gray-200 text-base md:text-lg mb-4">
+        Whether you’re a hobbyist or a full-time reseller, PROFIT is built for anyone who:
+      </p>
+      <ul class="list-disc ml-6 text-gray-200 space-y-1 text-left">
+        <li>Sources car parts from junkyards, auctions, or private sellers</li>
+        <li>Sells on eBay, Facebook Marketplace, or locally</li>
+        <li>Wants to keep track of inventory and see what’s profitable</li>
+        <li>Loves organization and hates leaving money on the table</li>
+      </ul>
+      <br/>
+      <a href="jalopy-jungle/index.html"
+         class="inline-flex items-center justify-center rounded-full px-8 py-4 text-lg font-semibold
+                text-white bg-white/10 backdrop-blur border border-white/20
+                hover:bg-emerald-600/20 hover:border-emerald-500/50
+                transition-all duration-200 hover:-translate-y-0.5
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+        Try PROFIT Now
+      </a>
+    </section>
 
   </main>
 

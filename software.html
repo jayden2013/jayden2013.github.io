@@ -24,7 +24,7 @@
     }
     .animate-hero-pan { animation: heroPan 22s ease-in-out infinite; }
 
-    /* Blue→Green animated gradient title (same as homepage) */
+    /* Blue→Green animated gradient title */
     .title-gradient {
       background: linear-gradient(90deg,
         #bfdbfe 0%,   /* blue-200 */
@@ -49,15 +49,11 @@
     @media (prefers-reduced-motion: reduce) {
       .animate-hero-pan, .fade-in-up, .title-gradient { animation: none !important; transition: none !important; }
     }
-	
-	    /* Mobile-only text color override */
+
+    /* Mobile-only text color override — keep gradient title intact */
     @media (max-width: 640px) {
-      body {
-        color: black !important;
-      }
-      body * {
-        color: black !important;
-      }
+      body { color: black !important; }
+      body *:not(.title-gradient) { color: black !important; }
     }
   </style>
 </head>
@@ -90,17 +86,18 @@
       ← Back to Home
     </a>
 
-    <!-- Matching animated gradient heading + accent bar -->
-    <h1 class="text-4xl md:text-5xl font-extrabold uppercase tracking-widest mb-3">
-      <span class="title-gradient">Our Software</span>
-    </h1>
-    <div class="mx-auto mb-8 h-1.5 w-28 rounded-full
-                bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
-                shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
-
-    <p class="text-gray-200 text-lg mb-10">
-      Powerful tools for car enthusiasts, sellers, and collectors.
-    </p>
+    <!-- Glass Pane: Our Software + subtext -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl px-6 py-6 md:px-8 md:py-8 mb-8">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-widest mb-3 break-words">
+        <span class="title-gradient">Our Software</span>
+      </h1>
+      <div class="mx-auto mb-6 h-1.5 w-28 rounded-full
+                  bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
+                  shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
+      <p class="text-gray-200 text-base sm:text-lg">
+        Powerful tools for car enthusiasts, sellers, and collectors.
+      </p>
+    </section>
 
     <!-- PROFIT App Section (glass card) -->
     <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mb-10 text-left">
