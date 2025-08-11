@@ -38,13 +38,14 @@
     </section>
 
     <!-- FREE offer banner -->
-    <div id="promo-banner" class="mt-8 bg-green-600/90 border border-green-400/30 text-white px-6 py-4 rounded-2xl shadow-lg max-w-xl mx-auto fade-in-up">
-      <div class="text-2xl font-extrabold">🚗 100% Off — Limited Time!</div>
-      <p class="text-sm mt-1 text-green-100">
-        We’re building our portfolio and offering <strong>free sessions</strong> for a short time.
-        Book now to lock in your spot.
-      </p>
-    </div>
+	<div id="promo-banner" class="mt-8 bg-green-600/90 border border-green-400/30 text-white px-6 py-4 rounded-2xl shadow-lg max-w-xl mx-auto fade-in-up">
+	<div class="text-2xl font-extrabold">🚗 100% Off — Limited Time!</div>
+	<p class="text-sm mt-1 text-green-100">
+		We’re building our portfolio and offering <strong>free sessions</strong> for a short time.
+		Book now to lock in your spot.
+	</p>
+	<div id="promo-countdown" class="mt-2 text-sm font-semibold text-white/90"></div>
+	</div>
 
     <!-- Recent Work -->
     <section class="fade-in-up max-w-6xl mx-auto w-full mt-16 relative">
@@ -213,136 +214,174 @@
 
 
   <!-- Packages details + promo expiration (kept separate for clarity) -->
-  <script>
-  (function () {
-    // === Change this when your free promo ends ===
-    const PROMO_END = new Date('2025-09-15T23:59:59');
-    const promoActive = Date.now() < PROMO_END.getTime();
+<script>
+(function () {
+  // === Change this when your free promo ends ===
+  const PROMO_END = new Date('2025-09-15T23:59:59');
 
-    const detailsData = {
-      still: {
-        name: "Still Session",
-        oldPrice: 150,
-        bullets: [
-          "Up to <strong>60 minutes</strong> on location",
-          "<strong>12–18 edited photos</strong> (web + print files)",
-          "Guided posing, lighting, and composition",
-          "Delivery in <strong>3–5 days</strong> via online gallery"
-        ],
-        blurb: "Great for clean feature shots, for sale listings, or garage portraits."
-      },
-      roller: {
-        name: "Roller Session",
-        oldPrice: 200,
-        bullets: [
-          "Up to <strong>60 minutes</strong> (safe & coordinated route)",
-          "<strong>10–14 edited rollers</strong> (web + print files)",
-          "Lead/follow car with stabilization rig",
-          "Delivery in <strong>3–5 days</strong> via online gallery"
-        ],
-        blurb: "Perfect for motion shots that show off stance, aero, and road presence."
-      },
-      feature: {
-        name: "Full Feature",
-        oldPrice: 250,
-        bullets: [
-          "<strong>Stills + rollers</strong> in one session",
-          "Curated locations and route planning",
-          "Delivery in <strong>3–7 days</strong>"
-        ],
-        blurb: "Best value if you want a complete feature for social + print."
-      }
-    };
+  // allow live flip from promo -> standard
+  let promoActive = Date.now() < PROMO_END.getTime();
 
-    const cards = Array.from(document.querySelectorAll(".package-card"));
-    const panel = document.getElementById("package-details");
-    const banner = document.getElementById("promo-banner");
-    const packageSelect = document.querySelector('select[name="package"]');
+  const detailsData = {
+    still:   { name: "Still Session",  oldPrice: 150,
+      bullets: [
+        "Up to <strong>60 minutes</strong> on location",
+        "<strong>12–18 edited photos</strong> (web + print files)",
+        "Guided posing, lighting, and composition",
+        "Delivery in <strong>3–5 days</strong> via online gallery"
+      ],
+      blurb: "Great for clean feature shots, for sale listings, or garage portraits."
+    },
+    roller:  { name: "Roller Session", oldPrice: 200,
+      bullets: [
+        "Up to <strong>60 minutes</strong> (safe & coordinated route)",
+        "<strong>10–14 edited rollers</strong> (web + print files)",
+        "Lead/follow car with stabilization rig",
+        "Delivery in <strong>3–5 days</strong> via online gallery"
+      ],
+      blurb: "Perfect for motion shots that show off stance, aero, and road presence."
+    },
+    feature: { name: "Full Feature",   oldPrice: 250,
+      bullets: [
+        "<strong>Stills + rollers</strong> in one session",
+        "Curated locations and route planning",
+        "Delivery in <strong>3–7 days</strong>"
+      ],
+      blurb: "Best value if you want a complete feature for social + print."
+    }
+  };
 
-    function priceHTML(price) {
-      if (promoActive) {
-        return `
-          <div class="mt-3 text-2xl font-extrabold">
-            <span class="line-through text-gray-500">$${price}</span>
-            <span class="ml-2 text-green-400">FREE</span>
-            <span class="ml-2 text-xs text-green-300 align-middle">Limited Time</span>
-          </div>
-        `;
-      }
+  const cards         = Array.from(document.querySelectorAll(".package-card"));
+  const panel         = document.getElementById("package-details");
+  const banner        = document.getElementById("promo-banner");
+  const countdownEl   = document.getElementById("promo-countdown");
+  const packageSelect = document.querySelector('select[name="package"]');
+
+  function priceHTML(price) {
+    if (promoActive) {
       return `
         <div class="mt-3 text-2xl font-extrabold">
-          $${price}
-          <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
-        </div>
-      `;
+          <span class="line-through text-gray-500">$${price}</span>
+          <span class="ml-2 text-green-400">FREE</span>
+          <span class="ml-2 text-xs text-green-300 align-middle">Limited Time</span>
+        </div>`;
     }
+    return `
+      <div class="mt-3 text-2xl font-extrabold">
+        $${price}
+        <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
+      </div>`;
+  }
 
-    function initCardPrices() {
-      cards.forEach(card => {
-        const key = card.dataset.package;
-        const priceDiv = card.querySelector('.text-3xl.font-extrabold');
-        if (!key || !priceDiv) return;
-        priceDiv.innerHTML = priceHTML(detailsData[key].oldPrice);
-      });
-    }
-
-    function initSelectOptions() {
-      if (!packageSelect) return;
-      const opts = {
-        still:   promoActive ? "Still Session — FREE (Limited Time)" : `Still Session — $${detailsData.still.oldPrice}`,
-        roller:  promoActive ? "Roller Session — FREE (Limited Time)" : `Roller Session — $${detailsData.roller.oldPrice}`,
-        feature: promoActive ? "Full Feature — FREE (Limited Time)"  : `Full Feature — $${detailsData.feature.oldPrice}`
-      };
-      Array.from(packageSelect.options).forEach(opt => {
-        const txt = opt.textContent.toLowerCase();
-        if (txt.includes('still')) opt.textContent = opts.still;
-        if (txt.includes('roller')) opt.textContent = opts.roller;
-        if (txt.includes('full feature')) opt.textContent = opts.feature;
-      });
-    }
-
-    function toggleBanner() {
-      if (!banner) return;
-      if (!promoActive) banner.remove();
-    }
-
-    function selectPackage(key, cardEl) {
-      cards.forEach(c => {
-        c.classList.remove("ring-2","ring-red-500","border-red-500");
-        c.setAttribute("aria-pressed", "false");
-      });
-      cardEl.classList.add("ring-2","ring-red-500","border-red-500");
-      cardEl.setAttribute("aria-pressed", "true");
-
-      const d = detailsData[key];
-      const bullets = d.bullets.map(li => `<li>${li}</li>`).join("");
-      panel.innerHTML = `
-        <h3 class="text-2xl font-bold mb-2">${d.name}</h3>
-        ${priceHTML(d.oldPrice)}
-        <ul class="list-disc pl-6 space-y-2 text-gray-300 mt-4">${bullets}</ul>
-        <div class="mt-4 text-sm text-gray-400">${d.blurb}</div>
-        <a href="#book" class="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-full transition">
-          Book ${d.name}
-        </a>
-      `;
-      panel.classList.remove("hidden");
-    }
-
+  function initCardPrices() {
     cards.forEach(card => {
-      card.tabIndex = 0;
-      card.addEventListener("click", () => selectPackage(card.dataset.package, card));
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          selectPackage(card.dataset.package, card);
-        }
-      });
+      const key = card.dataset.package;
+      const priceDiv = card.querySelector('.text-3xl.font-extrabold');
+      if (!key || !priceDiv) return;
+      priceDiv.innerHTML = priceHTML(detailsData[key].oldPrice);
     });
+  }
 
-    initCardPrices();
-    initSelectOptions();
-    toggleBanner();
-  })();
-  </script>
+  function initSelectOptions() {
+    if (!packageSelect) return;
+    const opts = {
+      still:   promoActive ? "Still Session — FREE (Limited Time)" : `Still Session — $${detailsData.still.oldPrice}`,
+      roller:  promoActive ? "Roller Session — FREE (Limited Time)" : `Roller Session — $${detailsData.roller.oldPrice}`,
+      feature: promoActive ? "Full Feature — FREE (Limited Time)"  : `Full Feature — $${detailsData.feature.oldPrice}`
+    };
+    Array.from(packageSelect.options).forEach(opt => {
+      const txt = opt.textContent.toLowerCase();
+      if (txt.includes('still'))        opt.textContent = opts.still;
+      if (txt.includes('roller'))       opt.textContent = opts.roller;
+      if (txt.includes('full feature')) opt.textContent = opts.feature;
+    });
+  }
+
+  function toggleBanner() {
+    if (!banner) return;
+    if (!promoActive) banner.remove();
+  }
+
+  function selectPackage(key, cardEl) {
+    cards.forEach(c => {
+      c.classList.remove("ring-2","ring-red-500","border-red-500");
+      c.setAttribute("aria-pressed", "false");
+    });
+    cardEl.classList.add("ring-2","ring-red-500","border-red-500");
+    cardEl.setAttribute("aria-pressed", "true");
+
+    const d = detailsData[key];
+    const bullets = d.bullets.map(li => `<li>${li}</li>`).join("");
+    panel.innerHTML = `
+      <h3 class="text-2xl font-bold mb-2">${d.name}</h3>
+      ${priceHTML(d.oldPrice)}
+      <ul class="list-disc pl-6 space-y-2 text-gray-300 mt-4">${bullets}</ul>
+      <div class="mt-4 text-sm text-gray-400">${d.blurb}</div>
+      <a href="#book" class="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-full transition">
+        Book ${d.name}
+      </a>`;
+    panel.classList.remove("hidden");
+  }
+
+  cards.forEach(card => {
+    card.tabIndex = 0;
+    card.addEventListener("click", () => selectPackage(card.dataset.package, card));
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectPackage(card.dataset.package, card);
+      }
+    });
+  });
+
+  // ---------- Countdown ----------
+  let timerId = null;
+
+  function formatRemaining(ms) {
+    if (ms <= 0) return "Offer ended";
+    const totalSec = Math.floor(ms / 1000);
+    const days = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    const d = days > 0 ? `${days}d ` : "";
+    return `Ends in ${d}${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  }
+
+  function updateCountdown() {
+    if (!countdownEl) return;
+    const now = Date.now();
+    const remaining = PROMO_END.getTime() - now;
+    if (remaining <= 0) {
+      countdownEl.textContent = "Offer ended";
+      // flip to standard pricing
+      if (promoActive) {
+        promoActive = false;
+        initCardPrices();
+        initSelectOptions();
+        toggleBanner();
+      }
+      if (timerId) clearInterval(timerId);
+      return;
+    }
+    countdownEl.textContent = formatRemaining(remaining);
+  }
+
+  // Kickoff
+  initCardPrices();
+  initSelectOptions();
+  toggleBanner();
+  updateCountdown();
+  // Auto-expand a default package on load
+const defaultKey = 'still'; // 'still' | 'roller' | 'feature'
+const defaultCard = cards.find(c => c.dataset.package === defaultKey);
+if (defaultCard) selectPackage(defaultKey, defaultCard);
+
+  if (promoActive && countdownEl) {
+    timerId = setInterval(updateCountdown, 1000);
+  }
+})();
+</script>
+
 </body>
 </html>
