@@ -18,7 +18,7 @@
   </style>
 </head>
 <body class="text-white font-sans min-h-screen flex flex-col bg-fallback">
-  <!-- Background image layer (same treatment as homepage) -->
+  <!-- Background image layer -->
   <div style="background-image: url('images/hero-car.jpg');" class="fixed inset-0 bg-cover bg-center opacity-20 blur-sm -z-10"></div>
 
   <main class="flex-1 w-full max-w-6xl mx-auto px-6 pt-12 text-center">
@@ -30,156 +30,87 @@
     <section class="fade-in-up max-w-2xl mx-auto text-center">
       <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest drop-shadow-xl mb-4">Automotive Photography</h1>
       <p class="text-gray-300 text-xl md:text-2xl mb-2">From clean stills to cinematic rollers</p>
-      <p class="text-gray-400 text-base md:text-lg mb-10">Serving the Treasure Valley and surrounding Idaho areas. We plan routes, shoot safely, and deliver edit-ready files.</p>
+      <p class="text-gray-400 text-base md:text-lg mb-6">Serving the Treasure Valley and surrounding Idaho areas. We plan routes, shoot safely, and deliver edit-ready files.</p>
       <div class="flex flex-wrap justify-center gap-4">
         <a href="#packages" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg transition-transform hover:scale-105">See Packages</a>
         <a href="#book" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg transition-transform hover:scale-105">Book Now</a>
       </div>
     </section>
 
-<!-- Recent Work (Coming Soon overlay) -->
-<section class="fade-in-up max-w-6xl mx-auto w-full mt-16 relative">
-  <h2 class="text-3xl font-extrabold mb-6 text-center">Recent Work</h2>
-
-  <!-- Image grid (dimmed/disabled) -->
-  <div aria-hidden="true"
-       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 filter grayscale opacity-60 blur-[1px] pointer-events-none select-none">
-    <img src="/images/photography/sample1.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
-    <img src="/images/photography/sample2.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
-    <img src="/images/photography/sample3.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
-    <img src="/images/photography/sample4.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
-  </div>
-
-  <!-- Overlay -->
-  <div class="absolute inset-0 flex items-center justify-center">
-    <div class="bg-black/70 backdrop-blur-sm border border-white/10 rounded-2xl px-8 py-6 text-center shadow-xl">
-      <div class="text-2xl md:text-3xl font-extrabold tracking-wide">Coming Soon</div>
-      <p class="text-gray-300 mt-2 max-w-md">
-        We’re curating the gallery. Check back shortly for fresh stills and rollers.
+    <!-- FREE offer banner -->
+    <div class="mt-8 bg-green-600/90 border border-green-400/30 text-white px-6 py-4 rounded-2xl shadow-lg max-w-xl mx-auto fade-in-up">
+      <div class="text-2xl font-extrabold">🚗 100% Off — Limited Time!</div>
+      <p class="text-sm mt-1 text-green-100">
+        We’re building our portfolio and offering <strong>free sessions</strong> for a short time.
+        Book now to lock in your spot.
       </p>
     </div>
-  </div>
-</section>
 
-<!-- Packages (clickable) -->
-<section id="packages" class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left px-6">
-  <h2 class="text-3xl font-extrabold mb-6 text-center md:text-left">Packages</h2>
-
-  <div id="package-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Still -->
-    <button type="button"
-            class="package-card rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-left focus:outline-none focus:ring-2 focus:ring-red-500 transition"
-            data-package="still" aria-pressed="false">
-      <h3 class="text-xl font-bold mb-2">Still Session</h3>
-      <p class="text-gray-300 mb-4">Up to 60 minutes, 12–18 edited photos.</p>
-      <div class="text-3xl font-extrabold">$100</div>
-    </button>
-
-    <!-- Roller -->
-    <button type="button"
-            class="package-card rounded-2xl bg-[#131313]/90 border border-red-500/30 p-6 text-left shadow-[0_0_0_1px_rgba(239,68,68,0.2)] focus:outline-none focus:ring-2 focus:ring-red-500 transition"
-            data-package="roller" aria-pressed="false">
-      <div class="text-xs uppercase tracking-wider text-red-300 mb-1">Most Popular</div>
-      <h3 class="text-xl font-bold mb-2">Roller Session</h3>
-      <p class="text-gray-300 mb-4">Up to 60 minutes, 10–14 edited rollers.</p>
-      <div class="text-3xl font-extrabold">$150</div>
-    </button>
-
-    <!-- Full Feature -->
-    <button type="button"
-            class="package-card rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-left focus:outline-none focus:ring-2 focus:ring-red-500 transition"
-            data-package="feature" aria-pressed="false">
-      <h3 class="text-xl font-bold mb-2">Full Feature</h3>
-      <p class="text-gray-300 mb-4">Stills + rollers + 20–30s cinematic short.</p>
-      <div class="text-3xl font-extrabold">$250</div>
-    </button>
-  </div>
-
-  <!-- Small note -->
-  <p class="text-sm text-gray-400 mt-4">Add-ons: extra locations, out-of-area travel, rolling rig, raw set delivery.</p>
-
-  <!-- Details panel -->
-  <div id="package-details"
-       class="mt-8 hidden rounded-2xl bg-[#131313]/90 border border-white/10 p-6 shadow-lg">
-    <!-- Filled by JS -->
-  </div>
-</section>
-
-
-<!-- How it works (centered icons with centered connector line) -->
-<section class="max-w-6xl mx-auto w-full mt-16 px-6">
-  <h2 class="text-3xl font-extrabold mb-6 text-center md:text-left">How It Works</h2>
-
-  <div class="relative rounded-2xl bg-[#131313]/90 border border-white/10 p-6 md:p-8">
-    <!-- Connector line (desktop only, centered on bubbles) -->
-    <div class="hidden md:block absolute top-[2.5rem] left-[14%] right-[14%] h-px bg-white/10 pointer-events-none"></div>
-
-    <ol class="grid grid-cols-1 md:grid-cols-4 gap-8 relative text-center">
-      <!-- Step 01 -->
-      <li class="fade-in-up" style="animation-delay:0.1s">
-        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-black/70 border border-white/10 flex items-center justify-center shadow relative z-10">
-          <!-- Calendar icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 2v4M16 2v4M3 10h18M4 8h16a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a1 1 0 0 1 1-1z"/>
-          </svg>
+    <!-- Recent Work -->
+    <section class="fade-in-up max-w-6xl mx-auto w-full mt-16 relative">
+      <h2 class="text-3xl font-extrabold mb-6 text-center">Recent Work</h2>
+      <div aria-hidden="true"
+           class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 filter grayscale opacity-60 blur-[1px] pointer-events-none select-none">
+        <img src="/images/photography/sample1.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
+        <img src="/images/photography/sample2.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
+        <img src="/images/photography/sample3.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
+        <img src="/images/photography/sample4.jpg" alt="" class="w-full h-56 object-cover rounded-xl shadow-md">
+      </div>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <div class="bg-black/70 backdrop-blur-sm border border-white/10 rounded-2xl px-8 py-6 text-center shadow-xl">
+          <div class="text-2xl md:text-3xl font-extrabold tracking-wide">Coming Soon</div>
+          <p class="text-gray-300 mt-2 max-w-md">
+            We’re curating the gallery. Check back shortly for fresh stills and rollers.
+          </p>
         </div>
-        <div class="text-sm text-gray-400">01</div>
-        <h4 class="font-bold mt-1">Plan</h4>
-        <p class="text-gray-300 text-sm mt-1">Pick a package, lock the date, share your car + vibe refs.</p>
-        <p class="text-gray-400 text-xs mt-1">We align on look, locations, and must-have shots.</p>
-      </li>
+      </div>
+    </section>
 
-      <!-- Step 02 -->
-      <li class="fade-in-up" style="animation-delay:0.3s">
-        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-black/70 border border-white/10 flex items-center justify-center shadow relative z-10">
-          <!-- Map pin icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9c0 5-7 12-7 12S5 14 5 9a7 7 0 1 1 14 0z"/>
-          </svg>
-        </div>
-        <div class="text-sm text-gray-400">02</div>
-        <h4 class="font-bold mt-1">Scout</h4>
-        <p class="text-gray-300 text-sm mt-1">We propose routes/locations tailored to your car.</p>
-        <p class="text-gray-400 text-xs mt-1">Angles, light, and backgrounds picked for your style.</p>
-      </li>
+    <!-- Packages -->
+    <section id="packages" class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left px-6">
+      <h2 class="text-3xl font-extrabold mb-6 text-center md:text-left">Packages</h2>
+      <div id="package-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Still -->
+        <button type="button" class="package-card rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-left" data-package="still" aria-pressed="false">
+          <h3 class="text-xl font-bold mb-2">Still Session</h3>
+          <p class="text-gray-300 mb-4">Up to 60 minutes, 12–18 edited photos.</p>
+          <div class="text-3xl font-extrabold">
+            <span class="line-through text-gray-500">$150</span>
+            <span class="ml-2 text-green-400">FREE</span>
+          </div>
+        </button>
 
-      <!-- Step 03 -->
-      <li class="fade-in-up" style="animation-delay:0.5s">
-        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-black/70 border border-white/10 flex items-center justify-center shadow relative z-10">
-          <!-- Camera icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h3l2-2h6l2 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"/>
-            <circle cx="12" cy="13" r="3.5" />
-          </svg>
-        </div>
-        <div class="text-sm text-gray-400">03</div>
-        <h4 class="font-bold mt-1">Shoot</h4>
-        <p class="text-gray-300 text-sm mt-1">Guided posing, safe rolling techniques, clean framing.</p>
-        <p class="text-gray-400 text-xs mt-1">You focus on driving—we handle the art + safety.</p>
-      </li>
+        <!-- Roller -->
+        <button type="button" class="package-card rounded-2xl bg-[#131313]/90 border border-red-500/30 p-6 text-left" data-package="roller" aria-pressed="false">
+          <div class="text-xs uppercase tracking-wider text-red-300 mb-1">Most Popular</div>
+          <h3 class="text-xl font-bold mb-2">Roller Session</h3>
+          <p class="text-gray-300 mb-4">Up to 60 minutes, 10–14 edited rollers.</p>
+          <div class="text-3xl font-extrabold">
+            <span class="line-through text-gray-500">$200</span>
+            <span class="ml-2 text-green-400">FREE</span>
+          </div>
+        </button>
 
-      <!-- Step 04 -->
-      <li class="fade-in-up" style="animation-delay:0.7s">
-        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-black/70 border border-white/10 flex items-center justify-center shadow relative z-10">
-          <!-- Gallery icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8"/>
-            <rect x="3" y="9" width="18" height="10" rx="2" ry="2"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 15l2-2 3 3 3-4 2 3"/>
-          </svg>
-        </div>
-        <div class="text-sm text-gray-400">04</div>
-        <h4 class="font-bold mt-1">Deliver</h4>
-        <p class="text-gray-300 text-sm mt-1">Online gallery within 3–5 days, web + print files.</p>
-        <p class="text-gray-400 text-xs mt-1">Ready to share, post, and print—no extra steps.</p>
-      </li>
-    </ol>
-  </div>
-</section>
+        <!-- Full Feature -->
+        <button type="button" class="package-card rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-left" data-package="feature" aria-pressed="false">
+          <h3 class="text-xl font-bold mb-2">Full Feature</h3>
+          <p class="text-gray-300 mb-4">Stills + rollers</p>
+          <div class="text-3xl font-extrabold">
+            <span class="line-through text-gray-500">$250</span>
+            <span class="ml-2 text-green-400">FREE</span>
+          </div>
+        </button>
+      </div>
 
+      <!-- Details panel -->
+      <div id="package-details" class="mt-8 hidden rounded-2xl bg-[#131313]/90 border border-white/10 p-6 shadow-lg"></div>
 
-
+      <!-- Small note -->
+      <p class="text-sm text-gray-400 mt-4">Add-ons: extra locations, out-of-area travel, rolling rig, raw set delivery.</p>
+      <p class="mt-2 text-green-300 text-sm font-semibold">
+        🎯 Offer valid while we build our portfolio — spots are filling fast!
+      </p>
+    </section>
 
     <!-- Booking -->
     <section id="book" class="fade-in-up max-w-3xl mx-auto w-full mt-16 text-left">
@@ -187,169 +118,115 @@
       <form id="booking-form" class="grid gap-4" method="post" data-endpoint="https://photography-contact.profit-alerts.workers.dev" novalidate>
         <div class="hidden"><label>Do not fill<input type="text" name="website" autocomplete="off" tabindex="-1" /></label></div>
         <label class="block">Name
-          <input class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="name" required />
+          <input class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2" name="name" required />
         </label>
         <label class="block">Email
-          <input type="email" class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="email" required />
+          <input type="email" class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2" name="email" required />
         </label>
         <label class="block">Vehicle
-          <input class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="car" placeholder="Year Make Model" />
+          <input class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2" name="car" placeholder="Year Make Model" />
         </label>
         <label class="block">Package
-          <select class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="package">
-            <option>Still Session — $100</option>
-            <option>Roller Session — $150</option>
-            <option>Full Feature — $250</option>
+          <select class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2" name="package">
+            <option>Still Session — FREE (Limited Time)</option>
+            <option>Roller Session — FREE (Limited Time)</option>
+            <option>Full Feature — FREE (Limited Time)</option>
           </select>
         </label>
         <label class="block">Message
-          <textarea rows="4" class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="message" placeholder="Preferred dates, locations, references…"></textarea>
+          <textarea rows="4" class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2" name="message" placeholder="Preferred dates, locations, references…"></textarea>
         </label>
-        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg transition-transform hover:scale-[1.02]">Send Request</button>
-        <p id="form-status" class="text-sm text-gray-400" hidden>Sending…</p>
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg">Send Request</button>
       </form>
     </section>
   </main>
 
-  <footer class="mt-20 py-6 text-sm text-gray-400 fade-in-up text-center">© 2025 Cars & Collectibles LLC. All rights reserved.</footer>
+  <footer class="mt-20 py-6 text-sm text-gray-400 text-center">© 2025 Cars & Collectibles LLC. All rights reserved.</footer>
 
+  <!-- Details Panel Script -->
   <script>
   (function () {
-    const form = document.getElementById('booking-form');
-    if (!form) return;
+    const detailsData = {
+      still: {
+        name: "Still Session",
+        oldPrice: 150,
+        bullets: [
+          "Up to <strong>60 minutes</strong> on location",
+          "<strong>12–18 edited photos</strong> (web + print files)",
+          "Guided posing, lighting, and composition",
+          "Delivery in <strong>3–5 days</strong> via online gallery"
+        ],
+        blurb: "Great for clean feature shots, for sale listings, or garage portraits."
+      },
+      roller: {
+        name: "Roller Session",
+        oldPrice: 200,
+        bullets: [
+          "Up to <strong>60 minutes</strong> (safe & coordinated route)",
+          "<strong>10–14 edited rollers</strong> (web + print files)",
+          "Lead/follow car with stabilization rig",
+          "Delivery in <strong>3–5 days</strong> via online gallery"
+        ],
+        blurb: "Perfect for motion shots that show off stance, aero, and road presence."
+      },
+      feature: {
+        name: "Full Feature",
+        oldPrice: 250,
+        bullets: [
+          "<strong>Stills + rollers</strong> in one session",
+          "Curated locations and route planning",
+          "Delivery in <strong>3–7 days</strong>"
+        ],
+        blurb: "Best value if you want a complete feature for social + print."
+      }
+    };
 
-    const statusEl = document.getElementById('form-status');
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const endpoint = form.getAttribute('data-endpoint') || '/api/contact';
+    const cards = Array.from(document.querySelectorAll(".package-card"));
+    const panel = document.getElementById("package-details");
 
-    function setStatus(msg, cls) {
-      if (!statusEl) return;
-      statusEl.textContent = msg;
-      statusEl.hidden = false;
-      statusEl.className = 'text-sm ' + (cls || 'text-gray-400');
+    function priceHTML(oldPrice) {
+      return `
+        <div class="mt-3 text-2xl font-extrabold">
+          <span class="line-through text-gray-500">$${oldPrice}</span>
+          <span class="ml-2 text-green-400">FREE</span>
+          <span class="ml-2 text-xs text-green-300 align-middle">Limited Time</span>
+        </div>
+      `;
     }
 
-    function validEmail(v) {
-      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+    function selectPackage(key, cardEl) {
+      cards.forEach(c => {
+        c.classList.remove("ring-2","ring-red-500","border-red-500");
+        c.setAttribute("aria-pressed", "false");
+      });
+      cardEl.classList.add("ring-2","ring-red-500","border-red-500");
+      cardEl.setAttribute("aria-pressed", "true");
+
+      const d = detailsData[key];
+      const bullets = d.bullets.map(li => `<li>${li}</li>`).join("");
+      panel.innerHTML = `
+        <h3 class="text-2xl font-bold mb-2">${d.name}</h3>
+        ${priceHTML(d.oldPrice)}
+        <ul class="list-disc pl-6 space-y-2 text-gray-300 mt-4">${bullets}</ul>
+        <div class="mt-4 text-sm text-gray-400">${d.blurb}</div>
+        <a href="#book" class="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-full transition">
+          Book ${d.name}
+        </a>
+      `;
+      panel.classList.remove("hidden");
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const hp = form.querySelector('input[name="website"]');
-      if (hp && hp.value.trim() !== '') {
-        setStatus("Thanks! We'll be in touch shortly.", 'text-green-400');
-        form.reset();
-        return;
-      }
-      const data = Object.fromEntries(new FormData(form).entries());
-      if (!data.name || !data.email || !validEmail(data.email)) {
-        setStatus('Please provide your name and a valid email.', 'text-red-400');
-        return;
-      }
-      setStatus('Sending…', 'text-gray-400');
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70', 'cursor-not-allowed'); }
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ source: 'photography', payload: data })
-        });
-        if (!res.ok) {
-          const t = await res.text().catch(() => '');
-          throw new Error(t || 'Request failed');
+    cards.forEach(card => {
+      card.tabIndex = 0;
+      card.addEventListener("click", () => selectPackage(card.dataset.package, card));
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectPackage(card.dataset.package, card);
         }
-        setStatus("Thanks! We'll get back to you shortly.", 'text-green-400');
-        form.reset();
-      } catch (err) {
-        setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
-        console.error('Booking form error:', err);
-      } finally {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70', 'cursor-not-allowed'); }
-      }
+      });
     });
   })();
   </script>
-  
-  <script>
-(function () {
-  const detailsData = {
-    still: {
-      title: "Still Session — $100",
-      html: `
-        <ul class="list-disc pl-6 space-y-2 text-gray-300">
-          <li>Up to <strong>60 minutes</strong> on location</li>
-          <li><strong>12–18 edited photos</strong> (web + print files)</li>
-          <li>Guided posing, lighting, and composition</li>
-          <li>Delivery in <strong>3–5 days</strong> via online gallery</li>
-        </ul>
-        <div class="mt-4 text-sm text-gray-400">Great for clean feature shots, for sale listings, or garage portraits.</div>
-        <a href="#book" class="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-full transition">Book the Still Session</a>
-      `
-    },
-    roller: {
-      title: "Roller Session — $150",
-      html: `
-        <ul class="list-disc pl-6 space-y-2 text-gray-300">
-          <li>Up to <strong>60 minutes</strong> (safe & coordinated route)</li>
-          <li><strong>10–14 edited rollers</strong> (web + print files)</li>
-          <li>Lead/follow car with stabilization rig</li>
-          <li>Delivery in <strong>3–5 days</strong> via online gallery</li>
-        </ul>
-        <div class="mt-4 text-sm text-gray-400">Perfect for motion shots that show off stance, aero, and road presence.</div>
-        <a href="#book" class="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-full transition">Book the Roller Session</a>
-      `
-    },
-    feature: {
-      title: "Full Feature — $250",
-      html: `
-        <ul class="list-disc pl-6 space-y-2 text-gray-300">
-          <li><strong>Stills + rollers</strong> in one session</li>
-          <li><strong>20–30s cinematic short</strong> (vertical or horizontal)</li>
-          <li>Curated locations and route planning</li>
-          <li>Delivery in <strong>3–7 days</strong> (video may add 1–2 days)</li>
-        </ul>
-        <div class="mt-4 text-sm text-gray-400">Best value if you want a complete feature for social + print.</div>
-        <a href="#book" class="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-full transition">Book the Full Feature</a>
-      `
-    }
-  };
-
-  const cards = Array.from(document.querySelectorAll(".package-card"));
-  const panel = document.getElementById("package-details");
-
-  function selectPackage(key, cardEl) {
-    // Toggle visual state
-    cards.forEach(c => {
-      c.classList.remove("ring-2","ring-red-500","border-red-500");
-      c.setAttribute("aria-pressed", "false");
-    });
-    cardEl.classList.add("ring-2","ring-red-500","border-red-500");
-    cardEl.setAttribute("aria-pressed", "true");
-
-    // Fill details
-    const data = detailsData[key];
-    panel.innerHTML = `
-      <h3 class="text-2xl font-bold mb-3">${data.title}</h3>
-      ${data.html}
-    `;
-    panel.classList.remove("hidden");
-
-  }
-
-  // Event listeners
-  cards.forEach(card => {
-    card.addEventListener("click", () => {
-      selectPackage(card.dataset.package, card);
-    });
-    card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        selectPackage(card.dataset.package, card);
-      }
-    });
-  });
-})();
-</script>
-
 </body>
 </html>
