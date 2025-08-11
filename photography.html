@@ -106,32 +106,80 @@
 </section>
 
 
-    <!-- How it works -->
-    <section class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left">
-      <h2 class="text-3xl font-extrabold mb-6">How It Works</h2>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="rounded-xl bg-[#131313]/90 border border-white/10 p-5">
-          <div class="text-sm text-gray-400">01</div>
-          <h4 class="font-bold mt-1">Plan</h4>
-          <p class="text-gray-300 mt-1">Pick a package, lock the date, share your car + vibe refs.</p>
+<!-- How it works (centered icons with centered connector line) -->
+<section class="max-w-6xl mx-auto w-full mt-16 px-6">
+  <h2 class="text-3xl font-extrabold mb-6 text-center md:text-left">How It Works</h2>
+
+  <div class="relative rounded-2xl bg-[#131313]/90 border border-white/10 p-6 md:p-8">
+    <!-- Connector line (desktop only, centered on bubbles) -->
+    <div class="hidden md:block absolute top-[2.5rem] left-[14%] right-[14%] h-px bg-white/10 pointer-events-none"></div>
+
+    <ol class="grid grid-cols-1 md:grid-cols-4 gap-8 relative text-center">
+      <!-- Step 01 -->
+      <li class="fade-in-up" style="animation-delay:0.1s">
+        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-black/70 border border-white/10 flex items-center justify-center shadow relative z-10">
+          <!-- Calendar icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 2v4M16 2v4M3 10h18M4 8h16a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a1 1 0 0 1 1-1z"/>
+          </svg>
         </div>
-        <div class="rounded-xl bg-[#131313]/90 border border-white/10 p-5">
-          <div class="text-sm text-gray-400">02</div>
-          <h4 class="font-bold mt-1">Scout</h4>
-          <p class="text-gray-300 mt-1">We propose routes/locations tailored to your car.</p>
+        <div class="text-sm text-gray-400">01</div>
+        <h4 class="font-bold mt-1">Plan</h4>
+        <p class="text-gray-300 text-sm mt-1">Pick a package, lock the date, share your car + vibe refs.</p>
+        <p class="text-gray-400 text-xs mt-1">We align on look, locations, and must-have shots.</p>
+      </li>
+
+      <!-- Step 02 -->
+      <li class="fade-in-up" style="animation-delay:0.3s">
+        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-black/70 border border-white/10 flex items-center justify-center shadow relative z-10">
+          <!-- Map pin icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9c0 5-7 12-7 12S5 14 5 9a7 7 0 1 1 14 0z"/>
+          </svg>
         </div>
-        <div class="rounded-xl bg-[#131313]/90 border border-white/10 p-5">
-          <div class="text-sm text-gray-400">03</div>
-          <h4 class="font-bold mt-1">Shoot</h4>
-          <p class="text-gray-300 mt-1">Guided posing, safe rolling techniques, clean framing.</p>
+        <div class="text-sm text-gray-400">02</div>
+        <h4 class="font-bold mt-1">Scout</h4>
+        <p class="text-gray-300 text-sm mt-1">We propose routes/locations tailored to your car.</p>
+        <p class="text-gray-400 text-xs mt-1">Angles, light, and backgrounds picked for your style.</p>
+      </li>
+
+      <!-- Step 03 -->
+      <li class="fade-in-up" style="animation-delay:0.5s">
+        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-black/70 border border-white/10 flex items-center justify-center shadow relative z-10">
+          <!-- Camera icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h3l2-2h6l2 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"/>
+            <circle cx="12" cy="13" r="3.5" />
+          </svg>
         </div>
-        <div class="rounded-xl bg-[#131313]/90 border border-white/10 p-5">
-          <div class="text-sm text-gray-400">04</div>
-          <h4 class="font-bold mt-1">Deliver</h4>
-          <p class="text-gray-300 mt-1">Online gallery within 3–5 days, web + print files.</p>
+        <div class="text-sm text-gray-400">03</div>
+        <h4 class="font-bold mt-1">Shoot</h4>
+        <p class="text-gray-300 text-sm mt-1">Guided posing, safe rolling techniques, clean framing.</p>
+        <p class="text-gray-400 text-xs mt-1">You focus on driving—we handle the art + safety.</p>
+      </li>
+
+      <!-- Step 04 -->
+      <li class="fade-in-up" style="animation-delay:0.7s">
+        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-black/70 border border-white/10 flex items-center justify-center shadow relative z-10">
+          <!-- Gallery icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8"/>
+            <rect x="3" y="9" width="18" height="10" rx="2" ry="2"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 15l2-2 3 3 3-4 2 3"/>
+          </svg>
         </div>
-      </div>
-    </section>
+        <div class="text-sm text-gray-400">04</div>
+        <h4 class="font-bold mt-1">Deliver</h4>
+        <p class="text-gray-300 text-sm mt-1">Online gallery within 3–5 days, web + print files.</p>
+        <p class="text-gray-400 text-xs mt-1">Ready to share, post, and print—no extra steps.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+
+
 
     <!-- Booking -->
     <section id="book" class="fade-in-up max-w-3xl mx-auto w-full mt-16 text-left">
