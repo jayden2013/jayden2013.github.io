@@ -53,6 +53,11 @@
       body * {
         color: black !important;
       }
+	    input::placeholder,
+  textarea::placeholder {
+    color: black !important;
+    opacity: 0.7; /* optional: make it slightly lighter than normal text */
+  }
     }
   </style>
   <style>
@@ -107,16 +112,16 @@
     </a>
 
 <!-- Hero -->
-<section class="max-w-6xl mx-auto w-full mt-4 px-6">
+<section class="max-w-6xl mx-auto w-full mt-8 px-6">
   <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-center">
-    <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest mb-3">
+    <h1 class="text-3xl sm:text-4xl md:text-6xl font-extrabold uppercase tracking-tight md:tracking-widest leading-tight break-words mb-3">
       <span class="title-gradient">Automotive Photography</span>
     </h1>
     <div class="mx-auto mb-6 h-1.5 w-28 rounded-full
                 bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
                 shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
 
-    <p class="text-gray-200 text-xl md:text-2xl mb-2">From clean stills to cinematic rollers</p>
+    <p class="text-gray-200 text-lg sm:text-xl md:text-2xl mb-2">From clean stills to cinematic rollers</p>
     <p class="text-gray-300 text-base md:text-lg mb-6">
       Serving the Treasure Valley and surrounding Idaho areas. We plan routes, shoot safely, and deliver edit-ready files.
     </p>
@@ -142,8 +147,6 @@
     </div>
   </div>
 </section>
-
-
 
 <!-- FREE offer banner (green) -->
 <section class="max-w-6xl mx-auto w-full mt-4 px-6">
