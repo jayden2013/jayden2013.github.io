@@ -152,9 +152,9 @@
       statusEl.className = 'text-sm ' + (cls || 'text-gray-400');
     }
 
-    function validEmail(v) {
-      return /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(v);
-    }
+	function validEmail(v) {
+		return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v).trim());
+	}
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
