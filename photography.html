@@ -13,20 +13,13 @@
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity: 0; }
     body { background-color: #0b0b0b; overflow-y: auto; position: relative; }
-    body.no-scroll { overflow: hidden; }
     html, body { height: 100%; }
     .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
-    /* Full-screen dim overlay that blocks clicks */
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9999; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
-    .overlay h1 { font-size: 3rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: .2em; text-shadow: 0 2px 6px rgba(0,0,0,.8); padding: 1rem 2rem; border: 3px solid white; border-radius: 0.5rem; background-color: rgba(0,0,0,0.5); }
   </style>
 </head>
 <body class="text-white font-sans min-h-screen flex flex-col bg-fallback">
   <!-- Background image layer (same treatment as homepage) -->
   <div style="background-image: url('images/hero-car.jpg');" class="fixed inset-0 bg-cover bg-center opacity-20 blur-sm -z-10"></div>
-
-  <!-- Semi-transparent overlay -->
-  <div class="overlay"><h1>Page Coming Soon</h1></div>
 
   <main class="flex-1 w-full">
     <!-- Hero -->
@@ -105,7 +98,7 @@
     <!-- Booking (form-only; no visible email) -->
     <section id="book" class="fade-in-up max-w-3xl mx-auto w-full mt-16 text-left px-6">
       <h2 class="text-3xl font-extrabold mb-6">Book a Session</h2>
-      <form id="booking-form" class="grid gap-4" method="post" data-endpoint="/api/contact" novalidate>
+      <form id="booking-form" class="grid gap-4" method="post" data-endpoint="https://photography-contact.profit-alerts.workers.dev" novalidate>
         <!-- Honeypot -->
         <div class="hidden"><label>Do not fill<input type="text" name="website" autocomplete="off" tabindex="-1" /></label></div>
         <label class="block">Name
@@ -135,38 +128,72 @@
 
   <footer class="mt-20 py-6 text-sm text-gray-400 fade-in-up text-center">© 2025 Cars & Collectibles LLC. All rights reserved.</footer>
 
-  <!-- Disable scroll while overlay is visible + form handler -->
-  <script>
-    (function(){
-      const overlay = document.querySelector('.overlay');
-      if (overlay) { document.body.classList.add('no-scroll'); }
-      // Helper to remove overlay later
-      window.removeComingSoonOverlay = function(){
-        const ov = document.querySelector('.overlay');
-        if (ov) ov.remove();
-        document.body.classList.remove('no-scroll');
-      };
-      // Form handler
-      const form = document.getElementById('booking-form');
-      const statusEl = document.getElementById('form-status');
-      if(!form) return;
-      function setStatus(msg, cls){ if(!statusEl) return; statusEl.textContent = msg; statusEl.hidden = false; statusEl.className = 'text-sm ' + (cls||''); }
-      form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const hp = form.querySelector('input[name="website"]');
-        if(hp && hp.value.trim() !== ''){ setStatus('Thanks! We\'ll be in touch shortly.', 'text-green-400'); form.reset(); return; }
-        const data = Object.fromEntries(new FormData(form).entries());
-        if(!data.name || !data.email){ setStatus('Please provide your name and a valid email.', 'text-red-400'); return; }
-        setStatus('Sending…', 'text-gray-400');
-        const endpoint = form.getAttribute('data-endpoint') || '/api/contact';
-        try{
-          const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ source:'photography', payload:data }) });
-          if(!res.ok) throw new Error('Request failed');
-          setStatus('Thanks! We\'ll get back to you shortly.', 'text-green-400');
-          form.reset();
-        }catch(err){ setStatus('Something went wrong. Please try again in a minute.', 'text-red-400'); }
+  <!-- Form handler -->
+<script>
+(function () {
+  const form = document.getElementById('booking-form');
+  if (!form) return;
+
+  const statusEl = document.getElementById('form-status');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const endpoint = form.getAttribute('data-endpoint') || '/api/contact';
+
+  function setStatus(msg, cls) {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.hidden = false;
+    statusEl.className = 'text-sm ' + (cls || 'text-gray-400');
+  }
+
+  function validEmail(v) {
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Honeypot (should be empty; if filled, pretend success)
+    const hp = form.querySelector('input[name="website"]');
+    if (hp && hp.value.trim() !== '') {
+      setStatus("Thanks! We'll be in touch shortly.", 'text-green-400');
+      form.reset();
+      return;
+    }
+
+    const data = Object.fromEntries(new FormData(form).entries());
+    if (!data.name || !data.email || !validEmail(data.email)) {
+      setStatus('Please provide your name and a valid email.', 'text-red-400');
+      return;
+    }
+
+    setStatus('Sending…', 'text-gray-400');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70', 'cursor-not-allowed'); }
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Worker accepts either flat JSON or {source, payload}; we'll send {source,payload}
+        body: JSON.stringify({ source: 'photography', payload: data })
       });
-    })();
-  </script>
+
+      if (!res.ok) {
+        const t = await res.text().catch(() => '');
+        throw new Error(t || 'Request failed');
+      }
+
+      setStatus("Thanks! We'll get back to you shortly.", 'text-green-400');
+      form.reset();
+    } catch (err) {
+      setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
+      console.error('Booking form error:', err);
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70', 'cursor-not-allowed'); }
+    }
+  });
+})();
+</script>
+
+  
 </body>
 </html>
