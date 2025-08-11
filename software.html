@@ -6,59 +6,132 @@
   <meta name="description" content="Cars & Collectibles specializes in car parts, collectibles, and in-house software like PROFIT for Jalopy Jungle junkyards in Idaho. Find inventory, tips, and unique auto-themed merch.">
   <meta name="keywords" content="Jalopy Jungle, Idaho, junkyard, car parts, parts inventory, eBay flipping, automotive software, collectibles, car merch, auto stickers">
   <title>Software - Cars & Collectibles</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity: 0; }
+
     body { background-color: #0b0b0b; }
     .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
+
+    /* Match homepage subtle motion */
+    @keyframes heroPan {
+      0%   { transform: scale(1.04) translateY(0); }
+      50%  { transform: scale(1.08) translateY(-8px); }
+      100% { transform: scale(1.04) translateY(0); }
+    }
+    .animate-hero-pan { animation: heroPan 22s ease-in-out infinite; }
+
+    /* Blue→Green animated gradient title (same as homepage) */
+    .title-gradient {
+      background: linear-gradient(90deg,
+        #bfdbfe 0%,   /* blue-200 */
+        #60a5fa 25%,  /* blue-400 */
+        #34d399 50%,  /* emerald-400 */
+        #22c55e 75%,  /* green-500 */
+        #a7f3d0 100%  /* emerald-200 */
+      );
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: titleGradientSlide 8s ease-in-out infinite;
+    }
+    @keyframes titleGradientSlide {
+      0%   { background-position:   0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position:   0% 50%; }
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .animate-hero-pan, .fade-in-up, .title-gradient { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
-<body class="text-white font-sans min-h-screen text-center px-6 relative bg-fallback">
-  <div style="background-image: url('images/hero-car.jpg');" class="absolute inset-0 bg-cover bg-center opacity-20 blur-sm -z-10"></div>
+<body class="text-white font-sans min-h-screen text-center px-6 relative overflow-x-hidden bg-fallback">
+
+  <!-- Background image layer (fixed; does NOT scroll) -->
+  <div style="background-image: url('images/hero-car.jpg');"
+       class="pointer-events-none fixed inset-0 bg-cover bg-center opacity-60 blur-sm -z-10 animate-hero-pan"></div>
+
+  <!-- Overlays (fixed as well) -->
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <!-- Soft white wash -->
+    <div class="absolute inset-0 bg-gradient-to-b from-white/24 via-white/16 to-white/10"></div>
+    <!-- Light vignette -->
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.04)_65%,rgba(0,0,0,0.12)_100%)]"></div>
+    <!-- Ultra-light grain -->
+    <div class="absolute inset-0 mix-blend-overlay" style="
+         opacity:.01;
+         background-image:url('data:image/svg+xml;utf8,\
+         <svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22>\
+           <filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%222%22/></filter>\
+           <rect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.25%22/>\
+         </svg>');
+         background-size:200px 200px;">
+    </div>
+  </div>
 
   <main class="fade-in-up max-w-2xl pt-12 mx-auto">
-    <a href="index.html" class="inline-block mb-6 text-red-400 hover:text-red-500 text-lg underline">
+    <a href="index.html" class="inline-block mb-6 text-emerald-300 hover:text-emerald-400 text-lg underline">
       ← Back to Home
     </a>
-    <h1 class="text-4xl md:text-5xl font-extrabold uppercase tracking-widest drop-shadow-xl mb-4">
-      Our Software
+
+    <!-- Matching animated gradient heading + accent bar -->
+    <h1 class="text-4xl md:text-5xl font-extrabold uppercase tracking-widest mb-3">
+      <span class="title-gradient">Our Software</span>
     </h1>
-    <p class="text-gray-300 text-lg mb-10">
+    <div class="mx-auto mb-8 h-1.5 w-28 rounded-full
+                bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
+                shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
+
+    <p class="text-gray-200 text-lg mb-10">
       Powerful tools for car enthusiasts, sellers, and collectors.
     </p>
 
-    <!-- PROFIT App Section -->
-    <section class="bg-black bg-opacity-60 rounded-2xl shadow-xl p-8 mb-10">
-      <div class="flex flex-col items-center md:flex-row md:items-start md:gap-8 text-left">
+    <!-- PROFIT App Section (glass card) -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mb-10 text-left">
+      <div class="flex flex-col items-center md:flex-row md:items-start md:gap-8">
         <div class="flex-shrink-0 mb-4 md:mb-0">
-          <div class="w-24 h-24 bg-zinc-800 rounded-full flex items-center justify-center text-yellow-400 text-3xl font-bold">P</div>
+          <div class="w-24 h-24 bg-white/10 border border-white/20 rounded-full flex items-center justify-center text-yellow-300 text-3xl font-bold">P</div>
         </div>
         <div>
           <h2 class="text-2xl font-bold mb-2">PROFIT</h2>
-          <p class="text-gray-300 mb-4">
-            <span class="font-semibold text-red-400">Parts Resale Optimization & Field Inventory Tool</span><br>
+          <p class="text-gray-200 mb-4">
+            <span class="font-semibold text-emerald-300">Parts Resale Optimization &amp; Field Inventory Tool</span><br>
             Track your junkyard finds, research prices, analyze sales, and streamline your resale business. Free and premium plans available.
           </p>
-          <a href="profit.html"
-             class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-7 py-3 rounded-full shadow-lg transition-transform transform hover:scale-105 text-lg">
-            Learn More
-          </a>
-          <a href="jalopy-jungle/index.html"
-             class="ml-3 bg-red-600 hover:bg-red-700 text-white font-bold px-7 py-3 rounded-full shadow-lg transition-transform transform hover:scale-105 text-lg">
-            Launch PROFIT
-          </a>
+          <div class="flex flex-wrap gap-3">
+            <a href="profit.html"
+               class="inline-flex items-center justify-center rounded-full px-7 py-3 text-lg font-semibold
+                      text-white bg-white/10 backdrop-blur border border-white/20
+                      hover:bg-emerald-600/20 hover:border-emerald-500/50 transition-all duration-200 hover:-translate-y-0.5
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+              Learn More
+            </a>
+            <a href="jalopy-jungle/index.html"
+               class="inline-flex items-center justify-center rounded-full px-7 py-3 text-lg font-semibold
+                      text-white bg-white/10 backdrop-blur border border-white/20
+                      hover:bg-emerald-600/20 hover:border-emerald-500/50 transition-all duration-200 hover:-translate-y-0.5
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+              Launch PROFIT
+            </a>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Future Apps Teaser -->
-    <section class="bg-black bg-opacity-40 rounded-2xl shadow-md p-6">
-      <h3 class="text-xl font-bold mb-2 text-gray-300">More tools coming soon…</h3>
-      <p class="text-gray-400">Stay tuned for new apps and features designed for car lovers and sellers.</p>
+    <!-- Future Apps Teaser (glass card) -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-md p-6 text-left">
+      <h3 class="text-xl font-bold mb-2 text-white">More tools coming soon…</h3>
+      <p class="text-gray-300">Stay tuned for new apps and features designed for car lovers and sellers.</p>
     </section>
   </main>
-  <footer class="mt-20 py-6 text-sm text-gray-400 fade-in-up">
+
+  <footer class="mt-20 py-6 text-sm text-gray-300 fade-in-up">
     © 2025 Cars & Collectibles LLC. All rights reserved.
   </footer>
 </body>

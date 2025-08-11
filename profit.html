@@ -8,82 +8,136 @@
   <title>PROFIT - Parts Resale Optimization & Field Inventory Tool</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity: 0; }
+
     body { background-color: #0b0b0b; }
     .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
-    /* Table styling */
-    .feature-table th, .feature-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #2c2c2c; }
-    .feature-table th { font-weight: 700; background: #191919; }
+
+    /* Subtle hero motion to match site */
+    @keyframes heroPan {
+      0%   { transform: scale(1.04) translateY(0); }
+      50%  { transform: scale(1.08) translateY(-8px); }
+      100% { transform: scale(1.04) translateY(0); }
+    }
+    .animate-hero-pan { animation: heroPan 22s ease-in-out infinite; }
+
+    /* Blue→Green animated gradient title */
+    .title-gradient {
+      background: linear-gradient(90deg,#bfdbfe 0%,#60a5fa 25%,#34d399 50%,#22c55e 75%,#a7f3d0 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent;
+      animation: titleGradientSlide 8s ease-in-out infinite;
+    }
+    @keyframes titleGradientSlide { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+    /* Glass table borders */
+    .feature-table th, .feature-table td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .feature-table th { font-weight: 700; background: rgba(255,255,255,0.06); }
     .feature-table tr:last-child td { border-bottom: 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animate-hero-pan, .fade-in-up, .title-gradient { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
-<body class="text-white font-sans min-h-screen text-center px-6 relative bg-fallback">
-  <!-- Background image layer -->
+<body class="text-white font-sans min-h-screen text-center px-6 relative overflow-x-hidden bg-fallback">
+
+  <!-- Background image layer (brightness matched) -->
   <div style="background-image: url('images/hero-car.jpg');"
-       class="absolute inset-0 bg-cover bg-center opacity-20 blur-sm -z-10"></div>
+       class="pointer-events-none fixed inset-0 bg-cover bg-center opacity-60 blur-sm -z-10 animate-hero-pan"></div>
+
+  <!-- Overlays -->
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-b from-white/24 via-white/16 to-white/10"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.04)_65%,rgba(0,0,0,0.12)_100%)]"></div>
+    <div class="absolute inset-0 mix-blend-overlay" style="
+      opacity:.01;
+      background-image:url('data:image/svg+xml;utf8,\
+      <svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22>\
+        <filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%222%22/></filter>\
+        <rect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.25%22/>\
+      </svg>');
+      background-size:200px 200px;">
+    </div>
+  </div>
 
   <main class="fade-in-up max-w-2xl mx-auto mt-12">
-    <a href="software.html" class="inline-block mb-6 text-red-400 hover:text-red-500 text-lg underline">
+    <a href="software.html" class="inline-block mb-6 text-emerald-300 hover:text-emerald-400 text-lg underline">
       ← Back to Software Solutions
     </a>
-    <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest drop-shadow-xl mb-2">
-      PROFIT
+
+    <!-- Animated heading + accent bar -->
+    <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest mb-3">
+      <span class="title-gradient">PROFIT</span>
     </h1>
-	<p class="text-gray-400 text-base md:text-lg mb-8">
-	The all-in-one dashboard for junkyard, parts, and eBay sellers, <span class="font-semibold text-yellow-400">built for Jalopy Jungle yards in Idaho.</span>
-	Track inventory, research part prices, add notes, and manage your reselling business like a pro—right from your browser.
-	</p>
+    <div class="mx-auto mb-6 h-1.5 w-28 rounded-full
+                bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
+                shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
+
+    <p class="text-gray-200 text-base md:text-lg mb-8">
+      The all-in-one dashboard for junkyard, parts, and eBay sellers,
+      <span class="font-semibold text-yellow-300">built for Jalopy Jungle yards in Idaho.</span>
+      Track inventory, research part prices, add notes, and manage your reselling business like a pro—right from your browser.
+    </p>
 
     <div class="flex flex-wrap justify-center gap-4 mb-10">
       <a href="jalopy-jungle/index.html"
-         class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-7 py-3 rounded-full shadow-lg transition-transform transform hover:scale-105">
+         class="inline-flex items-center justify-center rounded-full px-7 py-3 text-lg font-semibold
+                text-white bg-white/10 backdrop-blur border border-white/20
+                hover:bg-emerald-600/20 hover:border-emerald-500/50
+                transition-all duration-200 hover:-translate-y-0.5
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
         Launch PROFIT
       </a>
     </div>
 
-    <!-- Pricing Section -->
-    <section class="bg-black bg-opacity-70 rounded-2xl shadow-xl p-8 mt-8 mb-10">
-      <h2 class="text-2xl font-bold mb-4 text-yellow-400">Upgrade to Premium</h2>
-      <div class="flex flex-col md:flex-row justify-center items-center gap-8 mb-3">
-        <!-- Monthly Option -->
-        <div class="bg-zinc-900 rounded-xl p-6 mb-6 md:mb-0 w-full md:w-1/2 flex flex-col items-center">
-          <div class="text-3xl font-extrabold text-yellow-300 mb-2">$2.99<span class="text-base font-medium text-gray-300">/month</span></div>
-          <a href="https://buy.stripe.com/6oU3cvfffajeanRcnS8N200"
-             target="_blank"
-             rel="noopener"
-             class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded-full shadow-lg transition-transform hover:scale-105 mt-2 w-full text-lg text-center block">
+    <!-- Pricing Section (equal-height cards) -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mt-8 mb-10">
+      <h2 class="text-2xl font-bold mb-4 text-yellow-300">Upgrade to Premium</h2>
+
+      <div class="flex flex-col md:flex-row md:items-stretch gap-8 mb-3">
+        <!-- Monthly -->
+        <div class="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-6 w-full md:flex-1 flex flex-col">
+          <div class="text-3xl font-extrabold text-yellow-300 mb-2">
+            $2.99 <span class="text-base font-medium text-gray-200">/month</span>
+          </div>
+          <a href="https://buy.stripe.com/6oU3cvfffajeanRcnS8N200" target="_blank" rel="noopener"
+             class="mt-auto w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded-full shadow-lg transition-transform hover:scale-105 text-lg text-center block">
             Upgrade Monthly
           </a>
         </div>
-        <!-- Yearly Option -->
-        <div class="bg-zinc-900 rounded-xl p-6 w-full md:w-1/2 flex flex-col items-center border-2 border-yellow-500">
-          <div class="text-3xl font-extrabold text-yellow-300 mb-2">$29<span class="text-base font-medium text-gray-300">/year</span></div>
-          <div class="text-green-400 text-sm font-semibold mb-2">Save 19% vs. paying monthly</div>
-          <a href="https://buy.stripe.com/4gMaEXd773UQdA3drW8N201"
-             target="_blank"
-             rel="noopener"
-             class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded-full shadow-lg transition-transform hover:scale-105 mt-2 w-full text-lg text-center block">
+
+        <!-- Yearly -->
+        <div class="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-6 w-full md:flex-1 flex flex-col shadow-[0_0_0_1px_rgba(234,179,8,0.25)]">
+          <div class="text-3xl font-extrabold text-yellow-300 mb-2">
+            $29 <span class="text-base font-medium text-gray-200">/year</span>
+          </div>
+          <div class="text-emerald-300 text-sm font-semibold mb-2">
+            Save 19% vs. paying monthly
+          </div>
+          <a href="https://buy.stripe.com/4gMaEXd773UQdA3drW8N201" target="_blank" rel="noopener"
+             class="mt-auto w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded-full shadow-lg transition-transform hover:scale-105 text-lg text-center block">
             Upgrade Yearly
           </a>
         </div>
       </div>
-      <p class="text-xs text-gray-400 text-center">
-        Questions? <a href="mailto:jayden@carsandcollectibles.com" class="underline text-yellow-400">Contact us</a>
+
+      <p class="text-xs text-gray-300 text-center">
+        Questions? <a href="mailto:jayden@carsandcollectibles.com" class="underline text-yellow-300">Contact us</a>
       </p>
     </section>
 
-    <!-- Feature Breakdown Section -->
-    <section class="bg-black bg-opacity-60 rounded-2xl shadow-xl p-8 mb-8">
+    <!-- Feature Breakdown (glass cards) -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mb-8">
       <h2 class="text-3xl md:text-4xl font-bold mb-3 tracking-wide">Free vs Premium Features</h2>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-8">
-        <!-- Free Features -->
-        <div class="bg-zinc-900 bg-opacity-60 rounded-xl p-6">
-          <h3 class="text-xl font-bold text-green-400 mb-2">Free Features</h3>
-          <ul class="list-disc ml-6 text-gray-300 space-y-1">
+        <!-- Free -->
+        <div class="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-6">
+          <h3 class="text-xl font-bold text-emerald-300 mb-2">Free Features</h3>
+          <ul class="list-disc ml-6 text-gray-200 space-y-1">
             <li>View junkyard inventory with search/filter</li>
             <li>See eBay sold prices for any part/vehicle</li>
             <li>Add notes (20 character limit per note)</li>
@@ -96,10 +150,10 @@
             <li>Local browser storage (no cloud sync)</li>
           </ul>
         </div>
-        <!-- Premium Features -->
-        <div class="bg-zinc-900 bg-opacity-60 rounded-xl p-6">
-          <h3 class="text-xl font-bold text-yellow-400 mb-2">Premium Features</h3>
-          <ul class="list-disc ml-6 text-gray-300 space-y-1">
+        <!-- Premium -->
+        <div class="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-6">
+          <h3 class="text-xl font-bold text-yellow-300 mb-2">Premium Features</h3>
+          <ul class="list-disc ml-6 text-gray-200 space-y-1">
             <li>Unlimited notes (no character limit)</li>
             <li>Export inventory and "My Inventory" tables to CSV</li>
             <li>Add unlimited inventory rows</li>
@@ -113,110 +167,68 @@
           </ul>
         </div>
       </div>
+
       <!-- Comparison Table -->
       <div class="overflow-x-auto">
         <table class="w-full feature-table text-base text-left mt-2 mb-2">
           <thead>
             <tr>
-              <th class="text-gray-300 font-semibold">Feature</th>
-              <th class="text-green-400 font-semibold">Free</th>
-              <th class="text-yellow-400 font-semibold">Premium</th>
+              <th class="text-gray-200 font-semibold">Feature</th>
+              <th class="text-emerald-300 font-semibold">Free</th>
+              <th class="text-yellow-300 font-semibold">Premium</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>View Junkyard Inventory</td>
-              <td>✅</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>View eBay Sold Prices</td>
-              <td>✅</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>Add Notes</td>
-              <td>20 character limit</td>
-              <td>Unlimited</td>
-            </tr>
-            <tr>
-              <td>Pick List</td>
-              <td>✅</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>My Inventory Rows</td>
-              <td>Up to 5</td>
-              <td>Unlimited</td>
-            </tr>
-            <tr>
-              <td>Export Inventory/CSV</td>
-              <td>❌</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>eBay Fee Calculator</td>
-              <td>❌</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>Dark Mode</td>
-              <td>❌</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>Settings Panel</td>
-              <td>❌</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>Manage Favorites</td>
-              <td>❌</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>Data Sync/Transfer</td>
-              <td>❌</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>Bulk Editing</td>
-              <td>❌</td>
-              <td>✅</td>
-            </tr>
-            <tr>
-              <td>Early Feature Access</td>
-              <td>❌</td>
-              <td>✅</td>
-            </tr>
+          <tbody class="text-gray-200">
+            <tr><td>View Junkyard Inventory</td><td>✅</td><td>✅</td></tr>
+            <tr><td>View eBay Sold Prices</td><td>✅</td><td>✅</td></tr>
+            <tr><td>Add Notes</td><td>20 character limit</td><td>Unlimited</td></tr>
+            <tr><td>Pick List</td><td>✅</td><td>✅</td></tr>
+            <tr><td>My Inventory Rows</td><td>Up to 5</td><td>Unlimited</td></tr>
+            <tr><td>Export Inventory/CSV</td><td>❌</td><td>✅</td></tr>
+            <tr><td>eBay Fee Calculator</td><td>❌</td><td>✅</td></tr>
+            <tr><td>Dark Mode</td><td>❌</td><td>✅</td></tr>
+            <tr><td>Settings Panel</td><td>❌</td><td>✅</td></tr>
+            <tr><td>Manage Favorites</td><td>❌</td><td>✅</td></tr>
+            <tr><td>Data Sync/Transfer</td><td>❌</td><td>✅</td></tr>
+            <tr><td>Bulk Editing</td><td>❌</td><td>✅</td></tr>
+            <tr><td>Early Feature Access</td><td>❌</td><td>✅</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="text-xs text-gray-400 mt-6 text-center">
+
+      <p class="text-xs text-gray-300 mt-6 text-center">
         Start free and upgrade anytime to unlock premium power features.
       </p>
     </section>
 
-    <section class="mb-10">
-      <h2 class="text-2xl md:text-3xl font-bold mb-3">Who is PROFIT for?</h2>
-      <p class="text-gray-300 text-base md:text-lg mb-4">
-        Whether you’re a hobbyist or a full-time reseller, PROFIT is built for anyone who:
-      </p>
-      <ul class="list-disc ml-6 text-gray-300 space-y-1 text-left inline-block">
-        <li>Sources car parts from junkyards, auctions, or private sellers</li>
-        <li>Sells on eBay, Facebook Marketplace, or locally</li>
-        <li>Wants to keep track of inventory and see what’s profitable</li>
-        <li>Loves organization and hates leaving money on the table</li>
-      </ul>
-    </section>
-    <div class="mt-10">
-      <a href="jalopy-jungle/index.html"
-         class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-4 rounded-full shadow-lg transition-transform transform hover:scale-105 text-lg">
-        Try PROFIT Now
-      </a>
-    </div>
+<section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mb-10">
+  <h2 class="text-2xl md:text-3xl font-bold mb-3">Who is PROFIT for?</h2>
+  <p class="text-gray-200 text-base md:text-lg mb-4">
+    Whether you’re a hobbyist or a full-time reseller, PROFIT is built for anyone who:
+  </p>
+  <ul class="list-disc ml-6 text-gray-200 space-y-1 text-left">
+    <li>Sources car parts from junkyards, auctions, or private sellers</li>
+    <li>Sells on eBay, Facebook Marketplace, or locally</li>
+    <li>Wants to keep track of inventory and see what’s profitable</li>
+    <li>Loves organization and hates leaving money on the table</li>
+  </ul>
+  </br>
+<a href="jalopy-jungle/index.html"
+   class="inline-flex items-center justify-center rounded-full px-8 py-4 text-lg font-semibold
+          text-white bg-white/10 backdrop-blur border border-white/20
+          hover:bg-emerald-600/20 hover:border-emerald-500/50
+          transition-all duration-200 hover:-translate-y-0.5
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+  Try PROFIT Now
+</a>
+
+</section>
+
+
+
   </main>
-  <footer class="mt-20 py-6 text-sm text-gray-400 fade-in-up">
+
+  <footer class="mt-20 py-6 text-sm text-gray-300 fade-in-up">
     © 2025 Cars & Collectibles LLC. All rights reserved.
   </footer>
 </body>
