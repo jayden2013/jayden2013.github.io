@@ -135,63 +135,82 @@
 
   <footer class="mt-20 py-6 text-sm text-gray-400 text-center">© 2025 Cars & Collectibles LLC. All rights reserved.</footer>
 
-  <!-- Booking form script (restored) -->
-  <script>
-  (function () {
-    const form = document.getElementById('booking-form');
-    if (!form) return;
+  <!-- Booking form script -->
+<script>
+(function () {
+  const form = document.getElementById('booking-form');
+  if (!form) return;
 
-    const statusEl = document.getElementById('form-status');
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const endpoint = form.getAttribute('data-endpoint') || '/api/contact';
+  const statusEl  = document.getElementById('form-status');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const endpoint  = form.getAttribute('data-endpoint') || '/api/contact';
 
-    function setStatus(msg, cls) {
-      if (!statusEl) return;
-      statusEl.textContent = msg;
-      statusEl.hidden = false;
-      statusEl.className = 'text-sm ' + (cls || 'text-gray-400');
+  const nameEl  = form.querySelector('input[name="name"]');
+  const emailEl = form.querySelector('input[type="email"][name="email"]');
+  const hpEl    = form.querySelector('input[name="website"]');
+
+  function setStatus(msg, cls) {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.hidden = false;
+    statusEl.className = 'text-sm ' + (cls || 'text-gray-400');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Honeypot: if filled, pretend success
+    if (hpEl && hpEl.value && hpEl.value.trim() !== '') {
+      setStatus("Thanks! We'll be in touch shortly.", 'text-green-400');
+      form.reset();
+      return;
     }
 
-	function validEmail(v) {
-		return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v).trim());
-	}
+    // Read + trim
+    const name  = nameEl ? String(nameEl.value || '').trim() : '';
+    const email = emailEl ? String(emailEl.value || '').trim() : '';
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const hp = form.querySelector('input[name="website"]');
-      if (hp && hp.value.trim() !== '') {
-        setStatus("Thanks! We'll be in touch shortly.", 'text-green-400');
-        form.reset();
-        return;
+    // Use HTML5 validity (type="email") + non-empty name
+    const emailLooksGood = emailEl ? (emailEl.value = email, emailEl.checkValidity()) : false;
+    const nameLooksGood  = name.length > 0;
+
+    console.log('[booking] name:', name, 'email:', email, 'emailValid?', emailLooksGood, 'nameValid?', nameLooksGood);
+
+    if (!nameLooksGood || !emailLooksGood) {
+      setStatus('Please provide your name and a valid email.', 'text-red-400');
+      return;
+    }
+
+    // Build payload from FormData to keep other fields
+    const data = Object.fromEntries(new FormData(form).entries());
+    data.name  = name;   // ensure trimmed
+    data.email = email;  // ensure trimmed
+
+    setStatus('Sending…', 'text-gray-400');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70','cursor-not-allowed'); }
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ source: 'photography', payload: data })
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(() => '');
+        throw new Error(t || 'Request failed');
       }
-      const data = Object.fromEntries(new FormData(form).entries());
-      if (!data.name || !data.email || !validEmail(data.email)) {
-        setStatus('Please provide your name and a valid email.', 'text-red-400');
-        return;
-      }
-      setStatus('Sending…', 'text-gray-400');
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70', 'cursor-not-allowed'); }
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ source: 'photography', payload: data })
-        });
-        if (!res.ok) {
-          const t = await res.text().catch(() => '');
-          throw new Error(t || 'Request failed');
-        }
-        setStatus("Thanks! We'll get back to you shortly.", 'text-green-400');
-        form.reset();
-      } catch (err) {
-        setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
-        console.error('Booking form error:', err);
-      } finally {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70', 'cursor-not-allowed'); }
-      }
-    });
-  })();
-  </script>
+      setStatus("Thanks! We'll get back to you shortly.", 'text-green-400');
+      form.reset();
+    } catch (err) {
+      console.error('Booking form error:', err);
+      setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70','cursor-not-allowed'); }
+    }
+  });
+})();
+</script>
+
 
   <!-- Packages details + promo expiration (kept separate for clarity) -->
   <script>
