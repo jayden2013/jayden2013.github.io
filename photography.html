@@ -21,12 +21,16 @@
   <!-- Background image layer (same treatment as homepage) -->
   <div style="background-image: url('images/hero-car.jpg');" class="fixed inset-0 bg-cover bg-center opacity-20 blur-sm -z-10"></div>
 
-  <main class="flex-1 w-full">
+  <main class="flex-1 w-full max-w-6xl mx-auto px-6 pt-12 text-center">
+    <a href="index.html" class="inline-block mb-6 text-red-400 hover:text-red-500 text-lg underline">
+      ← Back to Home
+    </a>
+
     <!-- Hero -->
-    <section class="fade-in-up max-w-2xl mx-auto pt-14 text-center px-6">
+    <section class="fade-in-up max-w-2xl mx-auto text-center">
       <h1 class="text-5xl md:text-6xl font-extrabold uppercase tracking-widest drop-shadow-xl mb-4">Automotive Photography</h1>
       <p class="text-gray-300 text-xl md:text-2xl mb-2">From clean stills to cinematic rollers</p>
-      <p class="text-gray-400 text-base md:text-lg mb-10">Serving the Treasure Valley and surrounding Idaho areas. We plan routes, shoot safely, and deliver edit‑ready files.</p>
+      <p class="text-gray-400 text-base md:text-lg mb-10">Serving the Treasure Valley and surrounding Idaho areas. We plan routes, shoot safely, and deliver edit-ready files.</p>
       <div class="flex flex-wrap justify-center gap-4">
         <a href="#packages" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg transition-transform hover:scale-105">See Packages</a>
         <a href="#book" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg transition-transform hover:scale-105">Book Now</a>
@@ -34,7 +38,7 @@
     </section>
 
     <!-- Recent Work -->
-    <section class="fade-in-up max-w-6xl mx-auto w-full mt-16 px-6">
+    <section class="fade-in-up max-w-6xl mx-auto w-full mt-16">
       <h2 class="text-3xl font-extrabold mb-6">Recent Work</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <img src="/images/photography/sample1.jpg" alt="Sample 1" class="w-full h-56 object-cover rounded-xl shadow-md transition-transform hover:scale-[1.02]">
@@ -45,7 +49,7 @@
     </section>
 
     <!-- Packages -->
-    <section id="packages" class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left px-6">
+    <section id="packages" class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left">
       <h2 class="text-3xl font-extrabold mb-6">Packages</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-center">
@@ -65,11 +69,11 @@
           <div class="text-3xl font-extrabold mb-6">$250</div>
         </div>
       </div>
-      <p class="text-sm text-gray-400 mt-4">Add‑ons: extra locations, out‑of‑area travel, rolling rig, raw set delivery.</p>
+      <p class="text-sm text-gray-400 mt-4">Add-ons: extra locations, out-of-area travel, rolling rig, raw set delivery.</p>
     </section>
 
     <!-- How it works -->
-    <section class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left px-6">
+    <section class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left">
       <h2 class="text-3xl font-extrabold mb-6">How It Works</h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="rounded-xl bg-[#131313]/90 border border-white/10 p-5">
@@ -95,11 +99,10 @@
       </div>
     </section>
 
-    <!-- Booking (form-only; no visible email) -->
-    <section id="book" class="fade-in-up max-w-3xl mx-auto w-full mt-16 text-left px-6">
+    <!-- Booking -->
+    <section id="book" class="fade-in-up max-w-3xl mx-auto w-full mt-16 text-left">
       <h2 class="text-3xl font-extrabold mb-6">Book a Session</h2>
       <form id="booking-form" class="grid gap-4" method="post" data-endpoint="https://photography-contact.profit-alerts.workers.dev" novalidate>
-        <!-- Honeypot -->
         <div class="hidden"><label>Do not fill<input type="text" name="website" autocomplete="off" tabindex="-1" /></label></div>
         <label class="block">Name
           <input class="mt-1 w-full rounded-xl bg-[#161616] border border-white/10 px-3 py-2 outline-none focus:border-red-500" name="name" required />
@@ -128,72 +131,61 @@
 
   <footer class="mt-20 py-6 text-sm text-gray-400 fade-in-up text-center">© 2025 Cars & Collectibles LLC. All rights reserved.</footer>
 
-  <!-- Form handler -->
-<script>
-(function () {
-  const form = document.getElementById('booking-form');
-  if (!form) return;
+  <script>
+  (function () {
+    const form = document.getElementById('booking-form');
+    if (!form) return;
 
-  const statusEl = document.getElementById('form-status');
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const endpoint = form.getAttribute('data-endpoint') || '/api/contact';
+    const statusEl = document.getElementById('form-status');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const endpoint = form.getAttribute('data-endpoint') || '/api/contact';
 
-  function setStatus(msg, cls) {
-    if (!statusEl) return;
-    statusEl.textContent = msg;
-    statusEl.hidden = false;
-    statusEl.className = 'text-sm ' + (cls || 'text-gray-400');
-  }
-
-  function validEmail(v) {
-    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    // Honeypot (should be empty; if filled, pretend success)
-    const hp = form.querySelector('input[name="website"]');
-    if (hp && hp.value.trim() !== '') {
-      setStatus("Thanks! We'll be in touch shortly.", 'text-green-400');
-      form.reset();
-      return;
+    function setStatus(msg, cls) {
+      if (!statusEl) return;
+      statusEl.textContent = msg;
+      statusEl.hidden = false;
+      statusEl.className = 'text-sm ' + (cls || 'text-gray-400');
     }
 
-    const data = Object.fromEntries(new FormData(form).entries());
-    if (!data.name || !data.email || !validEmail(data.email)) {
-      setStatus('Please provide your name and a valid email.', 'text-red-400');
-      return;
+    function validEmail(v) {
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
     }
 
-    setStatus('Sending…', 'text-gray-400');
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70', 'cursor-not-allowed'); }
-
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Worker accepts either flat JSON or {source, payload}; we'll send {source,payload}
-        body: JSON.stringify({ source: 'photography', payload: data })
-      });
-
-      if (!res.ok) {
-        const t = await res.text().catch(() => '');
-        throw new Error(t || 'Request failed');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const hp = form.querySelector('input[name="website"]');
+      if (hp && hp.value.trim() !== '') {
+        setStatus("Thanks! We'll be in touch shortly.", 'text-green-400');
+        form.reset();
+        return;
       }
-
-      setStatus("Thanks! We'll get back to you shortly.", 'text-green-400');
-      form.reset();
-    } catch (err) {
-      setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
-      console.error('Booking form error:', err);
-    } finally {
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70', 'cursor-not-allowed'); }
-    }
-  });
-})();
-</script>
-
-  
+      const data = Object.fromEntries(new FormData(form).entries());
+      if (!data.name || !data.email || !validEmail(data.email)) {
+        setStatus('Please provide your name and a valid email.', 'text-red-400');
+        return;
+      }
+      setStatus('Sending…', 'text-gray-400');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70', 'cursor-not-allowed'); }
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: 'photography', payload: data })
+        });
+        if (!res.ok) {
+          const t = await res.text().catch(() => '');
+          throw new Error(t || 'Request failed');
+        }
+        setStatus("Thanks! We'll get back to you shortly.", 'text-green-400');
+        form.reset();
+      } catch (err) {
+        setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
+        console.error('Booking form error:', err);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70', 'cursor-not-allowed'); }
+      }
+    });
+  })();
+  </script>
 </body>
 </html>
