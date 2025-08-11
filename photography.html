@@ -38,7 +38,7 @@
     </section>
 
     <!-- FREE offer banner -->
-    <div class="mt-8 bg-green-600/90 border border-green-400/30 text-white px-6 py-4 rounded-2xl shadow-lg max-w-xl mx-auto fade-in-up">
+    <div id="promo-banner" class="mt-8 bg-green-600/90 border border-green-400/30 text-white px-6 py-4 rounded-2xl shadow-lg max-w-xl mx-auto fade-in-up">
       <div class="text-2xl font-extrabold">🚗 100% Off — Limited Time!</div>
       <p class="text-sm mt-1 text-green-100">
         We’re building our portfolio and offering <strong>free sessions</strong> for a short time.
@@ -74,10 +74,7 @@
         <button type="button" class="package-card rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-left" data-package="still" aria-pressed="false">
           <h3 class="text-xl font-bold mb-2">Still Session</h3>
           <p class="text-gray-300 mb-4">Up to 60 minutes, 12–18 edited photos.</p>
-          <div class="text-3xl font-extrabold">
-            <span class="line-through text-gray-500">$150</span>
-            <span class="ml-2 text-green-400">FREE</span>
-          </div>
+          <div class="text-3xl font-extrabold"></div>
         </button>
 
         <!-- Roller -->
@@ -85,20 +82,14 @@
           <div class="text-xs uppercase tracking-wider text-red-300 mb-1">Most Popular</div>
           <h3 class="text-xl font-bold mb-2">Roller Session</h3>
           <p class="text-gray-300 mb-4">Up to 60 minutes, 10–14 edited rollers.</p>
-          <div class="text-3xl font-extrabold">
-            <span class="line-through text-gray-500">$200</span>
-            <span class="ml-2 text-green-400">FREE</span>
-          </div>
+          <div class="text-3xl font-extrabold"></div>
         </button>
 
         <!-- Full Feature -->
         <button type="button" class="package-card rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-left" data-package="feature" aria-pressed="false">
           <h3 class="text-xl font-bold mb-2">Full Feature</h3>
           <p class="text-gray-300 mb-4">Stills + rollers</p>
-          <div class="text-3xl font-extrabold">
-            <span class="line-through text-gray-500">$250</span>
-            <span class="ml-2 text-green-400">FREE</span>
-          </div>
+          <div class="text-3xl font-extrabold"></div>
         </button>
       </div>
 
@@ -143,9 +134,13 @@
 
   <footer class="mt-20 py-6 text-sm text-gray-400 text-center">© 2025 Cars & Collectibles LLC. All rights reserved.</footer>
 
-  <!-- Details Panel Script -->
+  <!-- Details Panel + Promo Expiration Script -->
   <script>
   (function () {
+    // Set promo end date here
+    const PROMO_END = new Date('2025-09-15T23:59:59');
+    const promoActive = Date.now() < PROMO_END.getTime();
+
     const detailsData = {
       still: {
         name: "Still Session",
@@ -183,15 +178,57 @@
 
     const cards = Array.from(document.querySelectorAll(".package-card"));
     const panel = document.getElementById("package-details");
+    const banner = document.getElementById("promo-banner");
+    const packageSelect = document.querySelector('select[name="package"]');
 
-    function priceHTML(oldPrice) {
+    function priceHTML(price) {
+      if (promoActive) {
+        return `
+          <div class="mt-3 text-2xl font-extrabold">
+            <span class="line-through text-gray-500">$${price}</span>
+            <span class="ml-2 text-green-400">FREE</span>
+            <span class="ml-2 text-xs text-green-300 align-middle">Limited Time</span>
+          </div>
+        `;
+      }
       return `
         <div class="mt-3 text-2xl font-extrabold">
-          <span class="line-through text-gray-500">$${oldPrice}</span>
-          <span class="ml-2 text-green-400">FREE</span>
-          <span class="ml-2 text-xs text-green-300 align-middle">Limited Time</span>
+          $${price}
+          <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
         </div>
       `;
+    }
+
+    function initCardPrices() {
+      cards.forEach(card => {
+        const key = card.dataset.package;
+        const priceDiv = card.querySelector('.text-3xl.font-extrabold');
+        if (!key || !priceDiv) return;
+        priceDiv.innerHTML = priceHTML(detailsData[key].oldPrice);
+      });
+    }
+
+    function initSelectOptions() {
+      if (!packageSelect) return;
+      const opts = {
+        still: promoActive ? "Still Session — FREE (Limited Time)"
+                           : `Still Session — $${detailsData.still.oldPrice}`,
+        roller: promoActive ? "Roller Session — FREE (Limited Time)"
+                            : `Roller Session — $${detailsData.roller.oldPrice}`,
+        feature: promoActive ? "Full Feature — FREE (Limited Time)"
+                             : `Full Feature — $${detailsData.feature.oldPrice}`
+      };
+      Array.from(packageSelect.options).forEach(opt => {
+        const txt = opt.textContent.toLowerCase();
+        if (txt.includes('still')) opt.textContent = opts.still;
+        if (txt.includes('roller')) opt.textContent = opts.roller;
+        if (txt.includes('full feature')) opt.textContent = opts.feature;
+      });
+    }
+
+    function toggleBanner() {
+      if (!banner) return;
+      if (!promoActive) banner.remove();
     }
 
     function selectPackage(key, cardEl) {
@@ -226,6 +263,10 @@
         }
       });
     });
+
+    initCardPrices();
+    initSelectOptions();
+    toggleBanner();
   })();
   </script>
 </body>
