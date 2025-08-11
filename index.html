@@ -57,6 +57,16 @@
       .hover\:-translate-y-0\.5,
       .title-gradient { animation: none !important; transition: none !important; transform: none !important; }
     }
+	
+	    /* Mobile-only text color override */
+    @media (max-width: 640px) {
+      body {
+        color: black !important;
+      }
+      body * {
+        color: black !important;
+      }
+    }
   </style>
 </head>
 <body class="text-white font-sans min-h-screen flex flex-col justify-center items-center text-center px-6 relative overflow-x-hidden bg-fallback">

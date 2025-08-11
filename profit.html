@@ -40,6 +40,16 @@
     @media (prefers-reduced-motion: reduce) {
       .animate-hero-pan, .fade-in-up, .title-gradient { animation: none !important; transition: none !important; }
     }
+	
+	    /* Mobile-only text color override */
+    @media (max-width: 640px) {
+      body {
+        color: black !important;
+      }
+      body * {
+        color: black !important;
+      }
+    }
   </style>
 </head>
 <body class="text-white font-sans min-h-screen text-center px-6 relative overflow-x-hidden bg-fallback">
