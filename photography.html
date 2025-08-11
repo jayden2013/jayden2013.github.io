@@ -61,29 +61,50 @@
   </div>
 </section>
 
-    <!-- Packages -->
-    <section id="packages" class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left">
-      <h2 class="text-3xl font-extrabold mb-6">Packages</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-center">
-          <h3 class="text-xl font-bold mb-2">Still Session</h3>
-          <p class="text-gray-300 mb-4">Up to 60 minutes, 12–18 edited photos.</p>
-          <div class="text-3xl font-extrabold mb-6">$100</div>
-        </div>
-        <div class="rounded-2xl bg-[#131313]/90 border border-red-500/30 p-6 text-center shadow-[0_0_0_1px_rgba(239,68,68,0.2)]">
-          <div class="text-xs uppercase tracking-wider text-red-300 mb-1">Most Popular</div>
-          <h3 class="text-xl font-bold mb-2">Roller Session</h3>
-          <p class="text-gray-300 mb-4">Up to 60 minutes, 10–14 edited rollers.</p>
-          <div class="text-3xl font-extrabold mb-6">$150</div>
-        </div>
-        <div class="rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-center">
-          <h3 class="text-xl font-bold mb-2">Full Feature</h3>
-          <p class="text-gray-300 mb-4">Stills + rollers + 20–30s cinematic short.</p>
-          <div class="text-3xl font-extrabold mb-6">$250</div>
-        </div>
-      </div>
-      <p class="text-sm text-gray-400 mt-4">Add-ons: extra locations, out-of-area travel, rolling rig, raw set delivery.</p>
-    </section>
+<!-- Packages (clickable) -->
+<section id="packages" class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left px-6">
+  <h2 class="text-3xl font-extrabold mb-6 text-center md:text-left">Packages</h2>
+
+  <div id="package-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Still -->
+    <button type="button"
+            class="package-card rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-left focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+            data-package="still" aria-pressed="false">
+      <h3 class="text-xl font-bold mb-2">Still Session</h3>
+      <p class="text-gray-300 mb-4">Up to 60 minutes, 12–18 edited photos.</p>
+      <div class="text-3xl font-extrabold">$100</div>
+    </button>
+
+    <!-- Roller -->
+    <button type="button"
+            class="package-card rounded-2xl bg-[#131313]/90 border border-red-500/30 p-6 text-left shadow-[0_0_0_1px_rgba(239,68,68,0.2)] focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+            data-package="roller" aria-pressed="false">
+      <div class="text-xs uppercase tracking-wider text-red-300 mb-1">Most Popular</div>
+      <h3 class="text-xl font-bold mb-2">Roller Session</h3>
+      <p class="text-gray-300 mb-4">Up to 60 minutes, 10–14 edited rollers.</p>
+      <div class="text-3xl font-extrabold">$150</div>
+    </button>
+
+    <!-- Full Feature -->
+    <button type="button"
+            class="package-card rounded-2xl bg-[#131313]/90 border border-white/10 p-6 text-left focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+            data-package="feature" aria-pressed="false">
+      <h3 class="text-xl font-bold mb-2">Full Feature</h3>
+      <p class="text-gray-300 mb-4">Stills + rollers + 20–30s cinematic short.</p>
+      <div class="text-3xl font-extrabold">$250</div>
+    </button>
+  </div>
+
+  <!-- Small note -->
+  <p class="text-sm text-gray-400 mt-4">Add-ons: extra locations, out-of-area travel, rolling rig, raw set delivery.</p>
+
+  <!-- Details panel -->
+  <div id="package-details"
+       class="mt-8 hidden rounded-2xl bg-[#131313]/90 border border-white/10 p-6 shadow-lg">
+    <!-- Filled by JS -->
+  </div>
+</section>
+
 
     <!-- How it works -->
     <section class="fade-in-up max-w-6xl mx-auto w-full mt-16 text-left">
@@ -200,5 +221,87 @@
     });
   })();
   </script>
+  
+  <script>
+(function () {
+  const detailsData = {
+    still: {
+      title: "Still Session — $100",
+      html: `
+        <ul class="list-disc pl-6 space-y-2 text-gray-300">
+          <li>Up to <strong>60 minutes</strong> on location</li>
+          <li><strong>12–18 edited photos</strong> (web + print files)</li>
+          <li>Guided posing, lighting, and composition</li>
+          <li>Delivery in <strong>3–5 days</strong> via online gallery</li>
+        </ul>
+        <div class="mt-4 text-sm text-gray-400">Great for clean feature shots, for sale listings, or garage portraits.</div>
+        <a href="#book" class="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-full transition">Book the Still Session</a>
+      `
+    },
+    roller: {
+      title: "Roller Session — $150",
+      html: `
+        <ul class="list-disc pl-6 space-y-2 text-gray-300">
+          <li>Up to <strong>60 minutes</strong> (safe & coordinated route)</li>
+          <li><strong>10–14 edited rollers</strong> (web + print files)</li>
+          <li>Lead/follow car with stabilization rig</li>
+          <li>Delivery in <strong>3–5 days</strong> via online gallery</li>
+        </ul>
+        <div class="mt-4 text-sm text-gray-400">Perfect for motion shots that show off stance, aero, and road presence.</div>
+        <a href="#book" class="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-full transition">Book the Roller Session</a>
+      `
+    },
+    feature: {
+      title: "Full Feature — $250",
+      html: `
+        <ul class="list-disc pl-6 space-y-2 text-gray-300">
+          <li><strong>Stills + rollers</strong> in one session</li>
+          <li><strong>20–30s cinematic short</strong> (vertical or horizontal)</li>
+          <li>Curated locations and route planning</li>
+          <li>Delivery in <strong>3–7 days</strong> (video may add 1–2 days)</li>
+        </ul>
+        <div class="mt-4 text-sm text-gray-400">Best value if you want a complete feature for social + print.</div>
+        <a href="#book" class="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-full transition">Book the Full Feature</a>
+      `
+    }
+  };
+
+  const cards = Array.from(document.querySelectorAll(".package-card"));
+  const panel = document.getElementById("package-details");
+
+  function selectPackage(key, cardEl) {
+    // Toggle visual state
+    cards.forEach(c => {
+      c.classList.remove("ring-2","ring-red-500","border-red-500");
+      c.setAttribute("aria-pressed", "false");
+    });
+    cardEl.classList.add("ring-2","ring-red-500","border-red-500");
+    cardEl.setAttribute("aria-pressed", "true");
+
+    // Fill details
+    const data = detailsData[key];
+    panel.innerHTML = `
+      <h3 class="text-2xl font-bold mb-3">${data.title}</h3>
+      ${data.html}
+    `;
+    panel.classList.remove("hidden");
+
+  }
+
+  // Event listeners
+  cards.forEach(card => {
+    card.addEventListener("click", () => {
+      selectPackage(card.dataset.package, card);
+    });
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectPackage(card.dataset.package, card);
+      }
+    });
+  });
+})();
+</script>
+
 </body>
 </html>
