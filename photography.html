@@ -14,24 +14,31 @@ redirect_from:
   <meta name="keywords" content="Idaho car photography, Boise rollers, car photoshoot, automotive photography, Treasure Valley" />
   <title>Automotive Photography — Cars & Collectibles</title>
 
-  <script>
-    // MUST run before any <link rel="stylesheet"> or image URLs are parsed
-    (function () {
-      var host = location.hostname;
-      // Treat both apex & www as prod; also handles GitHub Pages if you ever view there
-      var isProd =
-        host === 'carsandcollectibles.com' ||
-        host === 'www.carsandcollectibles.com' ||
-        host.endsWith('.github.io');
+<script>
+(function () {
+  // Treat your live domain(s) as prod; include GH Pages if you preview there
+  const PROD_HOSTS = new Set(['carsandcollectibles.com', 'www.carsandcollectibles.com']);
+  const isGhPages  = /\.github\.io$/i.test(location.hostname);
+  const isProd     = PROD_HOSTS.has(location.hostname) || isGhPages;
 
-      if (!isProd) return; // keep local file viewing untouched
+  if (!isProd) return; // local/dev stays untouched
 
-      var base = document.createElement('base');
-      base.href = '/';
-      // Prepend so it appears before any later <link> or <style>
-      document.head.prepend(base);
-    })();
-  </script>
+  // Inject <base href="/"> if it doesn't already exist
+  if (!document.querySelector('base')) {
+    const base = document.createElement('base');
+    base.href = '/';
+    document.head.prepend(base); // must precede any <link>/<style> for correct URL resolution
+  }
+
+  // With <base>, plain "#id" links jump to "/#id". Fix them to stay on this page.
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.setAttribute('href', './' + a.getAttribute('href'));
+    });
+  });
+})();
+</script>
+
 
   <!-- Tailwind -->
   <link rel="stylesheet" href="dist/tailwind.css">
