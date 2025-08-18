@@ -1,3 +1,10 @@
+---
+layout: null
+permalink: /photography/
+redirect_from:
+  - /photography.html
+---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +13,18 @@
   <meta name="description" content="Automotive photography in Idaho — stills, rollers, night, and detail shots. Book enthusiast-grade photos for your ride." />
   <meta name="keywords" content="Idaho car photography, Boise rollers, car photoshoot, automotive photography, Treasure Valley" />
   <title>Automotive Photography — Cars & Collectibles</title>
+
+<script>
+  (function () {
+    var host = location.hostname;
+    var isProd = host === 'carsandcollectibles.com' || host.endsWith('.github.io');
+    if (!isProd) return; // keep local copies untouched
+    var base = document.createElement('base');
+    base.href = '/';
+    document.head.prepend(base);
+  })();
+</script>
+
 
   <!-- Tailwind -->
   <link rel="stylesheet" href="dist/tailwind.css">
