@@ -16,29 +16,65 @@ redirect_from:
 
 <script>
 (function () {
-  // Treat your live domain(s) as prod; include GH Pages if you preview there
+  // --- PROD-ONLY BASE TAG ---
   const PROD_HOSTS = new Set(['carsandcollectibles.com', 'www.carsandcollectibles.com']);
   const isGhPages  = /\.github\.io$/i.test(location.hostname);
   const isProd     = PROD_HOSTS.has(location.hostname) || isGhPages;
 
-  if (!isProd) return; // local/dev stays untouched
-
-  // Inject <base href="/"> if it doesn't already exist
-  if (!document.querySelector('base')) {
+  if (isProd && !document.querySelector('base')) {
     const base = document.createElement('base');
     base.href = '/';
-    document.head.prepend(base); // must precede any <link>/<style> for correct URL resolution
+    document.head.prepend(base); // must be before any <link>/<style> that uses relative URLs
   }
 
-  // With <base>, plain "#id" links jump to "/#id". Fix them to stay on this page.
-  document.addEventListener('DOMContentLoaded', function () {
+  // --- FIX HASH LINKS UNDER <base> ---
+  // 1) Normalize existing anchors so their href becomes "<current path>#id"
+  function normalizeHashHrefs() {
+    const path = location.pathname.replace(/\/+$/, '') || '/';
     document.querySelectorAll('a[href^="#"]').forEach(a => {
-      a.setAttribute('href', './' + a.getAttribute('href'));
+      const hash = a.getAttribute('href');
+      a.setAttribute('href', path + hash);
     });
+  }
+
+  // 2) Intercept clicks on hash links (works even if new links are added later)
+  function installHashClickHandler() {
+    document.addEventListener('click', function (e) {
+      const a = e.target.closest('a');
+      if (!a) return;
+
+      const href = a.getAttribute('href') || '';
+      const isHashOnThisPage =
+        href.startsWith('#') || href.startsWith(location.pathname + '#');
+
+      if (!isHashOnThisPage) return;
+
+      // prevent the browser from resolving against <base>
+      e.preventDefault();
+
+      // extract the fragment
+      const hash = href.includes('#') ? href.slice(href.indexOf('#') + 1) : '';
+      if (!hash) return;
+
+      // scroll target into view (smooth) and update URL without navigating away
+      const target = document.getElementById(hash) || document.querySelector(`[name="${CSS.escape(hash)}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // optional: move focus for accessibility
+        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+      }
+      const newUrl = location.pathname.replace(/\/+$/, '') + '#' + hash;
+      history.pushState(null, '', newUrl);
+    }, { capture: true });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    normalizeHashHrefs();
+    installHashClickHandler();
   });
 })();
 </script>
-
 
   <!-- Tailwind -->
   <link rel="stylesheet" href="dist/tailwind.css">
