@@ -219,7 +219,7 @@ redirect_from:
 
     <p class="text-gray-200 text-lg sm:text-xl md:text-2xl mb-2">From clean stills to cinematic rollers</p>
     <p class="text-gray-300 text-base md:text-lg mb-6">
-      Serving the Treasure Valley and surrounding Idaho areas. We plan routes, shoot safely, and deliver edit-ready files.
+      The premier choice for automotive photography in Idaho.
     </p>
     <div class="flex flex-wrap justify-center gap-4">
       <a href="#packages"
@@ -267,7 +267,7 @@ redirect_from:
               class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15"
               data-package="still" aria-pressed="false">
         <h3 class="text-xl font-bold mb-2">Still Session</h3>
-        <p class="text-gray-300 mb-4">Up to 60 minutes, 12–18 edited photos.</p>
+        <p class="text-gray-300 mb-4">12–18 edited photos.</p>
         <div class="text-3xl font-extrabold"></div>
       </button>
 
@@ -277,7 +277,7 @@ redirect_from:
               data-package="roller" aria-pressed="false">
         <div class="text-xs uppercase tracking-wider text-emerald-300 mb-1">Most Popular</div>
         <h3 class="text-xl font-bold mb-2">Roller Session</h3>
-        <p class="text-gray-300 mb-4">Up to 60 minutes, 10–14 edited rollers.</p>
+        <p class="text-gray-300 mb-4">10–14 edited rollers.</p>
         <div class="text-3xl font-extrabold"></div>
       </button>
 
@@ -322,7 +322,7 @@ redirect_from:
           </span>
         </div>
         <p class="text-gray-300 text-sm mt-3">
-          Edited photos on a USB drive — convenient for backup or offline viewing.
+          Edited photos on a USB drive.
         </p>
       </div>
 
@@ -337,7 +337,7 @@ redirect_from:
           </span>
         </div>
         <p class="text-gray-300 text-sm mt-3">
-          Photos delivered on a disc for easy sharing or archival. (Some newer devices lack optical drives.)
+          Photos delivered on a disc for easy sharing or archival.
         </p>
       </div>
     </div>
@@ -578,18 +578,14 @@ redirect_from:
   const detailsData = {
     still:   { name: "Still Session",  oldPrice: 150,
       bullets: [
-        "Up to <strong>60 minutes</strong> on location",
         "<strong>12–18 edited photos</strong> (web + print-ready files)",
-        "Guided posing, lighting, and composition",
         "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>"
       ],
       blurb: "Great for clean feature shots, for sale listings, or garage portraits."
     },
     roller:  { name: "Roller Session", oldPrice: 200,
       bullets: [
-        "Up to <strong>60 minutes</strong> (safe & coordinated route)",
         "<strong>10–14 edited rollers</strong> (web + print-ready files)",
-        "Lead/follow car with stabilization rig",
         "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>"
       ],
       blurb: "Perfect for motion shots that show off stance, aero, and road presence."
@@ -597,7 +593,6 @@ redirect_from:
     feature: { name: "Full Feature",   oldPrice: 250,
       bullets: [
         "<strong>Stills + rollers</strong> in one session",
-        "Curated locations and route planning",
         "Delivery in <strong>3–7 days</strong> via <strong>free email</strong>"
       ],
       blurb: "Best value if you want a complete feature for social + print."
@@ -613,21 +608,22 @@ redirect_from:
   const countdownEl   = document.getElementById("promo-countdown");
   const packageSelect = document.querySelector('select[name="package"]');
 
-  function priceHTML(price) {
-    if (promoActive) {
-      return `
-        <div class="mt-3 text-2xl font-extrabold">
-          <span class="line-through text-gray-500">$${price}</span>
-          <span class="ml-2 text-emerald-400">FREE</span>
-          <span class="ml-2 text-xs text-emerald-300 align-middle">Limited Time</span>
-        </div>`;
-    }
+function priceHTML(price) {
+  if (promoActive) {
     return `
       <div class="mt-3 text-2xl font-extrabold">
-        $${price}
-        <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
+        <span class="line-through decoration-4 decoration-red-500 text-white/90">$${price}</span>
+        <span class="ml-3 text-emerald-400">FREE</span>
+        <span class="ml-2 text-xs text-emerald-300 align-middle">Limited Time</span>
       </div>`;
   }
+  return `
+    <div class="mt-3 text-2xl font-extrabold">
+      $${price}
+      <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
+    </div>`;
+}
+
 
   function initCardPrices() {
     cards.forEach(card => {
