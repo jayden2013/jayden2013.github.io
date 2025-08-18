@@ -16,7 +16,17 @@ redirect_from:
 
 <script>
 (function () {
-  // --- PROD-ONLY BASE TAG ---
+  // --- 0) Normalize /photography -> /photography/ and PRESERVE any hash ---
+  // (Jekyll serves the page at /photography/, so hitting /photography drops the hash on redirect)
+  if (location.pathname === '/photography') {
+    var dest = '/photography/';
+    if (location.hash) dest += location.hash;
+    // replace() so history doesn't keep the wrong URL
+    location.replace(dest);
+    return; // stop here; browser will load the canonical URL next
+  }
+
+  // --- 1) PROD-ONLY BASE TAG (so relative assets work at /photography/) ---
   const PROD_HOSTS = new Set(['carsandcollectibles.com', 'www.carsandcollectibles.com']);
   const isGhPages  = /\.github\.io$/i.test(location.hostname);
   const isProd     = PROD_HOSTS.has(location.hostname) || isGhPages;
@@ -24,48 +34,60 @@ redirect_from:
   if (isProd && !document.querySelector('base')) {
     const base = document.createElement('base');
     base.href = '/';
-    document.head.prepend(base); // must be before any <link>/<style> that uses relative URLs
+    document.head.prepend(base); // must appear before any <link>/<style> that uses relative URLs
   }
 
-  // --- FIX HASH LINKS UNDER <base> ---
-  // 1) Normalize existing anchors so their href becomes "<current path>#id"
+  // --- 2) HASH-LINK BEHAVIOR UNDER <base> ---
+  // Make sure "#id" links target THIS PAGE's canonical path (with trailing slash)
+  function getCanonicalPath() {
+    // Ensure trailing slash on directory paths (e.g., /photography/)
+    const p = location.pathname;
+    if (p === '/') return '/';
+    // if it looks like a file (has a dot), leave it alone; otherwise add trailing slash
+    return /\.[a-z0-9]+$/i.test(p) ? p : (p.endsWith('/') ? p : p + '/');
+  }
+
   function normalizeHashHrefs() {
-    const path = location.pathname.replace(/\/+$/, '') || '/';
+    const path = getCanonicalPath();
     document.querySelectorAll('a[href^="#"]').forEach(a => {
-      const hash = a.getAttribute('href');
-      a.setAttribute('href', path + hash);
+      const hash = a.getAttribute('href'); // e.g., "#book"
+      a.setAttribute('href', path + hash); // e.g., "/photography/#book"
     });
   }
 
-  // 2) Intercept clicks on hash links (works even if new links are added later)
+  // Intercept clicks on same-page hash links so <base> can't bounce us to "/#id"
   function installHashClickHandler() {
     document.addEventListener('click', function (e) {
       const a = e.target.closest('a');
       if (!a) return;
 
       const href = a.getAttribute('href') || '';
-      const isHashOnThisPage =
-        href.startsWith('#') || href.startsWith(location.pathname + '#');
+      const path = getCanonicalPath();
 
-      if (!isHashOnThisPage) return;
+      const isSamePageHash =
+        href === '#' ||
+        href.startsWith('#') ||
+        href.startsWith(path + '#');
 
-      // prevent the browser from resolving against <base>
+      if (!isSamePageHash) return;
+
       e.preventDefault();
 
-      // extract the fragment
       const hash = href.includes('#') ? href.slice(href.indexOf('#') + 1) : '';
       if (!hash) return;
 
-      // scroll target into view (smooth) and update URL without navigating away
       const target = document.getElementById(hash) || document.querySelector(`[name="${CSS.escape(hash)}"]`);
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // optional: move focus for accessibility
         if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
         target.focus({ preventScroll: true });
       }
-      const newUrl = location.pathname.replace(/\/+$/, '') + '#' + hash;
-      history.pushState(null, '', newUrl);
+
+      // Update URL to /photography/#id (or current canonical path)
+      const newUrl = path + '#' + hash;
+      if (location.href !== location.origin + newUrl) {
+        history.pushState(null, '', newUrl);
+      }
     }, { capture: true });
   }
 
@@ -75,6 +97,8 @@ redirect_from:
   });
 })();
 </script>
+
+
 
   <!-- Tailwind -->
   <link rel="stylesheet" href="dist/tailwind.css">
