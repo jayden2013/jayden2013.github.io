@@ -14,16 +14,24 @@ redirect_from:
   <meta name="keywords" content="Idaho car photography, Boise rollers, car photoshoot, automotive photography, Treasure Valley" />
   <title>Automotive Photography — Cars & Collectibles</title>
 
-<script>
-  (function () {
-    var host = location.hostname;
-    var isProd = host === 'carsandcollectibles.com' || host.endsWith('.github.io');
-    if (!isProd) return; // keep local copies untouched
-    var base = document.createElement('base');
-    base.href = '/';
-    document.head.prepend(base);
-  })();
-</script>
+  <script>
+    // MUST run before any <link rel="stylesheet"> or image URLs are parsed
+    (function () {
+      var host = location.hostname;
+      // Treat both apex & www as prod; also handles GitHub Pages if you ever view there
+      var isProd =
+        host === 'carsandcollectibles.com' ||
+        host === 'www.carsandcollectibles.com' ||
+        host.endsWith('.github.io');
+
+      if (!isProd) return; // keep local file viewing untouched
+
+      var base = document.createElement('base');
+      base.href = '/';
+      // Prepend so it appears before any later <link> or <style>
+      document.head.prepend(base);
+    })();
+  </script>
 
 
   <!-- Tailwind -->
