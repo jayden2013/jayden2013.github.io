@@ -1,3 +1,10 @@
+---
+layout: null
+permalink: /photography/
+redirect_from:
+  - /photography.html
+---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -209,6 +216,54 @@
   </div>
 </section>
 
+<!-- Add-ons (clickable cards that sync with form) -->
+<section id="addons" class="max-w-6xl mx-auto w-full mt-4 px-6">
+  <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-left">
+    <h2 class="text-3xl font-extrabold mb-2 text-center md:text-left">Add-ons</h2>
+    <p class="text-emerald-300 font-semibold mb-6">
+      Email delivery is always <strong>free</strong>. High-resolution, print-ready files included.
+    </p>
+
+    <div id="addon-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- USB -->
+      <div
+        class="addon-card rounded-2xl bg-white/10 border border-white/20 p-5 cursor-pointer transition hover:bg-white/15 focus:outline-none"
+        data-addon="usb_drive" role="button" tabindex="0" aria-pressed="false">
+        <div class="flex items-center">
+          <h3 class="text-lg font-bold">USB Drive</h3>
+          <span class="ml-6 inline-flex items-center rounded-full border border-emerald-400 px-4 py-1 text-sm font-extrabold text-emerald-300">
+            $20
+          </span>
+        </div>
+        <p class="text-gray-300 text-sm mt-3">
+          Edited photos on a USB drive — convenient for backup or offline viewing.
+        </p>
+      </div>
+
+      <!-- CD / DVD -->
+      <div
+        class="addon-card rounded-2xl bg-white/10 border border-white/20 p-5 cursor-pointer transition hover:bg-white/15 focus:outline-none"
+        data-addon="cd_dvd" role="button" tabindex="0" aria-pressed="false">
+        <div class="flex items-center">
+          <h3 class="text-lg font-bold">CD / DVD</h3>
+          <span class="ml-6 inline-flex items-center rounded-full border border-emerald-400 px-4 py-1 text-sm font-extrabold text-emerald-300">
+            $10
+          </span>
+        </div>
+        <p class="text-gray-300 text-sm mt-3">
+          Photos delivered on a disc for easy sharing or archival. (Some newer devices lack optical drives.)
+        </p>
+      </div>
+    </div>
+
+    <p class="text-xs text-gray-400 mt-4">
+      Prints and posters can be arranged separately after your shoot if desired.
+    </p>
+  </div>
+</section>
+
+
+
 
 <!-- Booking (glass card same width as others) -->
 <section id="book" class="max-w-6xl mx-auto w-full mt-4 px-6">
@@ -240,6 +295,31 @@
       <label class="block">Message
         <textarea rows="4" class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white placeholder:text-gray-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="message" placeholder="Preferred dates, locations, references…"></textarea>
       </label>
+	  
+<!-- Add-ons -->
+<fieldset class="grid gap-2">
+  <legend class="font-semibold">Add-ons (optional)</legend>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" name="addons" value="usb_drive"
+           class="rounded bg-white/5 border-white/30">
+    <span>USB Drive — $20</span>
+  </label>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" name="addons" value="cd_dvd"
+           class="rounded bg-white/5 border-white/30">
+    <span>CD / DVD — $10</span>
+  </label>
+</fieldset>
+
+<p class="text-sm text-emerald-300 -mb-2">Email delivery is always free. Files are print-ready.</p>
+
+<!-- Total Cost -->
+<div id="total-cost" class="text-lg font-bold text-emerald-300 mt-4">
+  Total: $0
+</div>
+
 
       <button type="submit"
               class="inline-flex items-center justify-center rounded-full px-8 py-3 text-lg font-semibold
@@ -290,8 +370,6 @@
       // Read + trim
       const name  = nameEl ? String(nameEl.value || '').trim() : '';
       const email = emailEl ? String(emailEl.value || '').trim() : '';
-
-      // Built-in validity + non-empty name
       const emailLooksGood = emailEl ? (emailEl.value = email, emailEl.checkValidity()) : false;
       const nameLooksGood  = name.length > 0;
 
@@ -300,8 +378,27 @@
         return;
       }
 
-      const data = Object.fromEntries(new FormData(form).entries());
-      data.name  = name;
+      // Build payload with support for multi-value fields
+      const fd = new FormData(form);
+
+      const data = {};
+      // single-value fields first
+      for (const [k, v] of fd.entries()) {
+        if (k === 'addons') continue;      // handled below
+        if (k === 'prints') continue;      // handled below
+        if (data[k] === undefined) data[k] = v;
+      }
+
+      // multi-value: addons (checkboxes)
+      const addons = fd.getAll('addons');         // ["usb_drive", "cd_dvd"] etc.
+      if (addons.length) data.addons = addons;
+
+      // boolean-ish checkbox for prints
+      const printsInterested = fd.getAll('prints').includes('interested');
+      data.prints_interested = printsInterested;
+
+      // keep trimmed canonical name/email
+      data.name = name;
       data.email = email;
 
       setStatus('Sending…', 'text-gray-300');
@@ -328,181 +425,322 @@
     });
   })();
   </script>
+  
+<script>
+(function () {
+  const form = document.getElementById('booking-form');
+  if (!form) return;
+
+  const totalEl = document.getElementById('total-cost');
+  const usbCb   = form.querySelector('input[value="usb_drive"]');
+  const cdCb    = form.querySelector('input[value="cd_dvd"]');
+  const pkgSel  = form.querySelector('select[name="package"]');
+
+  const ADDON_PRICES = { usb_drive: 20, cd_dvd: 10 };
+
+  // Map the select text to our keys in detailsData
+  function getPackageKey() {
+    if (!pkgSel) return null;
+    const t = (pkgSel.options[pkgSel.selectedIndex]?.textContent || '').toLowerCase();
+    if (t.includes('full feature')) return 'feature';
+    if (t.includes('roller'))       return 'roller';
+    if (t.includes('still'))        return 'still';
+    return null;
+  }
+
+  function getPackagePrice() {
+    const cfg = window.PHOTO_CONFIG || {};
+    const key = getPackageKey();
+    if (!key || !cfg.detailsData) return 0;
+
+    // $0 during promo; otherwise oldPrice from your config
+    if (cfg.promoActive) return 0;
+    const price = Number(cfg.detailsData[key]?.oldPrice || 0);
+    return Number.isFinite(price) ? price : 0;
+  }
+
+  function getAddonsTotal() {
+    let total = 0;
+    if (usbCb?.checked) total += ADDON_PRICES.usb_drive;
+    if (cdCb?.checked)  total += ADDON_PRICES.cd_dvd;
+    return total;
+  }
+
+  function updateTotal() {
+    const grand = getPackagePrice() + getAddonsTotal();
+    if (totalEl) totalEl.textContent = `Total: $${grand}`;
+  }
+
+  // Update when anything relevant changes
+  [usbCb, cdCb, pkgSel].forEach(el => el && el.addEventListener('change', updateTotal));
+
+  // Initialize on load
+  updateTotal();
+})();
+</script>
+
+
 
   <!-- Packages details + promo expiration -->
-  <script>
-  (function () {
-    // === Change this when your free promo ends ===
-    const PROMO_END = new Date('2025-09-15T23:59:59');
+<script>
+(function () {
+  // === Change this when your free promo ends ===
+  const PROMO_END = new Date('2025-09-15T23:59:59');
+  let promoActive = Date.now() < PROMO_END.getTime();
 
-    let promoActive = Date.now() < PROMO_END.getTime();
+  // Package copy (print-ready + free email)
+  const detailsData = {
+    still:   { name: "Still Session",  oldPrice: 150,
+      bullets: [
+        "Up to <strong>60 minutes</strong> on location",
+        "<strong>12–18 edited photos</strong> (web + print-ready files)",
+        "Guided posing, lighting, and composition",
+        "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>"
+      ],
+      blurb: "Great for clean feature shots, for sale listings, or garage portraits."
+    },
+    roller:  { name: "Roller Session", oldPrice: 200,
+      bullets: [
+        "Up to <strong>60 minutes</strong> (safe & coordinated route)",
+        "<strong>10–14 edited rollers</strong> (web + print-ready files)",
+        "Lead/follow car with stabilization rig",
+        "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>"
+      ],
+      blurb: "Perfect for motion shots that show off stance, aero, and road presence."
+    },
+    feature: { name: "Full Feature",   oldPrice: 250,
+      bullets: [
+        "<strong>Stills + rollers</strong> in one session",
+        "Curated locations and route planning",
+        "Delivery in <strong>3–7 days</strong> via <strong>free email</strong>"
+      ],
+      blurb: "Best value if you want a complete feature for social + print."
+    }
+  };
 
-    const detailsData = {
-      still:   { name: "Still Session",  oldPrice: 150,
-        bullets: [
-          "Up to <strong>60 minutes</strong> on location",
-          "<strong>12–18 edited photos</strong> (web + print files)",
-          "Guided posing, lighting, and composition",
-          "Delivery in <strong>3–5 days</strong> via online gallery"
-        ],
-        blurb: "Great for clean feature shots, for sale listings, or garage portraits."
-      },
-      roller:  { name: "Roller Session", oldPrice: 200,
-        bullets: [
-          "Up to <strong>60 minutes</strong> (safe & coordinated route)",
-          "<strong>10–14 edited rollers</strong> (web + print files)",
-          "Lead/follow car with stabilization rig",
-          "Delivery in <strong>3–5 days</strong> via online gallery"
-        ],
-        blurb: "Perfect for motion shots that show off stance, aero, and road presence."
-      },
-      feature: { name: "Full Feature",   oldPrice: 250,
-        bullets: [
-          "<strong>Stills + rollers</strong> in one session",
-          "Curated locations and route planning",
-          "Delivery in <strong>3–7 days</strong>"
-        ],
-        blurb: "Best value if you want a complete feature for social + print."
-      }
-    };
+  // 👉 Expose to the total-cost script
+  window.PHOTO_CONFIG = { promoActive, detailsData };
 
-    const cards         = Array.from(document.querySelectorAll(".package-card"));
-    const panel         = document.getElementById("package-details");
-    const banner        = document.getElementById("promo-banner");
-    const countdownEl   = document.getElementById("promo-countdown");
-    const packageSelect = document.querySelector('select[name="package"]');
+  const cards         = Array.from(document.querySelectorAll(".package-card"));
+  const panel         = document.getElementById("package-details");
+  const banner        = document.getElementById("promo-banner");
+  const countdownEl   = document.getElementById("promo-countdown");
+  const packageSelect = document.querySelector('select[name="package"]');
 
-    function priceHTML(price) {
-      if (promoActive) {
-        return `
-          <div class="mt-3 text-2xl font-extrabold">
-            <span class="line-through text-gray-500">$${price}</span>
-            <span class="ml-2 text-emerald-400">FREE</span>
-            <span class="ml-2 text-xs text-emerald-300 align-middle">Limited Time</span>
-          </div>`;
-      }
+  function priceHTML(price) {
+    if (promoActive) {
       return `
         <div class="mt-3 text-2xl font-extrabold">
-          $${price}
-          <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
+          <span class="line-through text-gray-500">$${price}</span>
+          <span class="ml-2 text-emerald-400">FREE</span>
+          <span class="ml-2 text-xs text-emerald-300 align-middle">Limited Time</span>
         </div>`;
     }
+    return `
+      <div class="mt-3 text-2xl font-extrabold">
+        $${price}
+        <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
+      </div>`;
+  }
 
-    function initCardPrices() {
-      cards.forEach(card => {
-        const key = card.dataset.package;
-        const priceDiv = card.querySelector('.text-3xl.font-extrabold');
-        if (!key || !priceDiv) return;
-        priceDiv.innerHTML = priceHTML(detailsData[key].oldPrice);
-      });
-    }
-
-    function initSelectOptions() {
-      if (!packageSelect) return;
-      const opts = {
-        still:   promoActive ? "Still Session — FREE (Limited Time)" : `Still Session — $${detailsData.still.oldPrice}`,
-        roller:  promoActive ? "Roller Session — FREE (Limited Time)" : `Roller Session — $${detailsData.roller.oldPrice}`,
-        feature: promoActive ? "Full Feature — FREE (Limited Time)"  : `Full Feature — $${detailsData.feature.oldPrice}`
-      };
-      Array.from(packageSelect.options).forEach(opt => {
-        const txt = opt.textContent.toLowerCase();
-        if (txt.includes('still'))        opt.textContent = opts.still;
-        if (txt.includes('roller'))       opt.textContent = opts.roller;
-        if (txt.includes('full feature')) opt.textContent = opts.feature;
-      });
-    }
-
-    function toggleBanner() {
-      if (!banner) return;
-      if (!promoActive) banner.remove();
-    }
-
-    function selectPackage(key, cardEl) {
-      // Toggle visual state
-      cards.forEach(c => {
-        c.classList.remove("ring-2","ring-emerald-400","border-emerald-400");
-        c.setAttribute("aria-pressed", "false");
-      });
-      cardEl.classList.add("ring-2","ring-emerald-400","border-emerald-400");
-      cardEl.setAttribute("aria-pressed", "true");
-
-      // Fill details
-      const d = detailsData[key];
-      const bullets = d.bullets.map(li => `<li>${li}</li>`).join("");
-      panel.innerHTML = `
-        <h3 class="text-2xl font-bold mb-2">${d.name}</h3>
-        ${priceHTML(d.oldPrice)}
-        <ul class="list-disc pl-6 space-y-2 text-gray-300 mt-4">${bullets}</ul>
-        <div class="mt-4 text-sm text-gray-400">${d.blurb}</div>
-        <a href="#book"
-           class="inline-flex mt-6 items-center justify-center rounded-full px-6 py-3 font-bold
-                  text-white bg-white/10 backdrop-blur border border-white/20
-                  hover:bg-emerald-600/20 hover:border-emerald-500/50 transition">
-          Book ${d.name}
-        </a>`;
-      panel.classList.remove("hidden");
-    }
-
-    // Bind events
+  function initCardPrices() {
     cards.forEach(card => {
-      card.tabIndex = 0;
-      card.addEventListener("click", () => selectPackage(card.dataset.package, card));
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          selectPackage(card.dataset.package, card);
-        }
-      });
+      const key = card.dataset.package;
+      const priceDiv = card.querySelector('.text-3xl.font-extrabold');
+      if (!key || !priceDiv) return;
+      priceDiv.innerHTML = priceHTML(detailsData[key].oldPrice);
     });
+  }
 
-    // ---------- Countdown ----------
-    const PROMO_TIMER = { id: null };
+  function initSelectOptions() {
+    if (!packageSelect) return;
+    const opts = {
+      still:   promoActive ? "Still Session — FREE (Limited Time)" : `Still Session — $${detailsData.still.oldPrice}`,
+      roller:  promoActive ? "Roller Session — FREE (Limited Time)" : `Roller Session — $${detailsData.roller.oldPrice}`,
+      feature: promoActive ? "Full Feature — FREE (Limited Time)"  : `Full Feature — $${detailsData.feature.oldPrice}`
+    };
+    Array.from(packageSelect.options).forEach(opt => {
+      const txt = opt.textContent.toLowerCase();
+      if (txt.includes('still'))        opt.textContent = opts.still;
+      if (txt.includes('roller'))       opt.textContent = opts.roller;
+      if (txt.includes('full feature')) opt.textContent = opts.feature;
+    });
+  }
 
-    function formatRemaining(ms) {
-      if (ms <= 0) return "Offer ended";
-      const totalSec = Math.floor(ms / 1000);
-      const days = Math.floor(totalSec / 86400);
-      const hours = Math.floor((totalSec % 86400) / 3600);
-      const mins = Math.floor((totalSec % 3600) / 60);
-      const secs = totalSec % 60;
-      const d = days > 0 ? `${days}d ` : "";
-      return `Ends in ${d}${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
-    }
+  function toggleBanner() {
+    if (!banner) return;
+    if (!promoActive) banner.remove();
+  }
 
-    function updateCountdown() {
-      if (!countdownEl) return;
-      const now = Date.now();
-      const remaining = PROMO_END.getTime() - now;
-      if (remaining <= 0) {
-        countdownEl.textContent = "Offer ended";
-        if (promoActive) {
-          promoActive = false;
-          initCardPrices();
-          initSelectOptions();
-          toggleBanner();
-        }
-        if (PROMO_TIMER.id) clearInterval(PROMO_TIMER.id);
-        return;
+  function selectPackage(key, cardEl) {
+    // Toggle visual state
+    cards.forEach(c => {
+      c.classList.remove("ring-2","ring-emerald-400","border-emerald-400");
+      c.setAttribute("aria-pressed", "false");
+    });
+    cardEl.classList.add("ring-2","ring-emerald-400","border-emerald-400");
+    cardEl.setAttribute("aria-pressed", "true");
+
+    // Fill details
+    const d = detailsData[key];
+    const bullets = d.bullets.map(li => `<li>${li}</li>`).join("");
+    panel.innerHTML = `
+      <h3 class="text-2xl font-bold mb-2">${d.name}</h3>
+      ${priceHTML(d.oldPrice)}
+      <ul class="list-disc pl-6 space-y-2 text-gray-300 mt-4">${bullets}</ul>
+      <div class="mt-4 text-sm text-gray-400">${d.blurb}</div>
+      <a href="#book"
+         class="inline-flex mt-6 items-center justify-center rounded-full px-6 py-3 font-bold
+                text-white bg-white/10 backdrop-blur border border-white/20
+                hover:bg-emerald-600/20 hover:border-emerald-500/50 transition">
+        Book ${d.name}
+      </a>`;
+    panel.classList.remove("hidden");
+
+    // 👉 Keep the <select> in sync so totals update
+    if (packageSelect) {
+      const label = key === 'feature' ? 'full feature' : key; // match text used in options
+      const match = Array.from(packageSelect.options).find(o =>
+        o.textContent.toLowerCase().includes(label)
+      );
+      if (match) {
+        packageSelect.value = match.value;
+        packageSelect.dispatchEvent(new Event('change'));
       }
-      countdownEl.textContent = formatRemaining(remaining);
     }
+  }
 
-    // Kickoff
-    initCardPrices();
-    initSelectOptions();
-    toggleBanner();
+  // ---------- Countdown ----------
+  const PROMO_TIMER = { id: null };
 
-    // Auto-expand default package on load
-    const defaultKey = 'roller';
-    const defaultCard = cards.find(c => c.dataset.package === defaultKey);
-    if (defaultCard) selectPackage(defaultKey, defaultCard);
+  function formatRemaining(ms) {
+    if (ms <= 0) return "Offer ended";
+    const totalSec = Math.floor(ms / 1000);
+    const days = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    const d = days > 0 ? `${days}d ` : "";
+    return `Ends in ${d}${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  }
 
-    if (promoActive && countdownEl) {
-      PROMO_TIMER.id = setInterval(updateCountdown, 1000);
-      updateCountdown();
+  function updateCountdown() {
+    if (!countdownEl) return;
+    const now = Date.now();
+    const remaining = PROMO_END.getTime() - now;
+    if (remaining <= 0) {
+      countdownEl.textContent = "Offer ended";
+      if (promoActive) {
+        promoActive = false;
+        // refresh UI + select texts
+        initCardPrices();
+        initSelectOptions();
+        toggleBanner();
+        // 👉 keep PHOTO_CONFIG in sync
+        window.PHOTO_CONFIG.promoActive = promoActive;
+      }
+      if (PROMO_TIMER.id) clearInterval(PROMO_TIMER.id);
+      return;
     }
-  })();
-  </script>
+    countdownEl.textContent = formatRemaining(remaining);
+  }
+
+  // Bind card events
+  cards.forEach(card => {
+    card.tabIndex = 0;
+    card.addEventListener("click", () => selectPackage(card.dataset.package, card));
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectPackage(card.dataset.package, card);
+      }
+    });
+  });
+
+  // Kickoff
+  initCardPrices();
+  initSelectOptions();
+  toggleBanner();
+
+  // Auto-expand default package on load
+  const defaultKey = 'roller';
+  const defaultCard = cards.find(c => c.dataset.package === defaultKey);
+  if (defaultCard) selectPackage(defaultKey, defaultCard);
+
+  if (promoActive && countdownEl) {
+    PROMO_TIMER.id = setInterval(updateCountdown, 1000);
+    updateCountdown();
+  }
+})();
+</script>
+
+<script>
+(function () {
+  const form = document.getElementById('booking-form');
+  if (!form) return;
+
+  const addonCards = Array.from(document.querySelectorAll('.addon-card'));
+  const checkUsb   = form.querySelector('input[name="addons"][value="usb_drive"]');
+  const checkCd    = form.querySelector('input[name="addons"][value="cd_dvd"]');
+
+  // Map card key -> checkbox element
+  const ADDON_CHECKBOX = {
+    usb_drive: checkUsb,
+    cd_dvd: checkCd
+  };
+
+  function setCardSelected(card, selected) {
+    card.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    card.classList.toggle('ring-2', selected);
+    card.classList.toggle('ring-emerald-400', selected);
+    card.classList.toggle('border-emerald-400', selected);
+  }
+
+  function syncFromCheckbox(key) {
+    const card = addonCards.find(c => c.dataset.addon === key);
+    const cb   = ADDON_CHECKBOX[key];
+    if (card && cb) setCardSelected(card, !!cb.checked);
+  }
+
+  function toggleAddon(key) {
+    const cb = ADDON_CHECKBOX[key];
+    if (!cb) return;
+    cb.checked = !cb.checked;
+    // update card visuals
+    syncFromCheckbox(key);
+    // notify any listeners (like total-cost script)
+    cb.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  // Bind card interactions
+  addonCards.forEach(card => {
+    const key = card.dataset.addon;
+    if (!key) return;
+
+    card.addEventListener('click', () => toggleAddon(key));
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleAddon(key);
+      }
+    });
+  });
+
+  // Keep visuals in sync if user clicks checkboxes directly
+  [checkUsb, checkCd].forEach(cb => {
+    if (!cb) return;
+    cb.addEventListener('change', () => {
+      const key = cb.value; // usb_drive or cd_dvd
+      syncFromCheckbox(key);
+    });
+  });
+
+  // Initialize selection state on load
+  Object.keys(ADDON_CHECKBOX).forEach(syncFromCheckbox);
+})();
+</script>
+
+
 
 </body>
 </html>
