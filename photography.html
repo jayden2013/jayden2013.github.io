@@ -630,7 +630,7 @@ redirect_from:
     const dname = detailsData[key].name;
     const list  = window.PHOTO_PRICING.getListPrice(key);
     const cur   = window.PHOTO_PRICING.getPrice(key);
-    return (cur < list) ? `${dname} — $${cur} (Intro)` : `${dname} — $${list}`;
+    return (cur < list) ? `${dname} — $${cur} (Enthusiast Pricing)` : `${dname} — $${list}`;
   }
 
   function initCardPrices() {
