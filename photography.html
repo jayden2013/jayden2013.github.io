@@ -760,66 +760,86 @@ function priceHTML(price) {
   const form = document.getElementById('booking-form');
   if (!form) return;
 
-  const addonCards = Array.from(document.querySelectorAll('.addon-card'));
-  const checkUsb   = form.querySelector('input[name="addons"][value="usb_drive"]');
-  const checkCd    = form.querySelector('input[name="addons"][value="cd_dvd"]');
+  const statusEl  = document.getElementById('form-status');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const endpoint  = form.getAttribute('data-endpoint') || '/api/contact';
 
-  // Map card key -> checkbox element
-  const ADDON_CHECKBOX = {
-    usb_drive: checkUsb,
-    cd_dvd: checkCd
-  };
+  const nameEl  = form.querySelector('input[name="name"]');
+  const emailEl = form.querySelector('input[type="email"][name="email"]');
+  const hpEl    = form.querySelector('input[name="website"]');
 
-  function setCardSelected(card, selected) {
-    card.setAttribute('aria-pressed', selected ? 'true' : 'false');
-    card.classList.toggle('ring-2', selected);
-    card.classList.toggle('ring-emerald-400', selected);
-    card.classList.toggle('border-emerald-400', selected);
+  function setStatus(msg, cls) {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.hidden = false;
+    statusEl.className = 'text-sm ' + (cls || 'text-gray-300');
   }
 
-  function syncFromCheckbox(key) {
-    const card = addonCards.find(c => c.dataset.addon === key);
-    const cb   = ADDON_CHECKBOX[key];
-    if (card && cb) setCardSelected(card, !!cb.checked);
-  }
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  function toggleAddon(key) {
-    const cb = ADDON_CHECKBOX[key];
-    if (!cb) return;
-    cb.checked = !cb.checked;
-    // update card visuals
-    syncFromCheckbox(key);
-    // notify any listeners (like total-cost script)
-    cb.dispatchEvent(new Event('change', { bubbles: true }));
-  }
+    // Honeypot
+    if (hpEl && hpEl.value && hpEl.value.trim() !== '') {
+      setStatus("Thanks! We'll be in touch shortly.", 'text-emerald-300');
+      form.reset();
+      return;
+    }
 
-  // Bind card interactions
-  addonCards.forEach(card => {
-    const key = card.dataset.addon;
-    if (!key) return;
+    // Read + trim
+    const name  = nameEl ? String(nameEl.value || '').trim() : '';
+    const email = emailEl ? String(emailEl.value || '').trim() : '';
+    const emailLooksGood = emailEl ? (emailEl.value = email, emailEl.checkValidity()) : false;
+    const nameLooksGood  = name.length > 0;
 
-    card.addEventListener('click', () => toggleAddon(key));
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleAddon(key);
-      }
-    });
+    if (!nameLooksGood || !emailLooksGood) {
+      setStatus('Please provide your name and a valid email.', 'text-red-400');
+      return;
+    }
+
+    // Build payload (JSON), including multi-value addons
+    const fd = new FormData(form);
+    const data = {};
+    for (const [k, v] of fd.entries()) {
+      if (k === 'addons') continue; // handle below
+      if (k === 'prints') continue; // handle below
+      if (data[k] === undefined) data[k] = v;
+    }
+    const addons = fd.getAll('addons');
+    if (addons.length) data.addons = addons;
+
+    const printsInterested = fd.getAll('prints').includes('interested');
+    data.prints_interested = printsInterested;
+
+    data.name = name;
+    data.email = email;
+
+    setStatus('Sending…', 'text-gray-300');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70','cursor-not-allowed'); }
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        // IMPORTANT: only Content-Type header; NO 'Accept' header
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'photography', payload: data }),
+      });
+
+      // Optional: quick debugging in case of errors
+      // console.log('booking submit status', res.status, await res.clone().text());
+
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      setStatus("Thanks! We'll get back to you shortly.", 'text-emerald-300');
+      form.reset();
+    } catch (err) {
+      console.error('Booking form error:', err);
+      setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70','cursor-not-allowed'); }
+    }
   });
-
-  // Keep visuals in sync if user clicks checkboxes directly
-  [checkUsb, checkCd].forEach(cb => {
-    if (!cb) return;
-    cb.addEventListener('change', () => {
-      const key = cb.value; // usb_drive or cd_dvd
-      syncFromCheckbox(key);
-    });
-  });
-
-  // Initialize selection state on load
-  Object.keys(ADDON_CHECKBOX).forEach(syncFromCheckbox);
 })();
 </script>
+
 
 </body>
 </html>
