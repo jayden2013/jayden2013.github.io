@@ -244,17 +244,17 @@ redirect_from:
   </div>
 </section>
 
-<!-- FREE offer banner (green) -->
+<!-- Promo banner (green) -->
 <section class="max-w-6xl mx-auto w-full mt-4 px-6">
   <div id="promo-banner" class="bg-green-600/90 backdrop-blur border border-green-400/30 rounded-2xl shadow-lg px-6 py-4">
-    <div class="text-2xl font-extrabold text-white">🚗 100% Off — Limited Time!</div>
+    <div class="text-2xl font-extrabold text-white">🚗 Enthusiast Pricing — Limited Time</div>
     <p class="text-sm mt-1 text-green-100">
-      We’re building our portfolio and offering <strong>free sessions</strong> for a short time.
-      Book now to lock in your spot.
+      Special offer — secure your session before prices hit full throttle.
     </p>
     <div id="promo-countdown" class="mt-2 text-sm font-semibold text-white/90"></div>
   </div>
 </section>
+
 
 <!-- Packages (glass card) -->
 <section id="packages" class="max-w-6xl mx-auto w-full mt-4 px-6">
@@ -296,7 +296,7 @@ redirect_from:
 
     <!-- Notes -->
     <p class="mt-2 text-emerald-300 text-sm font-semibold">
-      🎯 Offer valid while we build our portfolio — spots are filling fast!
+      🎯 Offer valid for a limited time — spots are filling fast!
     </p>
   </div>
 </section>
@@ -371,9 +371,9 @@ redirect_from:
 
       <label class="block">Package
         <select class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="package">
-          <option>Still Session — FREE (Limited Time)</option>
-          <option>Roller Session — FREE (Limited Time)</option>
-          <option>Full Feature — FREE (Limited Time)</option>
+          <option>Still Session</option>
+          <option>Roller Session</option>
+          <option>Full Feature</option>
         </select>
       </label>
 
@@ -423,93 +423,49 @@ redirect_from:
 
   <!-- Booking form script -->
   <script>
-  (function () {
-    const form = document.getElementById('booking-form');
-    if (!form) return;
+(function () {
+  const form = document.getElementById('booking-form');
+  if (!form) return;
 
-    const statusEl  = document.getElementById('form-status');
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const endpoint  = form.getAttribute('data-endpoint') || '/api/contact';
+  const totalEl = document.getElementById('total-cost');
+  const usbCb   = form.querySelector('input[value="usb_drive"]');
+  const cdCb    = form.querySelector('input[value="cd_dvd"]');
+  const pkgSel  = form.querySelector('select[name="package"]');
 
-    const nameEl  = form.querySelector('input[name="name"]');
-    const emailEl = form.querySelector('input[type="email"][name="email"]');
-    const hpEl    = form.querySelector('input[name="website"]');
+  const ADDON_PRICES = { usb_drive: 20, cd_dvd: 10 };
 
-    function setStatus(msg, cls) {
-      if (!statusEl) return;
-      statusEl.textContent = msg;
-      statusEl.hidden = false;
-      statusEl.className = 'text-sm ' + (cls || 'text-gray-300');
-    }
+  function getPackageKey() {
+    if (!pkgSel) return null;
+    const t = (pkgSel.options[pkgSel.selectedIndex]?.textContent || '').toLowerCase();
+    if (t.includes('full feature')) return 'feature';
+    if (t.includes('roller'))       return 'roller';
+    if (t.includes('still'))        return 'still';
+    return null;
+  }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+  function getPackagePrice() {
+    const api = window.PHOTO_PRICING;
+    const k = getPackageKey();
+    return api && k ? api.getPrice(k) : 0;
+  }
 
-      // Honeypot
-      if (hpEl && hpEl.value && hpEl.value.trim() !== '') {
-        setStatus("Thanks! We'll be in touch shortly.", 'text-emerald-300');
-        form.reset();
-        return;
-      }
+  function getAddonsTotal() {
+    let total = 0;
+    if (usbCb?.checked) total += ADDON_PRICES.usb_drive;
+    if (cdCb?.checked)  total += ADDON_PRICES.cd_dvd;
+    return total;
+  }
 
-      // Read + trim
-      const name  = nameEl ? String(nameEl.value || '').trim() : '';
-      const email = emailEl ? String(emailEl.value || '').trim() : '';
-      const emailLooksGood = emailEl ? (emailEl.value = email, emailEl.checkValidity()) : false;
-      const nameLooksGood  = name.length > 0;
+  function updateTotal() {
+    const grand = getPackagePrice() + getAddonsTotal();
+    if (totalEl) totalEl.textContent = `Total: $${grand}`;
+  }
 
-      if (!nameLooksGood || !emailLooksGood) {
-        setStatus('Please provide your name and a valid email.', 'text-red-400');
-        return;
-      }
+  [usbCb, cdCb, pkgSel].forEach(el => el && el.addEventListener('change', updateTotal));
+  updateTotal();
+})();
+</script>
 
-      // Build payload with support for multi-value fields
-      const fd = new FormData(form);
-
-      const data = {};
-      // single-value fields first
-      for (const [k, v] of fd.entries()) {
-        if (k === 'addons') continue;      // handled below
-        if (k === 'prints') continue;      // handled below
-        if (data[k] === undefined) data[k] = v;
-      }
-
-      // multi-value: addons (checkboxes)
-      const addons = fd.getAll('addons');         // ["usb_drive", "cd_dvd"] etc.
-      if (addons.length) data.addons = addons;
-
-      // boolean-ish checkbox for prints
-      const printsInterested = fd.getAll('prints').includes('interested');
-      data.prints_interested = printsInterested;
-
-      // keep trimmed canonical name/email
-      data.name = name;
-      data.email = email;
-
-      setStatus('Sending…', 'text-gray-300');
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70','cursor-not-allowed'); }
-
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ source: 'photography', payload: data })
-        });
-        if (!res.ok) {
-          const t = await res.text().catch(() => '');
-          throw new Error(t || 'Request failed');
-        }
-        setStatus("Thanks! We'll get back to you shortly.", 'text-emerald-300');
-        form.reset();
-      } catch (err) {
-        console.error('Booking form error:', err);
-        setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
-      } finally {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70','cursor-not-allowed'); }
-      }
-    });
-  })();
-  </script>
   
 <script>
 (function () {
@@ -566,30 +522,82 @@ redirect_from:
 
 
 
-  <!-- Packages details + promo expiration -->
 <script>
 (function () {
-  // === Change this when your free promo ends ===
-  const PROMO_END = new Date('2025-09-15T23:59:59');
-  let promoActive = Date.now() < PROMO_END.getTime();
+  // ====== EDIT THESE PRICES ONLY ======
+  // List (standard) prices:
+  const LIST = { still: 150, roller: 200, feature: 300 };
 
-  // Package copy (print-ready + free email)
+  // Promo control:
+  const PROMO_END_ISO = '2025-09-15T23:59:59';  // when your intro pricing ends
+  const PROMO_ACTIVE  = Date.now() < new Date(PROMO_END_ISO).getTime();
+
+  // Choose ONE style:
+  // 1) Per-package promo prices (recommended)
+  const PROMO_PER_PACKAGE = { still: 100, roller: 180, feature: 250 };
+
+  // 2) OR a flat percent off everything (set to a number like 20 for 20% off, or 0 to disable)
+  const PROMO_PERCENT = 0;
+
+  // ====== DO NOT EDIT BELOW UNLESS YOU WANT TO TWEAK UI ======
+  const cards         = Array.from(document.querySelectorAll(".package-card"));
+  const panel         = document.getElementById("package-details");
+  const banner        = document.getElementById("promo-banner");
+  const countdownEl   = document.getElementById("promo-countdown");
+  const packageSelect = document.querySelector('select[name="package"]');
+  const PROMO_END     = new Date(PROMO_END_ISO);
+
+  // Public API for other scripts (e.g., total calculator)
+  function computePromoPrice(key) {
+    if (!PROMO_ACTIVE) return null;
+
+    // Prefer explicit per-package prices
+    if (PROMO_PER_PACKAGE && Number.isFinite(PROMO_PER_PACKAGE[key])) {
+      return Math.max(0, Math.round(PROMO_PER_PACKAGE[key]));
+    }
+
+    // Otherwise percent-off fallback
+    if (PROMO_PERCENT > 0) {
+      const discounted = LIST[key] * (1 - PROMO_PERCENT / 100);
+      return Math.max(0, Math.round(discounted));
+    }
+    return null;
+  }
+
+  window.PHOTO_PRICING = {
+    promoActive: PROMO_ACTIVE,
+    getPrice(key) {
+      const promo = computePromoPrice(key);
+      return Number.isFinite(promo) ? promo : LIST[key] || 0;
+    },
+    getListPrice(key) { return LIST[key] || 0; },
+    getSavingsPct(key) {
+      const list = LIST[key] || 0;
+      const now  = this.getPrice(key);
+      if (!list || now >= list) return 0;
+      return Math.round(((list - now) / list) * 100);
+    }
+  };
+
   const detailsData = {
-    still:   { name: "Still Session",  oldPrice: 150,
+    still: {
+      name: "Still Session",
       bullets: [
         "<strong>12–18 edited photos</strong> (web + print-ready files)",
         "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>"
       ],
       blurb: "Great for clean feature shots, for sale listings, or garage portraits."
     },
-    roller:  { name: "Roller Session", oldPrice: 200,
+    roller: {
+      name: "Roller Session",
       bullets: [
         "<strong>10–14 edited rollers</strong> (web + print-ready files)",
         "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>"
       ],
       blurb: "Perfect for motion shots that show off stance, aero, and road presence."
     },
-    feature: { name: "Full Feature",   oldPrice: 250,
+    feature: {
+      name: "Full Feature",
       bullets: [
         "<strong>Stills + rollers</strong> in one session",
         "Delivery in <strong>3–7 days</strong> via <strong>free email</strong>"
@@ -598,63 +606,63 @@ redirect_from:
     }
   };
 
-  // 👉 Expose to the total-cost script
-  window.PHOTO_CONFIG = { promoActive, detailsData };
+  function priceHTML(key) {
+    const list    = window.PHOTO_PRICING.getListPrice(key);
+    const current = window.PHOTO_PRICING.getPrice(key);
+    const savePct = window.PHOTO_PRICING.getSavingsPct(key);
 
-  const cards         = Array.from(document.querySelectorAll(".package-card"));
-  const panel         = document.getElementById("package-details");
-  const banner        = document.getElementById("promo-banner");
-  const countdownEl   = document.getElementById("promo-countdown");
-  const packageSelect = document.querySelector('select[name="package"]');
-
-function priceHTML(price) {
-  if (promoActive) {
+    if (current < list) {
+      return `
+        <div class="mt-3 text-2xl font-extrabold">
+          <span class="line-through decoration-4 decoration-red-500 text-white/90">$${list}</span>
+          <span class="ml-3 text-emerald-400">$${current}</span>
+          <span class="ml-2 text-xs text-emerald-300 align-middle">Save ${savePct}%</span>
+        </div>`;
+    }
     return `
       <div class="mt-3 text-2xl font-extrabold">
-        <span class="line-through decoration-4 decoration-red-500 text-white/90">$${price}</span>
-        <span class="ml-3 text-emerald-400">FREE</span>
-        <span class="ml-2 text-xs text-emerald-300 align-middle">Limited Time</span>
+        $${list}
+        <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
       </div>`;
   }
-  return `
-    <div class="mt-3 text-2xl font-extrabold">
-      $${price}
-      <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
-    </div>`;
-}
 
+  function labelForSelect(key) {
+    const dname = detailsData[key].name;
+    const list  = window.PHOTO_PRICING.getListPrice(key);
+    const cur   = window.PHOTO_PRICING.getPrice(key);
+    return (cur < list) ? `${dname} — $${cur} (Intro)` : `${dname} — $${list}`;
+  }
 
   function initCardPrices() {
     cards.forEach(card => {
       const key = card.dataset.package;
       const priceDiv = card.querySelector('.text-3xl.font-extrabold');
       if (!key || !priceDiv) return;
-      priceDiv.innerHTML = priceHTML(detailsData[key].oldPrice);
+      priceDiv.innerHTML = priceHTML(key);
     });
   }
 
   function initSelectOptions() {
     if (!packageSelect) return;
-    const opts = {
-      still:   promoActive ? "Still Session — FREE (Limited Time)" : `Still Session — $${detailsData.still.oldPrice}`,
-      roller:  promoActive ? "Roller Session — FREE (Limited Time)" : `Roller Session — $${detailsData.roller.oldPrice}`,
-      feature: promoActive ? "Full Feature — FREE (Limited Time)"  : `Full Feature — $${detailsData.feature.oldPrice}`
+    const map = {
+      still:   labelForSelect('still'),
+      roller:  labelForSelect('roller'),
+      feature: labelForSelect('feature')
     };
     Array.from(packageSelect.options).forEach(opt => {
-      const txt = opt.textContent.toLowerCase();
-      if (txt.includes('still'))        opt.textContent = opts.still;
-      if (txt.includes('roller'))       opt.textContent = opts.roller;
-      if (txt.includes('full feature')) opt.textContent = opts.feature;
+      const txt = (opt.textContent || '').toLowerCase();
+      if (txt.includes('full feature')) opt.textContent = map.feature;
+      else if (txt.includes('roller'))  opt.textContent = map.roller;
+      else if (txt.includes('still'))   opt.textContent = map.still;
     });
   }
 
   function toggleBanner() {
     if (!banner) return;
-    if (!promoActive) banner.remove();
+    if (!PROMO_ACTIVE) banner.remove();
   }
 
   function selectPackage(key, cardEl) {
-    // Toggle visual state
     cards.forEach(c => {
       c.classList.remove("ring-2","ring-emerald-400","border-emerald-400");
       c.setAttribute("aria-pressed", "false");
@@ -662,12 +670,11 @@ function priceHTML(price) {
     cardEl.classList.add("ring-2","ring-emerald-400","border-emerald-400");
     cardEl.setAttribute("aria-pressed", "true");
 
-    // Fill details
     const d = detailsData[key];
     const bullets = d.bullets.map(li => `<li>${li}</li>`).join("");
     panel.innerHTML = `
       <h3 class="text-2xl font-bold mb-2">${d.name}</h3>
-      ${priceHTML(d.oldPrice)}
+      ${priceHTML(key)}
       <ul class="list-disc pl-6 space-y-2 text-gray-300 mt-4">${bullets}</ul>
       <div class="mt-4 text-sm text-gray-400">${d.blurb}</div>
       <a href="#book"
@@ -678,9 +685,9 @@ function priceHTML(price) {
       </a>`;
     panel.classList.remove("hidden");
 
-    // 👉 Keep the <select> in sync so totals update
+    // keep the <select> synced so totals update
     if (packageSelect) {
-      const label = key === 'feature' ? 'full feature' : key; // match text used in options
+      const label = key === 'feature' ? 'full feature' : key;
       const match = Array.from(packageSelect.options).find(o =>
         o.textContent.toLowerCase().includes(label)
       );
@@ -691,36 +698,24 @@ function priceHTML(price) {
     }
   }
 
-  // ---------- Countdown ----------
+  // Countdown
   const PROMO_TIMER = { id: null };
-
   function formatRemaining(ms) {
     if (ms <= 0) return "Offer ended";
-    const totalSec = Math.floor(ms / 1000);
-    const days = Math.floor(totalSec / 86400);
-    const hours = Math.floor((totalSec % 86400) / 3600);
-    const mins = Math.floor((totalSec % 3600) / 60);
-    const secs = totalSec % 60;
-    const d = days > 0 ? `${days}d ` : "";
-    return `Ends in ${d}${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    const s = Math.floor(ms/1000), d = Math.floor(s/86400),
+          h = Math.floor((s%86400)/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    const dStr = d > 0 ? `${d}d ` : "";
+    return `Ends in ${dStr}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
   }
-
   function updateCountdown() {
     if (!countdownEl) return;
-    const now = Date.now();
-    const remaining = PROMO_END.getTime() - now;
+    const remaining = PROMO_END.getTime() - Date.now();
     if (remaining <= 0) {
       countdownEl.textContent = "Offer ended";
-      if (promoActive) {
-        promoActive = false;
-        // refresh UI + select texts
-        initCardPrices();
-        initSelectOptions();
-        toggleBanner();
-        // 👉 keep PHOTO_CONFIG in sync
-        window.PHOTO_CONFIG.promoActive = promoActive;
-      }
       if (PROMO_TIMER.id) clearInterval(PROMO_TIMER.id);
+      toggleBanner();
+      initCardPrices();  // ensure prices revert to list
+      initSelectOptions();
       return;
     }
     countdownEl.textContent = formatRemaining(remaining);
@@ -743,17 +738,18 @@ function priceHTML(price) {
   initSelectOptions();
   toggleBanner();
 
-  // Auto-expand default package on load
+  // Auto-open default
   const defaultKey = 'roller';
   const defaultCard = cards.find(c => c.dataset.package === defaultKey);
   if (defaultCard) selectPackage(defaultKey, defaultCard);
 
-  if (promoActive && countdownEl) {
+  if (PROMO_ACTIVE && countdownEl) {
     PROMO_TIMER.id = setInterval(updateCountdown, 1000);
     updateCountdown();
   }
 })();
 </script>
+
 
 <script>
 (function () {
