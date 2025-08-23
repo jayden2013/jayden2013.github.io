@@ -835,6 +835,67 @@ redirect_from:
   });
 })();
 </script>
+<script>
+(function () {
+  const form = document.getElementById('booking-form');
+  if (!form) return;
+
+  const addonCards = Array.from(document.querySelectorAll('.addon-card'));
+  const checkUsb   = form.querySelector('input[name="addons"][value="usb_drive"]');
+  const checkCd    = form.querySelector('input[name="addons"][value="cd_dvd"]');
+
+  // Map card key -> checkbox element
+  const ADDON_CHECKBOX = {
+    usb_drive: checkUsb,
+    cd_dvd:    checkCd
+  };
+
+  function setCardSelected(card, selected) {
+    card.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    card.classList.toggle('ring-2', selected);
+    card.classList.toggle('ring-emerald-400', selected);
+    card.classList.toggle('border-emerald-400', selected);
+  }
+
+  function syncFromCheckbox(key) {
+    const card = addonCards.find(c => c.dataset.addon === key);
+    const cb   = ADDON_CHECKBOX[key];
+    if (card && cb) setCardSelected(card, !!cb.checked);
+  }
+
+  function toggleAddon(key) {
+    const cb = ADDON_CHECKBOX[key];
+    if (!cb) return;
+    cb.checked = !cb.checked;
+    syncFromCheckbox(key);
+    // Notify the total-cost calculator
+    cb.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  // Bind card interactions (click + keyboard)
+  addonCards.forEach(card => {
+    const key = card.dataset.addon;
+    if (!key) return;
+
+    card.addEventListener('click', () => toggleAddon(key));
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleAddon(key);
+      }
+    });
+  });
+
+  // Keep visuals in sync if user clicks the checkboxes directly
+  [checkUsb, checkCd].forEach(cb => {
+    if (!cb) return;
+    cb.addEventListener('change', () => syncFromCheckbox(cb.value));
+  });
+
+  // Initialize selection state on load
+  Object.keys(ADDON_CHECKBOX).forEach(syncFromCheckbox);
+})();
+</script>
 
 
 </body>
