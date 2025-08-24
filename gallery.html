@@ -297,21 +297,6 @@
       // console.log('Cover img URL:', document.querySelector('img[data-src]')?.src);
     })();
   </script>
-<script>
-(function(){
-  const PROD = /\.github\.io$/i.test(location.hostname) ||
-               /carsandcollectibles\.com$/i.test(location.hostname);
-  const CDN  = 'https://photos.carsandcollectibles.com/'; // your R2 domain
-  const here = new URL('.', location.href);
-  function asset(p){
-    const clean = String(p).replace(/^(\.\/|\/)/,'');
-    return PROD ? (CDN + clean) : new URL(clean, here).href;
-  }
-  document.querySelectorAll('img[data-src]').forEach(img => { img.src = asset(img.dataset.src || ''); });
-  document.querySelectorAll('[data-bg]').forEach(el => { el.style.backgroundImage = `url('${asset(el.dataset.bg)}')`; });
-  document.querySelectorAll('a[data-href]').forEach(a => { a.href = asset(a.dataset.href || ''); });
-})();
-</script>
 
 </body>
 </html>
