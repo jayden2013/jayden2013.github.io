@@ -252,7 +252,7 @@
       clientName: "2018 Honda Civic",
       shootDate: "Aug 2025",
       galleryId: "CAC-0001",
-      folder: "/gallery/client01",
+      folder: "client01/",
       files: [
         "photo1.png","photo2.png","photo3.png"
       ],
@@ -261,7 +261,7 @@
       ORDER_ENDPOINT: "https://photography-contact.profit-alerts.workers.dev"
     };
     // ========================================================================
-
+const FOLDER_ABS = new URL(GALLERY.folder, window.location.href).href;
     // Header values
     document.getElementById("clientName").textContent = GALLERY.clientName;
     document.getElementById("shootDate").textContent  = GALLERY.shootDate;
@@ -332,7 +332,7 @@
 
     // Populate grid
     GALLERY.files.forEach((file, i) => {
-      const src = `${GALLERY.folder}/${file}`;
+      const src = new URL(file, FOLDER_ABS).href;
       grid.appendChild(photoCard(src, file, i));
     });
 
