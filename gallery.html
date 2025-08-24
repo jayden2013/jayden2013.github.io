@@ -72,6 +72,22 @@
       color:#a7f3d0;border:2px solid rgba(16,185,129,.55);
       background:rgba(16,185,129,.10);
     }
+	
+	/* Mobile-only: force text to black (keep the gradient title) */
+@media (max-width: 640px) {
+  html { color-scheme: light; } /* makes inputs/controls use light UI on mobile */
+  body,
+  body *:not(.title-gradient) { color: #000 !important; }
+
+  /* Helpful extras so links/inputs also go black */
+  a, a:visited { color: #000 !important; }
+  input, textarea, select { color: #000 !important; }
+  input::placeholder, textarea::placeholder { color: #000 !important; opacity: .7; }
+
+  /* Optional: if chips/tags look odd on dark backgrounds, lighten them */
+  /* .chip, .tag { background: rgba(0,0,0,.06); border-color: rgba(0,0,0,.2); } */
+}
+
   </style>
 </head>
 <body class="text-white font-sans min-h-screen flex flex-col relative overflow-x-hidden bg-fallback">
