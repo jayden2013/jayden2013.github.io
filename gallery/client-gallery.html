@@ -52,61 +52,27 @@
     .lb-close{ top:1rem; right:1rem; transform:none }
 
     /* Uniform thumbnail tiles */
-    .thumb-tile {
-      position: relative;
-      aspect-ratio: 3 / 2;
-      overflow: hidden;
-      border-radius: 0.75rem;
-    }
-    .thumb {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-      display: block;
-      transition: transform .5s ease;
-    }
+    .thumb-tile { position: relative; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 0.75rem; }
+    .thumb { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; transition: transform .5s ease; }
     .thumb:hover { transform: scale(1.04); }
 
     /* Force 3 columns (inside existing centered container) */
     #galleryGrid { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
-    @media (min-width: 640px){
-      #galleryGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    }
+    @media (min-width: 640px){ #galleryGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
     /* Centered select overlay pill */
     .select-pill {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      z-index: 40;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: .75rem 1.5rem;     /* bigger pill */
-      font-size: 1rem;            /* bump font size */
-      font-weight: 800;
-      border-radius: 9999px;
-      border: 2px solid rgba(16,185,129,.55);
-      color: #A7F3D0;
-      background: rgba(16,185,129,.10);
-      backdrop-filter: blur(2px);
-      cursor: pointer;
-      user-select: none;
-      transition: transform .12s ease,
-                  background-color .15s ease,
-                  color .15s ease,
-                  border-color .15s ease,
-                  box-shadow .15s ease;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      z-index: 40; display: inline-flex; align-items: center; justify-content: center;
+      padding: .75rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 9999px;
+      border: 2px solid rgba(16,185,129,.55); color: #A7F3D0; background: rgba(16,185,129,.10);
+      backdrop-filter: blur(2px); cursor: pointer; user-select: none;
+      transition: transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
     }
     .select-pill:hover { transform: translate(-50%,-50%) scale(1.05); }
     .select-pill:active { transform: translate(-50%,-50%) scale(0.96); }
-    .select-pill.on {
-      background: rgba(16,185,129,.95);
-      border-color: rgba(167,243,208,.75);
-      color: #fff;
-      box-shadow: 0 0 0 2px rgba(16,185,129,.4), 0 10px 20px rgba(16,185,129,.3);
-    }
+    .select-pill.on { background: rgba(16,185,129,.95); border-color: rgba(167,243,208,.75); color: #fff;
+      box-shadow: 0 0 0 2px rgba(16,185,129,.4), 0 10px 20px rgba(16,185,129,.3); }
 
     /* hide the native checkbox but keep it for a11y */
     .sr-only-input {
@@ -114,11 +80,13 @@
       overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
     }
 
+    /* Badge shouldn't intercept clicks */
+    .badge-nope { pointer-events: none; }
+
     /* Mobile-only: force text to black (keep the gradient title) */
     @media (max-width: 640px) {
       html { color-scheme: light; }
-      body,
-      body *:not(.title-gradient) { color: #000 !important; }
+      body, body *:not(.title-gradient) { color: #000 !important; }
       a, a:visited { color: #000 !important; }
       input, textarea, select { color: #000 !important; }
       input::placeholder, textarea::placeholder { color: #000 !important; opacity: .7; }
@@ -227,7 +195,7 @@
         <p id="emptyOrder" class="text-gray-400 text-sm mt-3">No items yet. Select photos above, choose a size, and click “Add Prints for Selected”.</p>
       </div>
 
-      <!-- ORDER FORM (like booking form) -->
+      <!-- ORDER FORM -->
       <form id="order-form" class="mt-6 grid md:grid-cols-3 gap-3" data-endpoint="https://photography-orders.profit-alerts.workers.dev/" novalidate>
         <!-- Honeypot -->
         <div class="hidden">
@@ -257,25 +225,44 @@
   </div>
 
   <script>
-    // ===== IMAGEKIT CONFIG =========================================
-    // Change endpoint/prefix to match your setup.
-    const IK = {
-      endpoint: "https://ik.imagekit.io/carsandcollectibles/", // your ImageKit URL endpoint
-      prefix:   ""                             // path prefix to this gallery in R2
-    };
-    function ikUrl(file, w){ // build transformed URL
-      const tr = w ? `?tr=w-${w},q-85,f=auto` : `?tr=q-90,f=auto`;
-      return IK.endpoint + IK.prefix + file + tr;
+    // === Dropbox share -> raw URL helper ===========================
+    function dropboxToRaw(u) {
+      if (!u) return u;
+      try {
+        const url = new URL(u);
+        if (!/\.dropbox\.com$/i.test(url.hostname)) return u;
+        url.hostname = "dl.dropboxusercontent.com";
+        const rlkey = url.searchParams.get("rlkey");
+        url.search = "";
+        if (rlkey) url.searchParams.set("rlkey", rlkey);
+        url.searchParams.set("raw", "1");
+        return url.toString();
+      } catch {
+        return u
+          .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+          .replace(/[\?&]dl=0\b/, "")
+          .replace(/[\?&]dl=1\b/, "")
+          .replace(/[\?&]raw=1\b/, "") + (u.includes("?") ? "&raw=1" : "?raw=1");
+      }
     }
     // ===============================================================
 
-    // ===== PER-GALLERY META =======================================
+    // ===== PER-GALLERY META (use Dropbox SHARE links) ==============
     const GALLERY = {
       clientName: "2018 Honda Civic",
       shootDate: "Aug 2025",
       galleryId: "CAC-0001",
       files: [
-        "photo1.png","photo2.png","photo3.png"
+        // Replace these with your actual Dropbox SHARE links (thumb + full)
+        { name: "photo1.webp",
+          thumb: "https://www.dropbox.com/scl/fi/rfta3oesdimqs0fsfahl9/photo1.webp?rlkey=ukixk9t1m04442zipuup9kpv2&st=uk0le1m8&dl=0",
+          full:  "https://www.dropbox.com/scl/fi/rfta3oesdimqs0fsfahl9/photo1.webp?rlkey=ukixk9t1m04442zipuup9kpv2&st=uk0le1m8&dl=0" },
+        { name: "photo2.webp",
+          thumb: "https://www.dropbox.com/scl/fi/a5s6krzgzn5tbarcuxuis/photo2.webp?rlkey=i4zx2dqrcfeox89pbs0z3s4au&st=k31not09&dl=0",
+          full:  "https://www.dropbox.com/scl/fi/a5s6krzgzn5tbarcuxuis/photo2.webp?rlkey=i4zx2dqrcfeox89pbs0z3s4au&st=k31not09&dl=0" },
+        { name: "photo3.webp",
+          thumb: "https://www.dropbox.com/scl/fi/hmz684spcer1cj1ofkmgm/photo3.webp?rlkey=gbnd6rb0c8g8f34qkq7lqdslu&st=1lwehey9&dl=0",
+          full:  "https://www.dropbox.com/scl/fi/hmz684spcer1cj1ofkmgm/photo3.webp?rlkey=gbnd6rb0c8g8f34qkq7lqdslu&st=1lwehey9&dl=0" }
       ],
       PRINT_PRICES: { "8x12": 15, "12x18": 28, "16x24": 55, "24x36": 95 },
       ADDON_PRICES: { usb: 20, cd: 10 },
@@ -293,12 +280,15 @@
     const selected = new Set();
     let lightboxIndex = -1;
 
-    function photoCard(src, file, idx) {
+    function photoCard(fileObj, idx) {
       const el = document.createElement("div");
       el.className = "relative bg-white/5 border border-white/10 rounded-xl overflow-hidden soft-shadow ring-emerald-soft";
+      const thumbSrc = dropboxToRaw(fileObj.thumb);
+
       el.innerHTML = `
         <div class="thumb-tile">
-          <img src="${src}" alt="${file}" class="thumb cursor-zoom-in" decoding="async"
+          <img src="${thumbSrc}" alt="${fileObj.name}" class="thumb cursor-zoom-in"
+               decoding="async" loading="lazy"
                sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw">
         </div>
 
@@ -306,46 +296,49 @@
                     from-black/30 via-transparent to-transparent
                     opacity-0 hover:opacity-100 transition z-10"></div>
 
-        <div class="absolute top-2 right-2 z-20 bg-black/60 rounded px-2 py-1 text-xs">
-          ${file}
+        <div class="absolute top-2 right-2 z-20 bg-black/60 rounded px-2 py-1 text-xs badge-nope">
+          ${fileObj.name}
         </div>
 
-        <input type="checkbox" class="select-photo sr-only-input" aria-label="Select ${file}">
-
-        <button type="button" class="select-pill" aria-pressed="false" aria-label="Toggle select ${file}">
+        <input type="checkbox" class="select-photo sr-only-input" aria-label="Select ${fileObj.name}">
+        <button type="button" class="select-pill" aria-pressed="false"
+                aria-label="Toggle select ${fileObj.name}">
           Select
         </button>
       `;
 
-      const img  = el.querySelector("img");
       const cb   = el.querySelector(".select-photo");
       const pill = el.querySelector(".select-pill");
-
-      img.addEventListener("click", () => openLightbox(idx));
 
       function applyState(on){
         cb.checked = on;
         pill.textContent = on ? "Selected" : "Select";
         pill.classList.toggle("on", on);
         pill.setAttribute("aria-pressed", on ? "true" : "false");
-        if (on) { selected.add(file); } else { selected.delete(file); }
+        if (on) { selected.add(fileObj.name); } else { selected.delete(fileObj.name); }
         updateSelCount();
       }
 
       cb.addEventListener("change", () => applyState(cb.checked));
+
+      // Toggle select when the pill is clicked (but don't open lightbox)
       pill.addEventListener("click", (e) => { e.stopPropagation(); applyState(!cb.checked); });
       pill.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); applyState(!cb.checked); }
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); applyState(!cb.checked); }
+      });
+
+      // Open lightbox when clicking anywhere else on the card
+      el.addEventListener("click", (e) => {
+        const t = e.target;
+        if (t === pill || t === cb) return; // ignore pill & checkbox
+        openLightbox(idx);
       });
 
       return el;
     }
 
-    // Populate grid (thumbs ~800w)
-    GALLERY.files.forEach((file, i) => {
-      const src = ikUrl(file, 800);
-      grid.appendChild(photoCard(src, file, i));
-    });
+    // Populate grid
+    GALLERY.files.forEach((f, i) => grid.appendChild(photoCard(f, i)));
 
     // Selection helpers
     const selCount = document.getElementById("selCount");
@@ -430,7 +423,7 @@
       const unit = GALLERY.PRINT_PRICES[size] || 0;
       const qty = Math.max(1, parseInt(qtyInput.value || "1", 10));
       if (!selected.size) { alert("Select one or more photos above first."); return; }
-      selected.forEach(file => ORDER.push({ file, size, qty, unit }));
+      selected.forEach(fileName => ORDER.push({ file: fileName, size, qty, unit }));
       renderOrder();
     });
 
@@ -438,7 +431,7 @@
     document.getElementById("addonUsb").addEventListener("change", recalcTotals);
     document.getElementById("addonCd").addEventListener("change", recalcTotals);
 
-    // ===== ORDER FORM submit (mirrors booking form) =========================
+    // ===== ORDER FORM submit =======================================
     (function () {
       const form       = document.getElementById('order-form');
       if (!form) return;
@@ -477,11 +470,7 @@
         }
 
         const items = ORDER.map(i => ({
-          file: i.file,
-          size: i.size,
-          qty:  i.qty,
-          unit: i.unit,
-          line: i.unit * i.qty
+          file: i.file, size: i.size, qty: i.qty, unit: i.unit, line: i.unit * i.qty
         }));
 
         const addons = [];
@@ -528,12 +517,8 @@ Totals:
                 name, email,
                 client:     GALLERY.clientName,
                 gallery_id: GALLERY.galleryId,
-                items,
-                addons,
-                prints_total: printsTotal,
-                addons_total: addonsTotal,
-                total,
-                message
+                items, addons,
+                prints_total: printsTotal, addons_total: addonsTotal, total, message
               }
             })
           });
@@ -551,17 +536,15 @@ Totals:
     })();
     // =======================================================================
 
-    // Lightbox (use ImageKit large variant)
+    // Lightbox (use Dropbox FULL variant)
     const lb = document.getElementById("lightbox");
     const lbImg = document.getElementById("lbImg");
-    const lbPrev = document.getElementById("lbPrev");
-    const lbNext = document.getElementById("lbNext");
-    const lbClose= document.getElementById("lbClose");
-
     function openLightbox(i){
+      const item = GALLERY.files[i];
+      if (!item || !item.full) { console.warn("No 'full' URL for item:", i, item); return; }
       lightboxIndex = i;
-      lbImg.src = ikUrl(GALLERY.files[i], 2000);
-      lbImg.alt = GALLERY.files[i];
+      lbImg.src = dropboxToRaw(item.full);
+      lbImg.alt = item.name || "";
       lb.classList.add("show");
       document.body.style.overflow = "hidden";
     }
@@ -573,9 +556,14 @@ Totals:
     function navLightbox(delta){
       if (lightboxIndex < 0) return;
       lightboxIndex = (lightboxIndex + delta + GALLERY.files.length) % GALLERY.files.length;
-      lbImg.src = ikUrl(GALLERY.files[lightboxIndex], 2000);
-      lbImg.alt = GALLERY.files[lightboxIndex];
+      const item = GALLERY.files[lightboxIndex];
+      lbImg.src = dropboxToRaw(item.full);
+      lbImg.alt = item.name || "";
     }
+
+    const lbPrev = document.getElementById("lbPrev");
+    const lbNext = document.getElementById("lbNext");
+    const lbClose= document.getElementById("lbClose");
 
     lbPrev.addEventListener("click", () => navLightbox(-1));
     lbNext.addEventListener("click", () => navLightbox(1));
