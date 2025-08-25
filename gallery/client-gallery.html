@@ -113,22 +113,16 @@
       position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
       overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
     }
-	
-	/* Mobile-only: force text to black (keep the gradient title) */
-@media (max-width: 640px) {
-  html { color-scheme: light; } /* makes inputs/controls use light UI on mobile */
-  body,
-  body *:not(.title-gradient) { color: #000 !important; }
 
-  /* Helpful extras so links/inputs also go black */
-  a, a:visited { color: #000 !important; }
-  input, textarea, select { color: #000 !important; }
-  input::placeholder, textarea::placeholder { color: #000 !important; opacity: .7; }
-
-  /* Optional: if chips/tags look odd on dark backgrounds, lighten them */
-  /* .chip, .tag { background: rgba(0,0,0,.06); border-color: rgba(0,0,0,.2); } */
-}
-
+    /* Mobile-only: force text to black (keep the gradient title) */
+    @media (max-width: 640px) {
+      html { color-scheme: light; }
+      body,
+      body *:not(.title-gradient) { color: #000 !important; }
+      a, a:visited { color: #000 !important; }
+      input, textarea, select { color: #000 !important; }
+      input::placeholder, textarea::placeholder { color: #000 !important; opacity: .7; }
+    }
   </style>
 </head>
 
@@ -263,12 +257,23 @@
   </div>
 
   <script>
-    // ===== CONFIG (edit per gallery) =========================================
+    // ===== IMAGEKIT CONFIG =========================================
+    // Change endpoint/prefix to match your setup.
+    const IK = {
+      endpoint: "https://ik.imagekit.io/carsandcollectibles/", // your ImageKit URL endpoint
+      prefix:   ""                             // path prefix to this gallery in R2
+    };
+    function ikUrl(file, w){ // build transformed URL
+      const tr = w ? `?tr=w-${w},q-85,f=auto` : `?tr=q-90,f=auto`;
+      return IK.endpoint + IK.prefix + file + tr;
+    }
+    // ===============================================================
+
+    // ===== PER-GALLERY META =======================================
     const GALLERY = {
       clientName: "2018 Honda Civic",
       shootDate: "Aug 2025",
       galleryId: "CAC-0001",
-      folder: "client01/",
       files: [
         "photo1.png","photo2.png","photo3.png"
       ],
@@ -276,8 +281,8 @@
       ADDON_PRICES: { usb: 20, cd: 10 },
       ORDER_ENDPOINT: "https://photography-contact.profit-alerts.workers.dev"
     };
-    // ========================================================================
-const FOLDER_ABS = new URL(GALLERY.folder, window.location.href).href;
+    // ===============================================================
+
     // Header values
     document.getElementById("clientName").textContent = GALLERY.clientName;
     document.getElementById("shootDate").textContent  = GALLERY.shootDate;
@@ -293,38 +298,31 @@ const FOLDER_ABS = new URL(GALLERY.folder, window.location.href).href;
       el.className = "relative bg-white/5 border border-white/10 rounded-xl overflow-hidden soft-shadow ring-emerald-soft";
       el.innerHTML = `
         <div class="thumb-tile">
-          <img src="${src}" alt="${file}" class="thumb cursor-zoom-in" loading="lazy" decoding="async"
+          <img src="${src}" alt="${file}" class="thumb cursor-zoom-in" decoding="async"
                sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw">
         </div>
 
-        <!-- Subtle overlay gradient (behind labels/pills) -->
         <div class="absolute inset-0 pointer-events-none bg-gradient-to-t
                     from-black/30 via-transparent to-transparent
                     opacity-0 hover:opacity-100 transition z-10"></div>
 
-        <!-- Filename tag in top-right -->
         <div class="absolute top-2 right-2 z-20 bg-black/60 rounded px-2 py-1 text-xs">
           ${file}
         </div>
 
-        <!-- a11y checkbox (kept for state & keyboard fallback) -->
         <input type="checkbox" class="select-photo sr-only-input" aria-label="Select ${file}">
 
-        <!-- Centered select overlay pill -->
         <button type="button" class="select-pill" aria-pressed="false" aria-label="Toggle select ${file}">
           Select
         </button>
       `;
 
-      // Hooks
       const img  = el.querySelector("img");
       const cb   = el.querySelector(".select-photo");
       const pill = el.querySelector(".select-pill");
 
-      // Lightbox on image click (but not when clicking the pill)
       img.addEventListener("click", () => openLightbox(idx));
 
-      // Toggle function
       function applyState(on){
         cb.checked = on;
         pill.textContent = on ? "Selected" : "Select";
@@ -334,10 +332,7 @@ const FOLDER_ABS = new URL(GALLERY.folder, window.location.href).href;
         updateSelCount();
       }
 
-      // Sync if checkbox changes (e.g., Select All / Clear)
       cb.addEventListener("change", () => applyState(cb.checked));
-
-      // Pill click toggles selection (and stops lightbox)
       pill.addEventListener("click", (e) => { e.stopPropagation(); applyState(!cb.checked); });
       pill.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); applyState(!cb.checked); }
@@ -346,9 +341,9 @@ const FOLDER_ABS = new URL(GALLERY.folder, window.location.href).href;
       return el;
     }
 
-    // Populate grid
+    // Populate grid (thumbs ~800w)
     GALLERY.files.forEach((file, i) => {
-      const src = new URL(file, FOLDER_ABS).href;
+      const src = ikUrl(file, 800);
       grid.appendChild(photoCard(src, file, i));
     });
 
@@ -465,14 +460,12 @@ const FOLDER_ABS = new URL(GALLERY.folder, window.location.href).href;
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Honeypot
         if (hpEl && hpEl.value && hpEl.value.trim() !== '') {
           setStatus("Thanks! We received your order.", 'text-emerald-300');
           form.reset();
           return;
         }
 
-        // Trim + validate
         const name  = nameEl ? String(nameEl.value || '').trim() : '';
         const email = emailEl ? String(emailEl.value || '').trim() : '';
         const emailLooksGood = emailEl ? (emailEl.value = email, emailEl.checkValidity()) : false;
@@ -483,7 +476,6 @@ const FOLDER_ABS = new URL(GALLERY.folder, window.location.href).href;
           return;
         }
 
-        // Build structured items
         const items = ORDER.map(i => ({
           file: i.file,
           size: i.size,
@@ -505,7 +497,6 @@ const FOLDER_ABS = new URL(GALLERY.folder, window.location.href).href;
           return;
         }
 
-        // Human-readable message (nice to have in the GitHub issue/email)
         const printsLines = items.map(i => `- ${i.file} — ${i.size} x ${i.qty} @ $${i.unit} = $${i.line}`).join("\n");
         const message =
 `Gallery Order
@@ -530,7 +521,7 @@ Totals:
         try {
           const res = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }, // IMPORTANT: do not send Accept
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               source: 'gallery-order',
               payload: {
@@ -560,7 +551,7 @@ Totals:
     })();
     // =======================================================================
 
-    // Lightbox
+    // Lightbox (use ImageKit large variant)
     const lb = document.getElementById("lightbox");
     const lbImg = document.getElementById("lbImg");
     const lbPrev = document.getElementById("lbPrev");
@@ -569,7 +560,7 @@ Totals:
 
     function openLightbox(i){
       lightboxIndex = i;
-      lbImg.src = `${GALLERY.folder}/${GALLERY.files[i]}`;
+      lbImg.src = ikUrl(GALLERY.files[i], 2000);
       lbImg.alt = GALLERY.files[i];
       lb.classList.add("show");
       document.body.style.overflow = "hidden";
@@ -582,7 +573,7 @@ Totals:
     function navLightbox(delta){
       if (lightboxIndex < 0) return;
       lightboxIndex = (lightboxIndex + delta + GALLERY.files.length) % GALLERY.files.length;
-      lbImg.src = `${GALLERY.folder}/${GALLERY.files[lightboxIndex]}`;
+      lbImg.src = ikUrl(GALLERY.files[lightboxIndex], 2000);
       lbImg.alt = GALLERY.files[lightboxIndex];
     }
 
