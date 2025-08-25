@@ -95,9 +95,12 @@
 </head>
 
 <body class="text-white font-sans min-h-screen flex flex-col relative overflow-x-hidden bg-fallback">
-  <!-- Background layers -->
-  <div style="background-image:url('../images/hero-car.jpg');"
+  <!-- Background layers (now supports Dropbox via data-db-bg; data-bg is fallback) -->
+  <div id="hero-bg"
+       data-db-bg="https://www.dropbox.com/scl/fi/4pergmzlrrccsxu73puw9/hero-car.jpg?rlkey=houxno6c4dg230r4hxajiyk8j&st=p2xpzgb5&dl=0"
+       data-bg="../images/hero-car.jpg"
        class="pointer-events-none fixed inset-0 bg-cover bg-center opacity-60 blur-sm -z-10 animate-hero-pan"></div>
+
   <div class="pointer-events-none fixed inset-0 -z-10">
     <div class="absolute inset-0 bg-gradient-to-b from-white/24 via-white/16 to-white/10"></div>
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.04)_65%,rgba(0,0,0,0.12)_100%)]"></div>
@@ -245,6 +248,17 @@
           .replace(/[\?&]raw=1\b/, "") + (u.includes("?") ? "&raw=1" : "?raw=1");
       }
     }
+    // ===============================================================
+
+    // ===== Set hero background from Dropbox (fallback to local) ====
+    (function () {
+      const hero = document.getElementById('hero-bg');
+      if (!hero) return;
+      const db = hero.getAttribute('data-db-bg');
+      const local = hero.getAttribute('data-bg');
+      const bgUrl = db ? dropboxToRaw(db) : local;
+      if (bgUrl) hero.style.backgroundImage = `url('${bgUrl}')`;
+    })();
     // ===============================================================
 
     // ===== PER-GALLERY META (use Dropbox SHARE links) ==============
