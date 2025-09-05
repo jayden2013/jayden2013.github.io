@@ -166,6 +166,10 @@
 
         <!-- Pick List: standalone tab -->
         <div class="tab-pane fade" id="pickListTab">
+		<div class="mb-3">
+			<button class="btn btn-outline-success" id="exportPickListBtn">Export Pick List to CSV</button>
+		</div>
+
           <div class="table-responsive">
             <table class="table table-striped table-bordered" id="pickListTable">
               <thead class="table-dark">
@@ -1103,6 +1107,64 @@
     const code = document.getElementById('dataCodeInput').value.trim();
     if (code) applyDataCode(code);
   };
+  
+  // Export only Year, Make, Model, Row, Yard, Notes from the saved Pick List
+function exportPickListCSV() {
+  const pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
+  const notesMap = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
+
+  if (!pickList.length) {
+    alert('Your pick list is empty.');
+    return;
+  }
+
+  const headers = ['Year','Make','Model','Row','Yard','Notes'];
+  const rows = pickList.map(r => {
+    const key = [r.Year, r.Make, r.Model, r.Row].join('|');
+    // sanitize notes to keep CSV tidy
+    const note = (notesMap[key] || '')
+      .replace(/\r?\n/g, ' ')
+      .replace(/"/g, '""'); // escape quotes for CSV
+
+    return [
+      r.Year || '',
+      r.Make || '',
+      r.Model || '',
+      r.Row || '',
+      r.Yard || '',
+      note
+    ];
+  });
+
+  // Build CSV
+  const csvLines = [
+    headers.join(','),
+    ...rows.map(cols =>
+      cols.map(v => {
+        // wrap fields containing commas/quotes in quotes
+        const needsQuotes = /[",\n]/.test(String(v));
+        return needsQuotes ? `"${String(v)}"` : String(v);
+      }).join(',')
+    )
+  ];
+  const csv = csvLines.join('\n');
+
+  // Download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pick_list.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+// Hook up the button
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('exportPickListBtn');
+  if (btn) btn.addEventListener('click', exportPickListCSV);
+});
+
 
   /****************
    * App init     *
