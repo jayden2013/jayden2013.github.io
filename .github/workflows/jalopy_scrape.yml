@@ -30,9 +30,10 @@ jobs:
         run: |
           python jalopy-jungle/scripts/jalopy_scraper.py
 
-      - name: Move CSVs into inventory folder
+      - name: Replace old CSVs with new scrape
         run: |
           mkdir -p jalopy-jungle/inventory-csvs
+          rm -f jalopy-jungle/inventory-csvs/*.csv  # remove old CSVs
           mv *.csv jalopy-jungle/inventory-csvs/
 
       - name: Generate index.json
