@@ -7,6 +7,7 @@
 
   <!-- Bootstrap & libs -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
@@ -48,6 +49,16 @@
     #serialGateBrand { font-weight: 800; letter-spacing: .5px; }
 
     .btn-premium { background-color:gold !important; border-color:goldenrod !important; color:#000 !important; }
+
+    /* Small polish */
+    .tab-card {
+      background:#fff; border-radius:16px; border:1px solid rgba(0,0,0,.06);
+      box-shadow:0 8px 24px rgba(0,0,0,.06); padding:16px;
+    }
+    .dark-mode .tab-card { background:#1b1b1b; border-color:#2a2a2a; box-shadow:none; }
+    .table thead th { position: sticky; top: 0; z-index: 2; }
+    .table-hover tbody tr { transition: transform .08s ease, box-shadow .12s ease; }
+    .table-hover tbody tr:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,.06); }
   </style>
 </head>
 
@@ -82,16 +93,14 @@
   <div id="appRoot">
     <div class="container py-4">
       <!-- Header -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 tab-card">
         <div>
-          <div class="display-1">PROFIT</div>
+          <div class="display-1 mb-1">PROFIT</div>
           <div class="h5">Parts Resale Optimization &amp; Field Inventory Tool</div>
-          <div class="small">Cars and Collectibles LLC</div>
-          <div class="small"><a href="https://carsandcollectibles.com" target="_blank">carsandcollectibles.com</a></div>
+          <div class="small">Cars and Collectibles LLC • <a href="https://carsandcollectibles.com" target="_blank">carsandcollectibles.com</a></div>
         </div>
         <div>
-          <!-- Settings available after unlock -->
-          <button class="btn btn-outline-secondary me-2" id="settingsBtn">⚙️ Settings</button>
+          <button class="btn btn-outline-secondary" id="settingsBtn"><i class="bi bi-gear"></i> Settings</button>
         </div>
       </div>
 
@@ -107,6 +116,9 @@
           <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pickListTab" type="button">Pick List</button>
         </li>
         <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#alertsTab" type="button">Alerts</button>
+        </li>
+        <li class="nav-item">
           <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pricesTab" type="button">Prices</button>
         </li>
       </ul>
@@ -115,74 +127,131 @@
       <div class="tab-content pt-3">
         <!-- Jalopy -->
         <div class="tab-pane fade show active" id="jalopyTab">
-          <div class="mb-3">
-            <select class="form-select" id="csvSelector"></select>
-          </div>
-          <div class="mb-3">
-            <input type="text" id="searchInput" class="form-control" placeholder="Filter rows...">
-          </div>
-          <div class="mb-3">
-            <button class="btn btn-success" id="exportBtn">Export Table to CSV</button>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-striped table-bordered" id="inventoryTable">
-              <thead class="table-dark"><tr id="tableHeader"></tr></thead>
-              <tbody id="tableBody"></tbody>
-            </table>
-          </div>
+          <div class="tab-card">
+            <div class="mb-3">
+              <select class="form-select" id="csvSelector"></select>
+            </div>
+            <div class="mb-3">
+              <input type="text" id="searchInput" class="form-control" placeholder="Filter rows...">
+            </div>
+            <div class="mb-3">
+              <button class="btn btn-success" id="exportBtn"><i class="bi bi-download"></i> Export Table to CSV</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-bordered table-hover" id="inventoryTable">
+                <thead class="table-dark"><tr id="tableHeader"></tr></thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
 
-          <div id="statistics" class="mt-3 small"></div>
-          <canvas id="ageChart" style="max-width:100%; margin-top:1em;"></canvas>
+            <div id="statistics" class="mt-3 small"></div>
+            <canvas id="ageChart" style="max-width:100%; margin-top:1em;"></canvas>
+          </div>
         </div>
 
         <!-- Trusty -->
         <div class="tab-pane fade" id="trustyTab">
-          <div class="mb-3">
-            <select class="form-select" id="trustySelector"></select>
-          </div>
-          <div class="mb-3">
-            <input type="text" id="trustySearchInput" class="form-control" placeholder="Filter rows...">
-          </div>
-          <div class="mb-3">
-            <button class="btn btn-success" id="trustyExportBtn">Export Table to CSV</button>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-striped table-bordered" id="trustyTable">
-              <thead class="table-dark"><tr id="trustyTableHeader"></tr></thead>
-              <tbody id="trustyTableBody"></tbody>
-            </table>
-          </div>
+          <div class="tab-card">
+            <div class="mb-3">
+              <select class="form-select" id="trustySelector"></select>
+            </div>
+            <div class="mb-3">
+              <input type="text" id="trustySearchInput" class="form-control" placeholder="Filter rows...">
+            </div>
+            <div class="mb-3">
+              <button class="btn btn-success" id="trustyExportBtn"><i class="bi bi-download"></i> Export Table to CSV</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-bordered table-hover" id="trustyTable">
+                <thead class="table-dark"><tr id="trustyTableHeader"></tr></thead>
+                <tbody id="trustyTableBody"></tbody>
+              </table>
+            </div>
 
-          <div id="trustyStatistics" class="mt-3 small"></div>
-          <canvas id="trustyAgeChart" style="max-width:100%; margin-top:1em;"></canvas>
+            <div id="trustyStatistics" class="mt-3 small"></div>
+            <canvas id="trustyAgeChart" style="max-width:100%; margin-top:1em;"></canvas>
+          </div>
+        </div>
+
+        <!-- Pick List -->
+        <div class="tab-pane fade" id="pickListTab">
+          <div class="tab-card">
+            <div class="mb-3">
+              <button class="btn btn-success" id="exportPickListBtn"><i class="bi bi-box-arrow-down"></i> Export Table to CSV</button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-striped table-bordered table-hover" id="pickListTable">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Year</th>
+                    <th>Make</th>
+                    <th>Model</th>
+                    <th>Row</th>
+                    <th>Yard</th>
+                    <th>Notes</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody id="pickListBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="tab-pane fade" id="alertsTab">
+          <div class="tab-card">
+            <h5 class="mb-1">Vehicle Alert Signup</h5>
+            <p class="text-muted mb-3">Get timely alerts when your specified vehicles arrive at Jalopy Jungle or Trusty.</p>
+
+            <form id="alertForm" class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" required class="form-control" placeholder="you@example.com"/>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Make(s)</label>
+                <input type="text" name="makes" class="form-control" placeholder="e.g., Ford"/>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Model(s)</label>
+                <input type="text" name="models" class="form-control" placeholder="e.g., Thunderbird"/>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Year Range</label>
+                <input type="text" name="years" class="form-control" placeholder="e.g., 1994-1997"/>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Preferred Yard</label>
+                <select name="yards" class="form-select">
+                  <option value="">Any</option>
+                  <option>Jalopy Jungle (Boise)</option>
+                  <option>Jalopy Jungle (Nampa)</option>
+                  <option>Jalopy Jungle (Caldwell)</option>
+                  <option>Jalopy Jungle (Garden City)</option>
+                  <option>Jalopy Jungle (Twin Falls)</option>
+                  <option>Trusty Pick-A-Part</option>
+                </select>
+              </div>
+
+              <div class="col-12">
+                <button type="submit" class="btn btn-success w-100">Submit Alert</button>
+              </div>
+            </form>
+
+            <p id="statusMsg" class="text-center mt-2 small text-muted"></p>
+          </div>
         </div>
 
         <!-- Prices (placeholder) -->
         <div class="tab-pane fade" id="pricesTab">
-          <div class="text-muted">Coming soon: Prices</div>
-        </div>
-
-        <!-- Pick List: standalone tab -->
-        <div class="tab-pane fade" id="pickListTab">
-          <div class="mb-3">
-            <button class="btn btn-success" id="exportPickListBtn">Export Table to CSV</button>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table table-striped table-bordered" id="pickListTable">
-              <thead class="table-dark">
-                <tr>
-                  <th>Year</th>
-                  <th>Make</th>
-                  <th>Model</th>
-                  <th>Row</th>
-                  <th>Yard</th>
-                  <th>Notes</th>
-                  <th>Remove</th>
-                </tr>
-              </thead>
-              <tbody id="pickListBody"></tbody>
-            </table>
+          <div class="tab-card">
+            <div class="text-muted">Coming soon: Prices</div>
           </div>
         </div>
       </div>
@@ -586,7 +655,7 @@
         const ni = document.getElementById('noteInput');
         ni.value = notes[key] || '';
         document.getElementById('noteLengthFeedback').style.display = 'none';
-        document.getElementById('noteLimitInfo').style.display = 'none'; // whole app is paid now
+        document.getElementById('noteLimitInfo').style.display = 'none';
         new bootstrap.Modal(document.getElementById('noteModal')).show();
       });
       tr.appendChild(nt);
@@ -609,7 +678,7 @@
         const isPicked = btn.classList.contains('btn-success');
         const selector = document.getElementById('csvSelector');
         const locKey = selector?.selectedOptions?.[0]?.dataset?.loc || '';
-        const yardName = `Jalopy Jungle ` + (LOCATION_NAMES[locKey] || (locKey ? locKey : ''));
+        const yardName = `Jalopy Jungle ` + LOCATION_NAMES[locKey] || (locKey ? locKey : '');
 
         if (!isPicked) {
           addToPickList({ ...row, Yard: yardName });
@@ -651,7 +720,7 @@
       notes[selectedRowKey] = val;
       localStorage.setItem('jalopyNotes', JSON.stringify(notes));
       renderTable(currentData);
-      renderTrustyTable(trustyData); // keep notes mirrored in Trusty view too
+      renderTrustyTable(trustyData);
     }
     bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
   };
@@ -666,70 +735,65 @@
     }
   };
 
-  /* ---------- CSV branding helpers ---------- */
+  /* ========== CSV helpers (with branding) ========== */
   function csvEscape(val) {
     const s = String(val ?? '');
     const needsQuotes = /[",\n]/.test(s);
     const escaped = s.replace(/"/g, '""');
     return needsQuotes ? `"${escaped}"` : escaped;
   }
-  function brandingLines(extra = []) {
-    const ts = new Date();
-    const stamp = ts.toISOString().replace('T',' ').replace(/\..+$/,' UTC');
-    return [
-      'PROFIT - Parts Resale Optimization & Field Inventory Tool',
-      'Cars & Collectibles LLC',
-      `Exported: ${stamp}`,
-      ...extra,
-      '' // blank line before column headers
-    ];
-  }
   function fileStamp() {
     const d = new Date();
     const pad = n => String(n).padStart(2,'0');
     return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
   }
+  function brandingBannerLines(contextLabel='Export') {
+    const d = new Date();
+    const ts = d.toISOString().slice(0,19).replace('T',' ');
+    return [
+      ['PROFIT – Cars and Collectibles LLC'].map(csvEscape).join(','),
+      ['Website: https://carsandcollectibles.com'].map(csvEscape).join(','),
+      [`${contextLabel} generated: ${ts}`].map(csvEscape).join(','),
+      '' // blank spacer line
+    ];
+  }
 
-  /* ---------- Branded table export (skips "Pick") ---------- */
-  function exportTableToCSVBranded(hdrSel, bodySel, filename, extraBranding=[]) {
-    // headers
-    const ths = Array.from(document.querySelectorAll(hdrSel + ' th'));
-    const headers = ths.map(th => th.textContent.trim());
-    const pickIdx = ths.findIndex(th => th.textContent.trim().toLowerCase() === 'pick');
-    const keptHeaders = headers.filter((h, i) => i !== pickIdx);
+  function exportTableToCSVGeneric(hdrSel, bodySel, filename, excludeHeaders = ['Pick']) {
+    // headers (drop excluded)
+    const rawHeaders = Array.from(document.querySelectorAll(hdrSel + ' th'))
+      .map(th => th.textContent.trim());
+    const excludeSet = new Set(excludeHeaders.map(h => h.trim().toLowerCase()));
+    const keepIdx = rawHeaders
+      .map((h, i) => ({ h, i }))
+      .filter(({ h }) => !excludeSet.has(h.toLowerCase()))
+      .map(({ i }) => i);
+    const headers = keepIdx.map(i => rawHeaders[i]);
 
     // rows
     const rows = Array.from(document.querySelectorAll(bodySel + ' tr')).map(tr => {
       const cells = Array.from(tr.cells).map(td => td.textContent);
-      const filtered = cells.filter((_, i) => i !== pickIdx);
-      return filtered.map(csvEscape).join(',');
+      return keepIdx.map(i => cells[i] ?? '');
     });
 
-    const csv = [
-      ...brandingLines(extraBranding),
-      keptHeaders.map(csvEscape).join(','),
-      ...rows
-    ].join('\n');
+    // build CSV with branding
+    const top = brandingBannerLines('Inventory Export');
+    const lines = [
+      ...top,
+      headers.map(csvEscape).join(','),
+      ...rows.map(r => r.map(csvEscape).join(','))
+    ];
+    const csv = lines.join('\n');
 
-    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = filename;
-    document.body.append(a); a.click(); a.remove();
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.append(a);
+    a.click();
+    a.remove();
   }
-
-  // Hook inventory exports with branding
-  document.getElementById('exportBtn').onclick = () => {
-    const locKey = document.getElementById('csvSelector')?.selectedOptions?.[0]?.dataset?.loc || '';
-    const yardNameMap = { boise:'Boise', caldwell:'Caldwell', garden_city:'Garden City', nampa:'Nampa', twin_falls:'Twin Falls' };
-    const yard = yardNameMap[locKey] ? `Jalopy Jungle ${yardNameMap[locKey]}` : 'Jalopy Jungle';
-    const ts = fileStamp();
-    exportTableToCSVBranded('#tableHeader', '#tableBody', `jalopy_inventory_${ts}.csv`, [`Source: ${yard}`]);
-  };
-
-  document.getElementById('trustyExportBtn').onclick = () => {
-    const ts = fileStamp();
-    exportTableToCSVBranded('#trustyTableHeader', '#trustyTableBody', `trusty_inventory_${ts}.csv`, ['Source: Trusty']);
-  };
+  document.getElementById('exportBtn').onclick = () =>
+    exportTableToCSVGeneric('#tableHeader', '#tableBody', 'inventory_with_notes.csv');
 
   function showStatistics(data) {
     const s = document.getElementById('statistics');
@@ -867,7 +931,6 @@
       });
       tr.appendChild(nt);
 
-      // Clicking a Trusty row still opens the sold modal
       tr.addEventListener('click', () => openSoldModal(row));
 
       // Pick
@@ -884,6 +947,7 @@
       btn.addEventListener('click', e => {
         e.stopPropagation();
         const isPicked = btn.classList.contains('btn-success');
+
         const yardName = `Trusty`;
 
         if (!isPicked) {
@@ -919,6 +983,35 @@
     renderTrustyTable(trustyData); showTrustyStatistics(trustyData);
   }
 
+  document.getElementById('trustyExportBtn').onclick = () =>
+    exportTableToCSVGeneric('#trustyTableHeader', '#trustyTableBody', 'trusty_inventory_with_notes.csv');
+
+  function showTrustyStatistics(data) {
+    const s = document.getElementById('trustyStatistics');
+    const valid = data.map(r => {
+      const y = parseInt(r.Year), rn = parseInt(r.Row);
+      return (!isNaN(y) && !isNaN(rn)) ? { row:rn, age:new Date().getFullYear()-y } : null;
+    }).filter(Boolean);
+
+    if (!valid.length) {
+      s.innerHTML = `<strong>Average Age:</strong> N/A<br/>
+                     <strong># Models:</strong> 0<br/>
+                     <strong># Makes:</strong> 0<br/>
+                     <strong>Newest Age:</strong> N/A<br/>
+                     <strong>Oldest Age:</strong> N/A`;
+      if (trustyAgeChart){ trustyAgeChart.destroy(); trustyAgeChart=null; }
+      return;
+    }
+
+    valid.sort((a,b)=>a.row-b.row);
+    const cum=[]; valid.forEach((it,i)=>{
+      const slice=valid.slice(0,i+1).map(x=>x.age);
+      cum.push(+(slice.reduce((s,v),0)/slice.length).toFixed(1));
+    });
+  }
+  </script>
+  <script>
+  // (Continuation – fix cum reduce typo and complete Trusty stats)
   function showTrustyStatistics(data) {
     const s = document.getElementById('trustyStatistics');
     const valid = data.map(r => {
@@ -969,7 +1062,6 @@
    * Pick List  *
    **************/
   function addToPickList(row, persist=true) {
-    // row expected to include {Year, Make, Model, Row, Yard?}
     const tbody = document.getElementById('pickListBody');
     const tr = document.createElement('tr');
 
@@ -995,7 +1087,7 @@
       e.stopPropagation();
       tbody.removeChild(tr);
 
-      // reset pick buttons in visible tables (jalopy/trusty)
+      // reset pick buttons in visible tables
       [document.getElementById('tableBody'), document.getElementById('trustyTableBody')].forEach(tbodyEl => {
         if (!tbodyEl) return;
         const origRow = tbodyEl.querySelector(`tr[data-key="${originalKeyForNotes}"]`);
@@ -1045,7 +1137,6 @@
    * Sold modal   *
    ****************/
   function openSoldModal(row) {
-    // Uses currently selected Jalopy yard for ebay-sales lookup
     const locKey = document.getElementById('csvSelector')?.selectedOptions?.[0]?.dataset?.loc;
 
     fetch('./ebay-sales/ebay-sales.json')
@@ -1200,13 +1291,11 @@
     if (code) applyDataCode(code);
   };
 
-  /* ---------- Pick List export helpers (with branding) ---------- */
+  /* ---------- Pick List CSV (with branding) ---------- */
   function gatherPickListRowsFromDOM() {
-    // Exports in the exact order the user sees in the Pick List table
     const tbody = document.getElementById('pickListBody');
     const rows = [];
     const notesMap = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
-
     Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
       const tds = tr.querySelectorAll('td');
       if (tds.length < 6) return;
@@ -1219,12 +1308,9 @@
       const Notes = (notesMap[key] || '').replace(/\r?\n/g,' ');
       rows.push({ Year, Make, Model, Row, Yard, Notes });
     });
-
     return rows;
   }
-
   function gatherPickListRowsFromStorage() {
-    // Uses storage order; useful for grouping/single-yard export
     const pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
     const notesMap = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
     return pickList.map(r => {
@@ -1239,11 +1325,10 @@
       };
     });
   }
-
-  function downloadCSV(rows, filename, brandingExtra = []) {
+  function downloadCSV(rows, filename, contextLabel='Pick List Export') {
     const headers = ['Year','Make','Model','Row','Yard','Notes'];
     const lines = [
-      ...brandingLines(brandingExtra),
+      ...brandingBannerLines(contextLabel),
       headers.map(csvEscape).join(',')
     ];
     rows.forEach(r => {
@@ -1258,9 +1343,7 @@
     a.click();
     a.remove();
   }
-
-  function downloadCSVGroupedByYard(rows, filename, brandingExtra = []) {
-    // Sort by Yard then Make/Model/Year/Row
+  function downloadCSVGroupedByYard(rows, filename) {
     const sorted = [...rows].sort((a,b) =>
       (a.Yard||'').localeCompare(b.Yard||'') ||
       (a.Make||'').localeCompare(b.Make||'') ||
@@ -1268,14 +1351,12 @@
       (parseInt(a.Year)||0) - (parseInt(b.Year)||0) ||
       (String(a.Row||'')).localeCompare(String(b.Row||''))
     );
-
     const headers = ['Year','Make','Model','Row','Yard','Notes'];
     const lines = [
-      ...brandingLines(['Export Mode: Grouped by Yard', ...brandingExtra]),
+      ...brandingBannerLines('Pick List Export (Grouped by Yard)'),
       headers.map(csvEscape).join(',')
     ];
     let currentYard = null;
-
     sorted.forEach(r => {
       if (r.Yard !== currentYard) {
         currentYard = r.Yard;
@@ -1284,7 +1365,6 @@
       }
       lines.push([r.Year, r.Make, r.Model, r.Row, r.Yard, r.Notes].map(csvEscape).join(','));
     });
-
     const csv = lines.join('\n');
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
@@ -1295,12 +1375,10 @@
     a.remove();
   }
 
-  // --- modal wiring ---
+  // Export modal wiring
   function openExportPickListModal() {
-    // populate yards
     const rows = gatherPickListRowsFromStorage();
     const yards = Array.from(new Set(rows.map(r => r.Yard).filter(Boolean))).sort();
-
     const select = document.getElementById('singleYardSelect');
     select.innerHTML = '<option value="">Select Yard…</option>';
     yards.forEach(y => {
@@ -1308,50 +1386,45 @@
       opt.value = y; opt.textContent = y;
       select.appendChild(opt);
     });
-
-    // default: "as-is"
     document.getElementById('exportAsIs').checked = true;
     select.disabled = true;
-
-    // enable/disable select when "single yard" chosen
     ['exportAsIs','exportGrouped','exportSingleYard'].forEach(id => {
       document.getElementById(id).onchange = () => {
         select.disabled = !document.getElementById('exportSingleYard').checked;
+        const btn = document.getElementById('confirmExportPick');
+        btn.textContent = id==='exportAsIs' ? 'Export Full List'
+          : id==='exportGrouped' ? 'Export Grouped by Yard'
+          : 'Export Selected Yard';
       };
     });
-
     bootstrap.Modal.getOrCreateInstance(document.getElementById('exportPickListModal')).show();
   }
-
   function performPickListExportFromModal() {
     const mode = document.querySelector('input[name="pickExportMode"]:checked')?.value || 'asis';
     const ts = fileStamp();
-
     if (mode === 'asis') {
       const rows = gatherPickListRowsFromDOM();
       if (!rows.length) return alert('Your pick list is empty.');
-      downloadCSV(rows, `pick_list_${ts}.csv`, ['Export Mode: Full list']);
+      downloadCSV(rows, `pick_list_${ts}.csv`, 'Pick List Export');
       return;
     }
-
     if (mode === 'grouped') {
       const rows = gatherPickListRowsFromStorage();
       if (!rows.length) return alert('Your pick list is empty.');
       downloadCSVGroupedByYard(rows, `pick_list_grouped_${ts}.csv`);
       return;
     }
-
     if (mode === 'single') {
       const yard = document.getElementById('singleYardSelect').value.trim();
       if (!yard) return alert('Please choose a yard.');
       const rows = gatherPickListRowsFromStorage().filter(r => r.Yard === yard);
       if (!rows.length) return alert(`No rows found for yard: ${yard}`);
-      downloadCSV(rows, `pick_list_${yard.replace(/\s+/g,'_')}_${ts}.csv`, ['Export Mode: Single Yard', `Yard: ${yard}`]);
+      downloadCSV(rows, `pick_list_${yard.replace(/\s+/g,'_')}_${ts}.csv`, `Pick List Export – ${yard}`);
       return;
     }
   }
 
-  // Hook up buttons (single listener set)
+  // Hook up buttons
   document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('exportPickListBtn');
     if (btn) btn.addEventListener('click', openExportPickListModal);
@@ -1362,6 +1435,39 @@
       bootstrap.Modal.getInstance(document.getElementById('exportPickListModal')).hide();
     });
   });
+
+  /* ---------- Alerts tab JS ---------- */
+  (function initAlerts() {
+    const form = document.getElementById("alertForm");
+    const statusMsg = document.getElementById("statusMsg");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusMsg.textContent = "Submitting…";
+
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch("https://profit-alerts.profit-alerts.workers.dev", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await res.json();
+        if (result.ok) {
+          statusMsg.textContent = "✅ Alert created!";
+          form.reset();
+        } else {
+          statusMsg.textContent = "❌ Error creating alert.";
+        }
+      } catch (err) {
+        statusMsg.textContent = "❌ Network error.";
+      }
+    });
+  })();
 
   /****************
    * App init     *
