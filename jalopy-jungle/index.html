@@ -72,12 +72,16 @@
           <h5 class="modal-title" id="serialGateBrand">PROFIT Access</h5>
         </div>
         <div class="modal-body">
-          <p class="text-muted mb-3">Enter your serial key to unlock all features.</p>
+          <p class="text-muted mb-3">Enter your serial key and email to unlock all features.</p>
           <div class="mb-2">
             <label class="form-label">Serial Key</label>
             <input id="serialInput" class="form-control form-control-lg" placeholder="e.g. ABC-123-XYZ">
           </div>
-          <div id="serialFeedback" class="text-danger small mt-1" style="display:none;">Invalid serial key.</div>
+          <div class="mb-2">
+            <label class="form-label">Email</label>
+            <input id="emailInput" type="email" class="form-control form-control-lg" placeholder="you@example.com">
+          </div>
+          <div id="serialFeedback" class="text-danger small mt-1" style="display:none;">Invalid serial key or missing email.</div>
         </div>
         <div class="modal-footer border-0 pt-0">
           <button class="btn btn-primary w-100" id="submitSerial">Unlock</button>
@@ -98,6 +102,7 @@
           <div class="display-1 mb-1">PROFIT</div>
           <div class="h5">Parts Resale Optimization &amp; Field Inventory Tool</div>
           <div class="small">Cars and Collectibles LLC • <a href="https://carsandcollectibles.com" target="_blank">carsandcollectibles.com</a></div>
+          <div class="small text-muted" id="signedInEmail" style="display:none;">Signed in as: <span id="signedInEmailValue"></span></div>
         </div>
         <div>
           <button class="btn btn-outline-secondary" id="settingsBtn"><i class="bi bi-gear"></i> Settings</button>
@@ -203,14 +208,10 @@
         <div class="tab-pane fade" id="alertsTab">
           <div class="tab-card">
             <h5 class="mb-1">Vehicle Alert Signup</h5>
-            <p class="text-muted mb-3">Get timely alerts when your specified vehicles arrive at Jalopy Jungle or Trusty.</p>
+            <p class="text-muted mb-3">Receive notifications when vehicles matching your criteria are added at Jalopy Jungle or Trusty.</p>
 
             <form id="alertForm" class="row g-3">
-              <div class="col-12">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" required class="form-control" placeholder="you@example.com"/>
-              </div>
-
+              <!-- Email field removed: will be auto-inserted from serial sign-in -->
               <div class="col-md-6">
                 <label class="form-label">Make(s)</label>
                 <input type="text" name="makes" class="form-control" placeholder="e.g., Ford"/>
@@ -443,6 +444,11 @@
         .addEventListener('shown.bs.modal', () => {
           const input = document.getElementById('serialInput');
           if (input) input.focus();
+          // prefill saved values if any
+          const savedKey = localStorage.getItem('premiumKey') || '';
+          const savedEmail = localStorage.getItem('premiumEmail') || '';
+          if (savedKey) document.getElementById('serialInput').value = savedKey;
+          if (savedEmail) document.getElementById('emailInput').value = savedEmail;
         }, { once:true });
       setTimeout(() => {
         const gateEl = document.getElementById('serialGate');
@@ -459,6 +465,7 @@
     document.body.classList.remove('serial-locked','force-show-modal');
     const inst = bootstrap.Modal.getInstance(document.getElementById('serialGate'));
     if (inst) inst.hide();
+    updateSignedInEmailUI();
     initApp();
   }
   async function validateStoredKey() {
@@ -469,26 +476,45 @@
       console.warn('Could not load serial-keys.json:', e);
       serialData = [];
     }
-    const saved = localStorage.getItem('premiumKey');
-    const entry = serialData.find(e => e.key === saved);
-    if (entry) { unlockApp(entry.name); } else { showGate(); }
+    const savedKey = localStorage.getItem('premiumKey');
+    const savedEmail = localStorage.getItem('premiumEmail');
+    const entry = serialData.find(e => e.key === savedKey);
+    if (entry && savedEmail) { unlockApp(entry.name); } else { showGate(); }
 
     const submitBtn = document.getElementById('submitSerial');
-    const inputEl   = document.getElementById('serialInput');
+    const keyInput   = document.getElementById('serialInput');
+    const emailInput = document.getElementById('emailInput');
     submitBtn.onclick = () => {
-      const key = inputEl.value.trim();
+      const key = keyInput.value.trim();
+      const email = emailInput.value.trim();
       const match = serialData.find(e => e.key === key);
-      if (match) {
+      if (match && email) {
         localStorage.setItem('premiumKey', key);
+        localStorage.setItem('premiumEmail', email);
         document.getElementById('serialFeedback').style.display = 'none';
         unlockApp(match.name);
       } else {
         document.getElementById('serialFeedback').style.display = 'block';
       }
     };
-    inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); submitBtn.click(); }
+    // Enter to submit
+    [keyInput, emailInput].forEach(el => {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); submitBtn.click(); }
+      });
     });
+  }
+
+  function updateSignedInEmailUI() {
+    const email = localStorage.getItem('premiumEmail') || '';
+    const wrap = document.getElementById('signedInEmail');
+    const val  = document.getElementById('signedInEmailValue');
+    if (email && wrap && val) {
+      val.textContent = email;
+      wrap.style.display = '';
+    } else if (wrap) {
+      wrap.style.display = 'none';
+    }
   }
 
   /***********************
@@ -947,7 +973,6 @@
       btn.addEventListener('click', e => {
         e.stopPropagation();
         const isPicked = btn.classList.contains('btn-success');
-
         const yardName = `Trusty`;
 
         if (!isPicked) {
@@ -983,35 +1008,6 @@
     renderTrustyTable(trustyData); showTrustyStatistics(trustyData);
   }
 
-  document.getElementById('trustyExportBtn').onclick = () =>
-    exportTableToCSVGeneric('#trustyTableHeader', '#trustyTableBody', 'trusty_inventory_with_notes.csv');
-
-  function showTrustyStatistics(data) {
-    const s = document.getElementById('trustyStatistics');
-    const valid = data.map(r => {
-      const y = parseInt(r.Year), rn = parseInt(r.Row);
-      return (!isNaN(y) && !isNaN(rn)) ? { row:rn, age:new Date().getFullYear()-y } : null;
-    }).filter(Boolean);
-
-    if (!valid.length) {
-      s.innerHTML = `<strong>Average Age:</strong> N/A<br/>
-                     <strong># Models:</strong> 0<br/>
-                     <strong># Makes:</strong> 0<br/>
-                     <strong>Newest Age:</strong> N/A<br/>
-                     <strong>Oldest Age:</strong> N/A`;
-      if (trustyAgeChart){ trustyAgeChart.destroy(); trustyAgeChart=null; }
-      return;
-    }
-
-    valid.sort((a,b)=>a.row-b.row);
-    const cum=[]; valid.forEach((it,i)=>{
-      const slice=valid.slice(0,i+1).map(x=>x.age);
-      cum.push(+(slice.reduce((s,v),0)/slice.length).toFixed(1));
-    });
-  }
-  </script>
-  <script>
-  // (Continuation – fix cum reduce typo and complete Trusty stats)
   function showTrustyStatistics(data) {
     const s = document.getElementById('trustyStatistics');
     const valid = data.map(r => {
@@ -1259,8 +1255,8 @@
     const pickList   = JSON.parse(localStorage.getItem('myPickList') || '[]');
     const favorites  = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
     const homeYard   = localStorage.getItem('homeYard') || '';
-    const darkMode   = localStorage.getItem('darkMode') || 'false';
-    const combined = JSON.stringify({ pickList, favorites, homeYard, darkMode });
+    theDark = localStorage.getItem('darkMode') || 'false';
+    const combined = JSON.stringify({ pickList, favorites, homeYard, darkMode: theDark });
     return LZString.compressToBase64(combined);
   }
   function applyDataCode(code) {
@@ -1449,6 +1445,14 @@
       const formData = new FormData(form);
       const payload = Object.fromEntries(formData.entries());
 
+      const email = localStorage.getItem('premiumEmail');
+      if (!email) {
+        statusMsg.textContent = "❌ Missing email. Please re-login.";
+        showGate();
+        return;
+      }
+      payload.email = email; // auto-insert stored email
+
       try {
         const res = await fetch("https://profit-alerts.profit-alerts.workers.dev", {
           method: "POST",
@@ -1476,6 +1480,7 @@
     try { notes = JSON.parse(localStorage.getItem('jalopyNotes') || '{}'); } catch { notes = {}; }
     if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
 
+    updateSignedInEmailUI();
     listCSVFiles();      // Jalopy
     listTrustyFiles();   // Trusty
     loadPickListData();  // Pick list
