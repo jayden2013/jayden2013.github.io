@@ -29,7 +29,7 @@ jobs:
       - name: Run Trusty scraping script
         run: |
           # Adjust this path to your actual Trusty scraper
-          python trusty/scripts/trusty_scraper.py
+          python jalopy-jungle/scripts/trusty_scraper.py
 
       - name: Replace old Trusty CSVs with new scrape
         run: |
