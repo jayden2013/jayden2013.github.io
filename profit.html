@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Cars & Collectibles specializes in car parts, collectibles, and in-house software like PROFIT for Jalopy Jungle junkyards in Idaho. Find inventory, tips, and unique auto-themed merch.">
-  <meta name="keywords" content="Jalopy Jungle, Idaho, junkyard, car parts, parts inventory, eBay flipping, automotive software, collectibles, car merch, auto stickers">
-  <title>PROFIT - Parts Resale Optimization & Field Inventory Tool</title>
+  <meta name="description" content="PROFIT is a pro-grade toolkit for junkyard and parts resellers—purpose-built for Jalopy Jungle and Trusty yards in Idaho. Subscribe for full access to inventory tools, pricing research, CSV export, and more." />
+  <meta name="keywords" content="PROFIT subscription, Jalopy Jungle software, Trusty yards, junkyard reselling tool, eBay flipping app, inventory tracker, paid plan" />
+  <title>PROFIT — Parts Resale Optimization & Field Inventory Tool</title>
 
   <link rel="stylesheet" href="dist/tailwind.css">
 
@@ -16,12 +16,8 @@
     body { background-color: #0b0b0b; }
     .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
 
-    /* Subtle hero motion to match site */
-    @keyframes heroPan {
-      0%   { transform: scale(1.04) translateY(0); }
-      50%  { transform: scale(1.08) translateY(-8px); }
-      100% { transform: scale(1.04) translateY(0); }
-    }
+    /* Subtle hero motion */
+    @keyframes heroPan { 0%{transform:scale(1.04) translateY(0)} 50%{transform:scale(1.08) translateY(-8px)} 100%{transform:scale(1.04) translateY(0)} }
     .animate-hero-pan { animation: heroPan 22s ease-in-out infinite; }
 
     /* Blue→Green animated gradient title */
@@ -86,9 +82,9 @@
                   shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
 
       <p class="text-gray-200 text-base sm:text-lg md:text-lg mb-6">
-        The all-in-one dashboard for junkyard, parts, and eBay sellers,
-        <span class="font-semibold text-yellow-300">built for Jalopy Jungle yards in Idaho.</span>
-        Track inventory, research part prices, add notes, and manage your reselling business like a pro—right from your browser.
+        PROFIT is offered as a subscription — a purpose-built toolkit for junkyard, parts, and eBay sellers.
+        Designed specifically for <span class="font-semibold text-yellow-300">Jalopy Jungle and Trusty yards in Idaho</span>,
+        it makes it easy to research part prices, track your inventory, and export your data with confidence—all in one place.
       </p>
 
       <div class="flex flex-wrap justify-center gap-4">
@@ -98,24 +94,29 @@
                   hover:bg-emerald-600/20 hover:border-emerald-500/50
                   transition-all duration-200 hover:-translate-y-0.5
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-          Launch PROFIT
+          Launch PROFIT (Subscribers Only)
         </a>
       </div>
+
+      <p class="text-xs text-gray-300 mt-4">
+        After subscribing, use your subscription email or serial key to unlock the app.
+      </p>
     </section>
 
-    <!-- Pricing Section (glass card, equal-height cards) -->
+    <!-- Pricing (no free tier) -->
     <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mt-8 mb-10">
-      <h2 class="text-2xl font-bold mb-4 text-yellow-300">Upgrade to Premium</h2>
+      <h2 class="text-2xl font-bold mb-4 text-yellow-300">Pricing</h2>
 
-      <div class="flex flex-col md:flex-row md:items-stretch gap-8 mb-3">
+      <div class="flex flex-col md:flex-row md:items-stretch gap-8 mb-2">
         <!-- Monthly -->
         <div class="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-6 w-full md:flex-1 flex flex-col">
           <div class="text-3xl font-extrabold text-yellow-300 mb-2">
             $2.99 <span class="text-base font-medium text-gray-200">/month</span>
           </div>
+          <p class="text-sm text-gray-200 mb-4">Full access. Cancel anytime.</p>
           <a href="https://buy.stripe.com/6oU3cvfffajeanRcnS8N200" target="_blank" rel="noopener"
              class="mt-auto w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded-full shadow-lg transition-transform hover:scale-105 text-lg text-center block">
-            Upgrade Monthly
+            Purchase Monthly
           </a>
         </div>
 
@@ -125,113 +126,72 @@
             $29 <span class="text-base font-medium text-gray-200">/year</span>
           </div>
           <div class="text-emerald-300 text-sm font-semibold mb-2">
-            Save 19% vs. paying monthly
+            Save 19% vs monthly
           </div>
+          <p class="text-sm text-gray-200 mb-4">One payment, 12 months access.</p>
           <a href="https://buy.stripe.com/4gMaEXd773UQdA3drW8N201" target="_blank" rel="noopener"
              class="mt-auto w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded-full shadow-lg transition-transform hover:scale-105 text-lg text-center block">
-            Upgrade Yearly
+            Purchase Yearly
           </a>
         </div>
       </div>
 
       <p class="text-xs text-gray-300 text-center">
-        Questions? <a href="mailto:jayden@carsandcollectibles.com" class="underline text-yellow-300">Contact us</a>
+        Questions? <a href="mailto:jayden@carsandcollectibles.com" class="underline text-yellow-300">jayden@carsandcollectibles.com</a>
       </p>
     </section>
 
-    <!-- Feature Breakdown (glass cards) -->
+    <!-- What's Included (single table only) -->
     <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mb-8">
-      <h2 class="text-3xl md:text-4xl font-bold mb-3 tracking-wide">Free vs Premium Features</h2>
+      <h2 class="text-3xl md:text-4xl font-bold mb-3 tracking-wide">What’s Included</h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-8">
-        <!-- Free -->
-        <div class="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-6">
-          <h3 class="text-xl font-bold text-emerald-300 mb-2">Free Features</h3>
-          <ul class="list-disc ml-6 text-gray-200 space-y-1">
-            <li>View junkyard inventory with search/filter</li>
-            <li>See eBay sold prices for any part/vehicle</li>
-            <li>Add notes (20 character limit per note)</li>
-            <li>Use Pick List for on-site tracking</li>
-            <li>Track up to 5 of your own inventory items</li>
-            <li>Mark items as sold and view profits/dates</li>
-            <li>Basic profit calculation (no eBay fee deduction)</li>
-            <li>View statistics and basic charts</li>
-            <li>CSV import for yard inventory</li>
-            <li>Local browser storage (no cloud sync)</li>
-          </ul>
-        </div>
-        <!-- Premium -->
-        <div class="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-6">
-          <h3 class="text-xl font-bold text-yellow-300 mb-2">Premium Features</h3>
-          <ul class="list-disc ml-6 text-gray-200 space-y-1">
-            <li>Unlimited notes (no character limit)</li>
-            <li>Export inventory and "My Inventory" tables to CSV</li>
-            <li>Add unlimited inventory rows</li>
-            <li>eBay fee calculator for accurate profit</li>
-            <li>Enable Dark Mode</li>
-            <li>Full access to settings panel</li>
-            <li>Save unlimited favorite vehicles</li>
-            <li>Sync/export all data via Data Code</li>
-            <li>Bulk editing (via import/export features)</li>
-            <li>Early access to new features</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Comparison Table -->
       <div class="overflow-x-auto">
         <table class="w-full feature-table text-base text-left mt-2 mb-2">
           <thead>
             <tr>
-              <th class="text-gray-200 font-semibold">Feature</th>
-              <th class="text-emerald-300 font-semibold">Free</th>
-              <th class="text-yellow-300 font-semibold">Premium</th>
+              <th class="text-gray-200 font-semibold">Features</th>
             </tr>
           </thead>
           <tbody class="text-gray-200">
-            <tr><td>View Junkyard Inventory</td><td>✅</td><td>✅</td></tr>
-            <tr><td>View eBay Sold Prices</td><td>✅</td><td>✅</td></tr>
-            <tr><td>Add Notes</td><td>20 character limit</td><td>Unlimited</td></tr>
-            <tr><td>Pick List</td><td>✅</td><td>✅</td></tr>
-            <tr><td>My Inventory Rows</td><td>Up to 5</td><td>Unlimited</td></tr>
-            <tr><td>Export Inventory/CSV</td><td>❌</td><td>✅</td></tr>
-            <tr><td>eBay Fee Calculator</td><td>❌</td><td>✅</td></tr>
-            <tr><td>Dark Mode</td><td>❌</td><td>✅</td></tr>
-            <tr><td>Settings Panel</td><td>❌</td><td>✅</td></tr>
-            <tr><td>Manage Favorites</td><td>❌</td><td>✅</td></tr>
-            <tr><td>Data Sync/Transfer</td><td>❌</td><td>✅</td></tr>
-            <tr><td>Bulk Editing</td><td>❌</td><td>✅</td></tr>
-            <tr><td>Early Feature Access</td><td>❌</td><td>✅</td></tr>
+            <tr><td>Junkyard inventory viewer with search & filters</td></tr>
+            <tr><td>eBay sold-price research for any part/vehicle</td></tr>
+            <tr><td>Pick List for on-site yard tracking</td></tr>
+            <tr><td>Favorites: save vehicles you care about</td></tr>
+			<tr><td>Alerts: Get an email notification whenever a matching vehicle is added to a yard’s inventory.</td></tr>
+            <tr><td>Notes</td></tr>
+			<tr><td>Dark Mode</td></tr>
+            <tr><td>Export as CSV</td></tr>
           </tbody>
         </table>
       </div>
 
       <p class="text-xs text-gray-300 mt-6 text-center">
-        Start free and upgrade anytime to unlock premium power features.
+        Choose a plan above, then launch the app to sign in and start using PROFIT.
       </p>
     </section>
 
-    <!-- Who is PROFIT for? (kept as its own glass pane) -->
+    <!-- Who is PROFIT for? -->
     <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mb-10">
       <h2 class="text-2xl md:text-3xl font-bold mb-3">Who is PROFIT for?</h2>
       <p class="text-gray-200 text-base md:text-lg mb-4">
-        Whether you’re a hobbyist or a full-time reseller, PROFIT is built for anyone who:
+        For resellers who want a faster, more organized way to source, price, and track parts:
       </p>
       <ul class="list-disc ml-6 text-gray-200 space-y-1 text-left">
-        <li>Sources car parts from junkyards, auctions, or private sellers</li>
-        <li>Sells on eBay, Facebook Marketplace, or locally</li>
-        <li>Wants to keep track of inventory and see what’s profitable</li>
-        <li>Loves organization and hates leaving money on the table</li>
+        <li>Pullers sourcing from junkyards, auctions, or private sellers</li>
+        <li>eBay and Marketplace sellers who need clear tracking</li>
+        <li>Anyone who wants clean records, exports, and less guesswork</li>
       </ul>
       <br/>
-      <a href="jalopy-jungle/index.html"
-         class="inline-flex items-center justify-center rounded-full px-8 py-4 text-lg font-semibold
-                text-white bg-white/10 backdrop-blur border border-white/20
-                hover:bg-emerald-600/20 hover:border-emerald-500/50
-                transition-all duration-200 hover:-translate-y-0.5
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-        Try PROFIT Now
-      </a>
+      <div class="flex flex-wrap justify-center gap-4">
+        <!-- Removed "Get Access" as requested -->
+        <a href="jalopy-jungle/index.html"
+           class="inline-flex items-center justify-center rounded-full px-8 py-4 text-lg font-semibold
+                  text-white bg-white/10 backdrop-blur border border-white/20
+                  hover:bg-emerald-600/20 hover:border-emerald-500/50
+                  transition-all duration-200 hover:-translate-y-0.5">
+          Launch PROFIT (Subscribers Only)
+        </a>
+      </div>
     </section>
 
   </main>
@@ -239,40 +199,40 @@
   <footer class="mt-20 py-6 text-sm text-gray-300 fade-in-up">
     © 2025 Cars & Collectibles LLC. All rights reserved.
   </footer>
-  
+
   <!-- Hero background via Dropbox (non-destructive; only overrides the image URL) -->
-<script>
-(function () {
-  // 1) Paste your Dropbox *share* link here:
-  var DB_HERO = "https://www.dropbox.com/scl/fi/4pergmzlrrccsxu73puw9/hero-car.jpg?rlkey=houxno6c4dg230r4hxajiyk8j&st=p2xpzgb5&dl=0";
-  if (!DB_HERO) return;
+  <script>
+  (function () {
+    // 1) Paste your Dropbox *share* link here:
+    var DB_HERO = "https://www.dropbox.com/scl/fi/4pergmzlrrccsxu73puw9/hero-car.jpg?rlkey=houxno6c4dg230r4hxajiyk8j&st=p2xpzgb5&dl=0";
+    if (!DB_HERO) return;
 
-  // 2) Convert to a direct file URL
-  function dropboxToRaw(u) {
-    try {
-      var url = new URL(u);
-      if (!/\.dropbox\.com$/i.test(url.hostname)) return u;
-      url.hostname = "dl.dropboxusercontent.com";
-      var rlkey = url.searchParams.get("rlkey");
-      url.search = "";
-      if (rlkey) url.searchParams.set("rlkey", rlkey);
-      url.searchParams.set("raw", "1");
-      return url.toString();
-    } catch (e) {
-      return u
-        .replace("www.dropbox.com", "dl.dropboxusercontent.com")
-        .replace(/[\?&]dl=0\b/, "")
-        .replace(/[\?&]dl=1\b/, "")
-        .replace(/[\?&]raw=1\b/, "") + (u.includes("?") ? "&raw=1" : "?raw=1");
+    // 2) Convert to a direct file URL
+    function dropboxToRaw(u) {
+      try {
+        var url = new URL(u);
+        if (!/\.dropbox\.com$/i.test(url.hostname)) return u;
+        url.hostname = "dl.dropboxusercontent.com";
+        var rlkey = url.searchParams.get("rlkey");
+        url.search = "";
+        if (rlkey) url.searchParams.set("rlkey", rlkey);
+        url.searchParams.set("raw", "1");
+        return url.toString();
+      } catch (e) {
+        return u
+          .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+          .replace(/[\?&]dl=0\b/, "")
+          .replace(/[\?&]dl=1\b/, "")
+          .replace(/[\?&]raw=1\b/, "") + (u.includes("?") ? "&raw=1" : "?raw=1");
+      }
     }
-  }
 
-  // 3) Swap the background on the existing hero layer (and only that)
-  var hero = document.querySelector("div[style*='hero-car.jpg']");
-  if (hero) {
-    hero.style.backgroundImage = "url('" + dropboxToRaw(DB_HERO) + "')";
-  }
-})();
-</script>
+    // 3) Swap the background on the existing hero layer (and only that)
+    var hero = document.querySelector("div[style*='hero-car.jpg']");
+    if (hero) {
+      hero.style.backgroundImage = "url('" + dropboxToRaw(DB_HERO) + "')";
+    }
+  })();
+  </script>
 </body>
 </html>
