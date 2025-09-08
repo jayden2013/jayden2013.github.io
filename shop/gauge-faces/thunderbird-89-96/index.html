@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>89–96 Ford Thunderbird Gauge Faces — Cars & Collectibles</title>
+  <meta name="description" content="Custom gauge faces for 1989–1996 Ford Thunderbird. OEM fitment, backlight compatible, multiple designs."/>
+
+  <!-- Tailwind (relative to /shop/gauge-faces/thunderbird-89-96/) -->
+  <link rel="stylesheet" href="../../../dist/tailwind.css"/>
+
+  <style>
+    body { background:#0b0b0b; color:#fff; }
+
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(30px) } to { opacity:1; transform:translateY(0) } }
+    .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity:0 }
+
+    .bg-fallback { background: linear-gradient(135deg,#0f0f0f,#1a1a1a) }
+
+    /* Hero motion */
+    @keyframes heroPan {
+      0% { transform: scale(1.04) translateY(0) }
+      50% { transform: scale(1.08) translateY(-8px) }
+      100% { transform: scale(1.04) translateY(0) }
+    }
+    .animate-hero-pan { animation: heroPan 22s ease-in-out infinite }
+
+    /* Animated gradient text */
+    .title-gradient {
+      background:linear-gradient(90deg,#bfdbfe 0%,#60a5fa 25%,#34d399 50%,#22c55e 75%,#a7f3d0 100%);
+      background-size:200% 100%;
+      -webkit-background-clip:text; background-clip:text;
+      color:transparent; animation:titleGradientSlide 8s ease-in-out infinite;
+    }
+    @keyframes titleGradientSlide {
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+
+    .tile { transition: background-color .25s ease, transform .25s ease; }
+    .tile:hover { transform: translateY(-2px); }
+
+    .chip {
+      display:inline-flex; align-items:center; gap:.4rem;
+      font-size:.70rem; letter-spacing:.04em; color:#d1fae5;
+      background: rgba(16,185,129,0.16);
+      border:1px solid rgba(16,185,129,0.35);
+      padding:.25rem .5rem; border-radius:999px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    /* Image frames with watermark */
+    .img-frame {
+      position: relative; overflow: hidden; border-radius: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.20); background: rgba(255,255,255,0.03);
+    }
+    .img-frame img {
+      width:100%; height:auto; display:block; object-fit:cover;
+      user-select:none; -webkit-user-drag:none; pointer-events:none;
+    }
+    .wm::after {
+      content: attr(data-watermark);
+      position:absolute; inset:0; pointer-events:none;
+      display:grid; place-items:center;
+      color: rgba(255,255,255,0.12);
+      font-weight:800; letter-spacing:.25em; text-transform:uppercase;
+      font-size: clamp(1.25rem, 3vw, 2rem);
+      mix-blend-mode: lighten;
+      transform: rotate(-12deg);
+      text-shadow: 0 0 12px rgba(0,0,0,0.25);
+    }
+    .img-frame::before {
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background: radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0.00) 45%, rgba(0,0,0,0.22) 100%);
+    }
+    .img-caption {
+      position:absolute; left:.5rem; top:.5rem;
+      background: rgba(0,0,0,0.45); color:#fff; font-size:.75rem;
+      padding:.25rem .5rem; border-radius:999px;
+      border:1px solid rgba(255,255,255,0.25);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body class="text-white font-sans min-h-screen text-center px-6 relative overflow-x-hidden bg-fallback">
+
+  <!-- Hero background (Dropbox swapped by script) -->
+  <div style="background-image:url('../../../images/hero-car.jpg')"
+       class="pointer-events-none fixed inset-0 bg-cover bg-center opacity-60 blur-sm -z-10 animate-hero-pan"></div>
+
+  <main class="fade-in-up max-w-5xl mx-auto pt-12">
+    <div class="mb-6">
+      <a href="/shop/" class="text-emerald-300 hover:text-emerald-400 underline">← Back to Shop</a>
+      <span class="mx-2 text-gray-500">/</span>
+      <a href="/shop/gauge-faces/" class="text-emerald-300 hover:text-emerald-400 underline">Gauge Faces</a>
+    </div>
+
+    <!-- Hero card -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl px-6 py-6 md:px-8 md:py-8 mb-8 text-left">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-widest mb-3 text-center">
+        <span class="title-gradient">89–96 Ford Thunderbird Gauge Faces</span>
+      </h1>
+      <div class="mx-auto mb-4 h-1.5 w-28 rounded-full
+                  bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
+                  shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
+      <p class="text-gray-200 max-w-3xl mx-auto text-center">
+        Designed for OEM clusters with backlight-friendly layers. Browse all designs below.
+      </p>
+      <div class="mt-4 flex items-center justify-center gap-2">
+        <span class="chip">OEM Fitment</span>
+        <span class="chip">Backlight Compatible</span>
+        <span class="chip">Durable Print</span>
+        <span class="chip">Easy Install</span>
+      </div>
+    </section>
+
+    <!-- Designs grid: two cards per row on md+ -->
+    <section class="grid gap-10 md:grid-cols-2 text-left">
+
+      <!-- Crayon Inferno -->
+      <article class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 tile h-full">
+        <header class="mb-4">
+          <h2 class="text-2xl font-bold">Crayon Inferno - CAC-GC001</h2>
+          <p class="text-sm text-gray-300">A playful yet bold design that looks hand-drawn in crayon, then set ablaze with streaking flames across the cluster. Perfect for Thunderbird owners who want something fun, eye-catching, and totally unique — it lights up like fire at night while keeping OEM fitment and backlight compatibility intact.</p>
+        </header>
+
+        <div class="grid sm:grid-cols-1 gap-4">
+          <figure class="img-frame wm" data-watermark="Cars & Collectibles"
+                  data-dropbox="https://www.dropbox.com/scl/fi/nv19m0rkrjav4bs9jo6jx/crayon-flames-lx-sc-96.webp?rlkey=3ruw46rxhycs5zuoo7ub01rxp&st=6af5o8nw&dl=0"
+                  oncontextmenu="return false;">
+            <img alt="Crayon Inferno - Design" draggable="false" loading="lazy">
+            <figcaption class="img-caption">Design</figcaption>
+          </figure>
+        </div>
+
+        <ul class="mt-4 text-sm text-gray-300 list-disc ml-5 space-y-1">
+          <li>Compatible: 1989–1996 Thunderbird/Cougar including Super Coupe/XR7</li>
+          <li>Hand-drawn aesthetic — bold crayon-style lines with a playful, one-of-a-kind look.</li>
+          <li>Flame accents — fiery streaks across the cluster for a dramatic, eye-catching style.</li>
+        </ul>
+      </article>
+
+      <!-- Redline -->
+      <article class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 tile h-full">
+        <header class="mb-4">
+          <h2 class="text-2xl font-bold">Redline - CAC-GC002</h2>
+          <p class="text-sm text-gray-300">A bold, no-nonsense design inspired by the thrill of pushing your Thunderbird to the limit. With a deep black background and striking red illumination, this cluster face delivers maximum contrast for day and night driving. Sleek, aggressive, and unmistakably performance-minded — it’s built for enthusiasts who want their gauges to look as sharp as their car feels.</p>
+        </header>
+
+        <div class="grid sm:grid-cols-1 gap-4">
+          <figure class="img-frame wm" data-watermark="Cars & Collectibles"
+                  data-dropbox="https://www.dropbox.com/scl/fi/3myhroxg2oztg89gmmwdt/red-black-lx-sc-96.webp?rlkey=o1d3gb5atk2ob52hrdq76naox&st=q4d58u3z&dl=0"
+                  oncontextmenu="return false;">
+            <img alt="Redline - Design" draggable="false" loading="lazy">
+            <figcaption class="img-caption">Design</figcaption>
+          </figure>
+        </div>
+
+        <ul class="mt-4 text-sm text-gray-300 list-disc ml-5 space-y-1">
+          <li>Compatible: 1989–1996 Thunderbird/Cougar including Super Coupe/XR7</li>
+          <li>High-contrast black and red layout — aggressive look with easy readability day or night.</li>
+          <li>Performance-inspired design — a clean, OEM-fit face that channels the spirit of the redline.</li>
+        </ul>
+      </article>
+
+      <!-- Aqua Glow -->
+      <article class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 tile h-full">
+        <header class="mb-4">
+          <h2 class="text-2xl font-bold">Aqua Glow - CAC-GC003</h2>
+          <p class="text-sm text-gray-300">A modern twist on the Thunderbird cluster with a deep black base and vivid aqua illumination. Cool, sharp, and futuristic, this design offers a unique style that stands out without sacrificing readability. Perfect for enthusiasts who want a fresh, modern edge in their interior.</p>
+        </header>
+
+        <div class="grid sm:grid-cols-1 gap-4">
+          <figure class="img-frame wm" data-watermark="Cars & Collectibles"
+                  data-dropbox="https://www.dropbox.com/scl/fi/49cdh7yk1i2hj0i45crh9/aqua-black-lx-sc-96.webp?rlkey=i0om9ug8s98eywtrucd9sduqr&st=gm7v84ns&dl=0"
+                  oncontextmenu="return false;">
+            <img alt="Aqua Glow - Design" draggable="false" loading="lazy">
+            <figcaption class="img-caption">Design</figcaption>
+          </figure>
+        </div>
+
+        <ul class="mt-4 text-sm text-gray-300 list-disc ml-5 space-y-1">
+          <li>Compatible: 1989–1996 Thunderbird/Cougar including Super Coupe/XR7</li>
+          <li>Black + aqua contrast — crisp visibility with a striking, modern colorway.</li>
+          <li>Distinctive look — OEM fitment with a unique glow that sets your Thunderbird apart.</li>
+        </ul>
+      </article>
+
+      <!-- Yellowjacket -->
+      <article class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 tile h-full">
+        <header class="mb-4">
+          <h2 class="text-2xl font-bold">Yellowjacket - CAC-GC004</h2>
+          <p class="text-sm text-gray-300">A high-contrast design that pairs a deep black background with bold yellow markings for a look that’s both aggressive and striking. Inspired by performance dials and the sting of speed, Yellowjacket stands out day or night while keeping OEM fitment and backlight compatibility.</p>
+        </header>
+
+        <div class="grid sm:grid-cols-1 gap-4">
+          <figure class="img-frame wm" data-watermark="Cars & Collectibles"
+                  data-dropbox="https://www.dropbox.com/scl/fi/4jphvt1b8rxq8x5ayvwmk/yellow-black-lx-sc-96.webp?rlkey=u6acdffia0ygdaiayo7v42wp2&st=e2ajtlq1&dl=0"
+                  oncontextmenu="return false;">
+            <img alt="Yellowjacket - Design" draggable="false" loading="lazy">
+            <figcaption class="img-caption">Design</figcaption>
+          </figure>
+        </div>
+
+        <ul class="mt-4 text-sm text-gray-300 list-disc ml-5 space-y-1">
+          <li>Compatible: 1989–1996 Thunderbird/Cougar including Super Coupe/XR7</li>
+          <li>Bold yellow on black — crisp, high-visibility layout that pops in any light.</li>
+          <li>Performance-inspired styling — aggressive design with OEM fitment and reliable readability.</li>
+        </ul>
+      </article>
+
+    </section>
+
+    <!-- Specs -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 my-10 text-left">
+      <h3 class="text-xl font-semibold mb-3">Model Range Notes</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <tbody>
+            <tr class="border-b border-white/10">
+              <td class="py-3 pr-4 text-gray-300">Model Years</td>
+              <td class="py-3 text-white">1989–1996 Thunderbird (’97 uses a different cluster)</td>
+            </tr>
+            <tr class="border-b border-white/10">
+              <td class="py-3 pr-4 text-gray-300">Cluster Types</td>
+              <td class="py-3 text-white">LX/SC/XR7</td>
+            </tr>
+            <tr class="border-b border-white/10">
+              <td class="py-3 pr-4 text-gray-300">Illumination</td>
+              <td class="py-3 text-white">Backlight compatible (retains factory-night glow)</td>
+            </tr>
+            <tr>
+              <td class="py-3 pr-4 text-gray-300">Notes</td>
+              <td class="py-3 text-white">Verify trim/package and cluster type before ordering.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="py-6 text-sm text-gray-300">
+      © 2025 Cars & Collectibles LLC. All rights reserved.
+    </footer>
+  </main>
+
+  <!-- Dropbox converter for hero + previews -->
+  <script>
+  (function () {
+    function dropboxToRaw(u) {
+      try {
+        var url = new URL(u);
+        if (!/\.dropbox\.com$/i.test(url.hostname)) return u;
+        url.hostname = "dl.dropboxusercontent.com";
+        var rlkey = url.searchParams.get("rlkey");
+        url.search = "";
+        if (rlkey) url.searchParams.set("rlkey", rlkey);
+        url.searchParams.set("raw", "1");
+        return url.toString();
+      } catch (e) {
+        return u
+          .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+          .replace(/[\?&]dl=0\b/, "")
+          .replace(/[\?&]dl=1\b/, "")
+          .replace(/[\?&]raw=1\b/, "") + (u.includes("?") ? "&raw=1" : "?raw=1");
+      }
+    }
+
+    // Hero background (use the exact working link from your other pages)
+    var DB_HERO = "https://www.dropbox.com/scl/fi/4pergmzlrrccsxu73puw9/hero-car.jpg?rlkey=houxno6c4dg230r4hxajiyk8j&st=p2xpzgb5&dl=0";
+    var hero = document.querySelector("div[style*='hero-car.jpg']");
+    if (hero) {
+      hero.style.backgroundImage = "url('" + dropboxToRaw(DB_HERO) + "')";
+    }
+
+    // Convert all design preview figures
+    document.querySelectorAll("[data-dropbox]").forEach(function(fig) {
+      var link = fig.getAttribute("data-dropbox");
+      var img = fig.querySelector("img");
+      if (link && img) img.src = dropboxToRaw(link);
+    });
+  })();
+  </script>
+</body>
+</html>

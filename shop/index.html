@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shop — Cars & Collectibles</title>
+  <meta name="description" content="Explore parts and custom gear from Cars & Collectibles. Browse custom gauge faces, jump to our eBay storefront, or explore our PROFIT software."/>
+
+  <!-- Tailwind (relative to /shop/) -->
+  <link rel="stylesheet" href="../dist/tailwind.css"/>
+
+  <style>
+    body { background:#0b0b0b; color:#fff; }
+
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(30px) } to { opacity:1; transform:translateY(0) } }
+    .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity:0 }
+
+    .bg-fallback { background: linear-gradient(135deg,#0f0f0f,#1a1a1a) }
+
+    /* Subtle hero motion */
+    @keyframes heroPan {
+      0% { transform: scale(1.04) translateY(0) }
+      50% { transform: scale(1.08) translateY(-8px) }
+      100% { transform: scale(1.04) translateY(0) }
+    }
+    .animate-hero-pan { animation: heroPan 22s ease-in-out infinite }
+
+    /* Animated gradient text (same as site) */
+    .title-gradient{
+      background:linear-gradient(90deg,#bfdbfe 0%,#60a5fa 25%,#34d399 50%,#22c55e 75%,#a7f3d0 100%);
+      background-size:200% 100%;
+      -webkit-background-clip:text; background-clip:text;
+      color:transparent;
+      animation:titleGradientSlide 8s ease-in-out infinite;
+    }
+    @keyframes titleGradientSlide { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+    /* ====== Fancy text-only banner styles ====== */
+    .tile-banner {
+      position: relative;
+      overflow: hidden;
+      border-radius: 0.75rem; /* rounded-xl */
+      border: 1px solid rgba(255,255,255,0.20);
+      background:
+        radial-gradient(120% 100% at 80% 0%, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0.00) 40%),
+        radial-gradient(120% 100% at 0% 100%, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.00) 45%),
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 10px 30px rgba(0,0,0,0.25);
+      display: flex; align-items:center; justify-content:center;
+    }
+    /* Glow ring on hover */
+    .tile:hover .tile-banner {
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        0 12px 36px rgba(34,197,94,0.20),
+        0 0 0 1px rgba(34,197,94,0.35);
+      transition: box-shadow .35s ease;
+    }
+    /* Animated border gradient (subtle) */
+    .tile-banner::before {
+      content:"";
+      position:absolute; inset:-1px;
+      border-radius: inherit;
+      padding:1px;
+      background: linear-gradient(120deg, rgba(186,230,253,0.35), rgba(52,211,153,0.35), rgba(186,230,253,0.35));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity:.0; transition: opacity .3s ease, filter .3s ease;
+      filter: blur(0.5px);
+    }
+    .tile:hover .tile-banner::before { opacity:.75; }
+
+    /* Sheen sweep */
+    @keyframes sheen {
+      0% { transform: translateX(-120%) rotate(12deg); opacity: 0; }
+      40% { opacity:.45; }
+      100% { transform: translateX(140%) rotate(12deg); opacity: 0; }
+    }
+    .tile-banner .sheen {
+      position:absolute; top:-20%; bottom:-20%; width:30%;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%,
+                                         rgba(255,255,255,0.25) 45%,
+                                         rgba(255,255,255,0) 100%);
+      transform: translateX(-120%) rotate(12deg);
+      pointer-events:none;
+    }
+    .tile:hover .tile-banner .sheen {
+      animation: sheen 900ms ease-in-out forwards;
+    }
+
+    /* Label styling */
+    .tile-label {
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 800;
+      text-align: center;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+      line-height: 1.15;
+    }
+    .tile-sub {
+      color: rgba(255,255,255,0.9);
+      font-size: .9rem;
+      letter-spacing: .02em;
+    }
+
+    /* Badge chips */
+    .chip {
+      display:inline-flex; align-items:center; gap:.4rem;
+      font-size:.70rem; letter-spacing:.04em;
+      color:#d1fae5; /* emerald-100 */
+      background: rgba(16,185,129,0.16);
+      border: 1px solid rgba(16,185,129,0.35);
+      padding:.25rem .5rem; border-radius:999px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animate-hero-pan, .fade-in-up, .title-gradient { animation: none !important; transition: none !important; }
+      .tile-banner .sheen { display:none; }
+      .tile-banner::before { opacity:.4; }
+    }
+  </style>
+</head>
+<body class="text-white font-sans min-h-screen text-center px-6 relative overflow-x-hidden bg-fallback">
+
+  <!-- Background layer (placeholder, Dropbox script replaces it) -->
+  <div style="background-image:url('../images/hero-car.jpg')"
+       class="pointer-events-none fixed inset-0 bg-cover bg-center opacity-60 blur-sm -z-10 animate-hero-pan"></div>
+
+  <!-- Overlays -->
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-b from-white/24 via-white/16 to-white/10"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.04)_65%,rgba(0,0,0,0.12)_100%)]"></div>
+    <div class="absolute inset-0 mix-blend-overlay" style="
+      opacity:.01;
+      background-image:url('data:image/svg+xml;utf8,\
+      <svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22>\
+        <filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%222%22/></filter>\
+        <rect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.25%22/>\
+      </svg>');
+      background-size:200px 200px;">
+    </div>
+  </div>
+
+  <main class="fade-in-up max-w-5xl mx-auto pt-12">
+    <a href="/" class="inline-block mb-6 text-emerald-300 hover:text-emerald-400 text-lg underline">← Back to Home</a>
+
+    <!-- Hero card -->
+    <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl px-6 py-6 md:px-8 md:py-8 mb-8">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-widest mb-3">
+        <span class="title-gradient">Shop</span>
+      </h1>
+      <div class="mx-auto mb-4 h-1.5 w-28 rounded-full
+                  bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
+                  shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
+      <p class="text-gray-200">Explore parts, custom gauge faces, and our PROFIT software.</p>
+    </section>
+
+    <!-- Tiles -->
+    <section class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+      <!-- Gauge Faces -->
+      <a href="/shop/gauge-faces/" class="tile group block bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-5 hover:bg-white/15 transition">
+        <div class="tile-banner aspect-[4/3] mb-4">
+          <div class="sheen"></div>
+          <div class="relative px-4 text-center">
+            <div class="tile-label text-2xl sm:text-3xl">
+              <span class="bg-clip-text text-transparent
+                           bg-[linear-gradient(90deg,#bfdbfe_0%,#60a5fa_25%,#34d399_50%,#22c55e_75%,#a7f3d0_100%)]
+                           bg-[length:200%_100%] animate-[titleGradientSlide_8s_ease-in-out_infinite]">
+                Custom Gauge Faces
+              </span>
+            </div>
+            <div class="mt-2 tile-sub text-gray-300/90 tracking-wide">
+              OEM fit • Backlight compatible
+            </div>
+            <div class="mt-3 flex items-center justify-center gap-2">
+              <span class="chip">Made in USA</span>
+              <span class="chip">Daily-driver tested</span>
+            </div>
+          </div>
+        </div>
+        <h2 class="text-xl font-semibold mb-1">Custom Gauge Faces</h2>
+        <p class="text-sm text-gray-300">Designed for OEM clusters, compatible with backlighting.</p>
+      </a>
+
+      <!-- Software Solutions (NEW) -->
+      <a href="/software/" class="tile group block bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-5 hover:bg-white/15 transition">
+        <div class="tile-banner aspect-[4/3] mb-4">
+          <div class="sheen"></div>
+          <div class="relative px-4 text-center">
+            <div class="tile-label text-2xl sm:text-3xl">
+              <span class="bg-clip-text text-transparent
+                           bg-[linear-gradient(90deg,#bfdbfe_0%,#60a5fa_25%,#34d399_50%,#22c55e_75%,#a7f3d0_100%)]
+                           bg-[length:200%_100%] animate-[titleGradientSlide_8s_ease-in-out_infinite]">
+                Software Solutions
+              </span>
+            </div>
+            <div class="mt-2 tile-sub text-gray-300/90 tracking-wide">
+              PROFIT — research prices & yard alerts
+            </div>
+            <div class="mt-3 flex items-center justify-center gap-2">
+              <span class="chip">PROFIT</span>
+              <span class="chip">Tailored for Idaho yards</span>
+            </div>
+          </div>
+        </div>
+        <h2 class="text-xl font-semibold mb-1">Software Solutions</h2>
+        <p class="text-sm text-gray-300">Learn more about PROFIT and purchase access.</p>
+      </a>
+
+      <!-- eBay Storefront -->
+      <a href="https://www.ebay.com/usr/weaverfever69?utm_source=site&utm_medium=shop_hub&utm_campaign=ebay_tile"
+         target="_blank" rel="noopener"
+         class="tile group block bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-5 hover:bg-white/15 transition">
+        <div class="tile-banner aspect-[4/3] mb-4">
+          <div class="sheen"></div>
+          <div class="relative px-4 text-center">
+            <div class="tile-label text-2xl sm:text-3xl">
+              <span class="bg-clip-text text-transparent
+                           bg-[linear-gradient(90deg,#bfdbfe_0%,#60a5fa_25%,#34d399_50%,#22c55e_75%,#a7f3d0_100%)]
+                           bg-[length:200%_100%] animate-[titleGradientSlide_8s_ease-in-out_infinite]">
+                ebay storefront
+              </span>
+            </div>
+            <div class="mt-2 tile-sub text-gray-300/90 tracking-wide">
+              OEM parts &amp; collectibles
+            </div>
+            <div class="mt-3 flex items-center justify-center gap-2">
+              <span class="chip">Authentic parts</span>
+              <span class="chip">Fast shipping</span>
+            </div>
+          </div>
+        </div>
+        <h2 class="text-xl font-semibold mb-1">Ebay Storefront</h2>
+        <p class="text-sm text-gray-300">OEM parts, collectibles, and more.</p>
+      </a>
+
+      <!-- Optional future tile -->
+      <div class="tile block bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-5 opacity-60">
+        <div class="tile-banner aspect-[4/3] mb-4" style="opacity:.85">
+          <div class="relative px-4 text-center">
+            <div class="tile-label text-2xl sm:text-3xl">
+              <span class="bg-clip-text text-transparent
+                           bg-[linear-gradient(90deg,#bfdbfe_0%,#60a5fa_25%,#34d399_50%,#22c55e_75%,#a7f3d0_100%)]
+                           bg-[length:200%_100%] animate-[titleGradientSlide_8s_ease-in-out_infinite]">
+                More Coming Soon
+              </span>
+            </div>
+            <div class="mt-2 tile-sub te
