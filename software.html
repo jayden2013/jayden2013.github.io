@@ -10,27 +10,22 @@ redirect_from:
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Cars & Collectibles specializes in car parts, collectibles, and in-house software like PROFIT for Jalopy Jungle junkyards in Idaho. Find inventory, tips, and unique auto-themed merch.">
-  <meta name="keywords" content="Jalopy Jungle, Idaho, junkyard, car parts, parts inventory, eBay flipping, automotive software, collectibles, car merch, auto stickers">
+  <meta name="description" content="PROFIT is a subscription dashboard for Jalopy Jungle and Trusty yards: search inventory, check eBay prices, take notes, export as CSV, get email alerts when new vehicles arrive — and switch on Dark Mode when it’s time to cruise at night." />
+  <meta name="keywords" content="PROFIT subscription, Jalopy Jungle software, Trusty yards, junkyard reselling tool, eBay flipping app, inventory tracker, CSV export, vehicle alerts, Dark Mode" />
   <title>Software - Cars & Collectibles</title>
   
-    <script>
-    // MUST run before any <link rel="stylesheet"> or image URLs are parsed
-    (function () {
-      var host = location.hostname;
-      // Treat both apex & www as prod; also handles GitHub Pages if you ever view there
-      var isProd =
-        host === 'carsandcollectibles.com' ||
-        host === 'www.carsandcollectibles.com' ||
-        host.endsWith('.github.io');
-
-      if (!isProd) return; // keep local file viewing untouched
-
-      var base = document.createElement('base');
-      base.href = '/';
-      // Prepend so it appears before any later <link> or <style>
-      document.head.prepend(base);
-    })();
+  <script>
+  (function () {
+    var host = location.hostname;
+    var isProd =
+      host === 'carsandcollectibles.com' ||
+      host === 'www.carsandcollectibles.com' ||
+      host.endsWith('.github.io');
+    if (!isProd) return;
+    var base = document.createElement('base');
+    base.href = '/';
+    document.head.prepend(base);
+  })();
   </script>
 
   <link rel="stylesheet" href="dist/tailwind.css">
@@ -38,45 +33,21 @@ redirect_from:
   <style>
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity: 0; }
-
     body { background-color: #0b0b0b; }
     .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
-
-    /* Match homepage subtle motion */
-    @keyframes heroPan {
-      0%   { transform: scale(1.04) translateY(0); }
-      50%  { transform: scale(1.08) translateY(-8px); }
-      100% { transform: scale(1.04) translateY(0); }
-    }
+    @keyframes heroPan { 0%{transform:scale(1.04) translateY(0)} 50%{transform:scale(1.08) translateY(-8px)} 100%{transform:scale(1.04) translateY(0)} }
     .animate-hero-pan { animation: heroPan 22s ease-in-out infinite; }
-
-    /* Blue→Green animated gradient title */
     .title-gradient {
-      background: linear-gradient(90deg,
-        #bfdbfe 0%,   /* blue-200 */
-        #60a5fa 25%,  /* blue-400 */
-        #34d399 50%,  /* emerald-400 */
-        #22c55e 75%,  /* green-500 */
-        #a7f3d0 100%  /* emerald-200 */
-      );
+      background: linear-gradient(90deg,#bfdbfe 0%,#60a5fa 25%,#34d399 50%,#22c55e 75%,#a7f3d0 100%);
       background-size: 200% 100%;
-      -webkit-background-clip: text;
-      background-clip: text;
+      -webkit-background-clip: text; background-clip: text;
       color: transparent;
       animation: titleGradientSlide 8s ease-in-out infinite;
     }
-    @keyframes titleGradientSlide {
-      0%   { background-position:   0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position:   0% 50%; }
-    }
-
-    /* Respect reduced motion */
+    @keyframes titleGradientSlide { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
     @media (prefers-reduced-motion: reduce) {
       .animate-hero-pan, .fade-in-up, .title-gradient { animation: none !important; transition: none !important; }
     }
-
-    /* Mobile-only text color override — keep gradient title intact */
     @media (max-width: 640px) {
       body { color: black !important; }
       body *:not(.title-gradient) { color: black !important; }
@@ -85,17 +56,14 @@ redirect_from:
 </head>
 <body class="text-white font-sans min-h-screen text-center px-6 relative overflow-x-hidden bg-fallback">
 
-  <!-- Background image layer (fixed; does NOT scroll) -->
+  <!-- Background image layer -->
   <div style="background-image: url('images/hero-car.jpg');"
        class="pointer-events-none fixed inset-0 bg-cover bg-center opacity-60 blur-sm -z-10 animate-hero-pan"></div>
 
-  <!-- Overlays (fixed as well) -->
+  <!-- Overlays -->
   <div class="pointer-events-none fixed inset-0 -z-10">
-    <!-- Soft white wash -->
     <div class="absolute inset-0 bg-gradient-to-b from-white/24 via-white/16 to-white/10"></div>
-    <!-- Light vignette -->
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.04)_65%,rgba(0,0,0,0.12)_100%)]"></div>
-    <!-- Ultra-light grain -->
     <div class="absolute inset-0 mix-blend-overlay" style="
          opacity:.01;
          background-image:url('data:image/svg+xml;utf8,\
@@ -112,7 +80,7 @@ redirect_from:
       ← Back to Home
     </a>
 
-    <!-- Glass Pane: Our Software + subtext -->
+    <!-- Glass Pane: Our Software -->
     <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl px-6 py-6 md:px-8 md:py-8 mb-8">
       <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-widest mb-3 break-words">
         <span class="title-gradient">Our Software</span>
@@ -125,7 +93,7 @@ redirect_from:
       </p>
     </section>
 
-    <!-- PROFIT App Section (glass card) -->
+    <!-- PROFIT App Section -->
     <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-8 mb-10 text-left">
       <div class="flex flex-col items-center md:flex-row md:items-start md:gap-8">
         <div class="flex-shrink-0 mb-4 md:mb-0">
@@ -135,7 +103,9 @@ redirect_from:
           <h2 class="text-2xl font-bold mb-2">PROFIT</h2>
           <p class="text-gray-200 mb-4">
             <span class="font-semibold text-emerald-300">Parts Resale Optimization &amp; Field Inventory Tool</span><br>
-            Track your junkyard finds, research prices, analyze sales, and streamline your resale business. Free and premium plans available.
+            PROFIT is a subscription dashboard for <span class="font-semibold text-yellow-300">Jalopy Jungle and Trusty yards in Idaho</span>: 
+            search inventory, check eBay prices, take notes, export as CSV, get email alerts when new vehicles arrive — 
+            and switch on Dark Mode when it’s time to cruise at night.
           </p>
           <div class="flex flex-wrap gap-3">
             <a href="profit.html"
@@ -157,7 +127,7 @@ redirect_from:
       </div>
     </section>
 
-    <!-- Future Apps Teaser (glass card) -->
+    <!-- Future Apps Teaser -->
     <section class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-md p-6 text-left">
       <h3 class="text-xl font-bold mb-2 text-white">More tools coming soon…</h3>
       <p class="text-gray-300">Stay tuned for new apps and features designed for car lovers and sellers.</p>
@@ -168,39 +138,34 @@ redirect_from:
     © 2025 Cars & Collectibles LLC. All rights reserved.
   </footer>
   
-  <!-- Hero background via Dropbox (non-destructive; only overrides the image URL) -->
-<script>
-(function () {
-  // 1) Paste your Dropbox *share* link here:
-  var DB_HERO = "https://www.dropbox.com/scl/fi/4pergmzlrrccsxu73puw9/hero-car.jpg?rlkey=houxno6c4dg230r4hxajiyk8j&st=p2xpzgb5&dl=0";
-  if (!DB_HERO) return;
-
-  // 2) Convert to a direct file URL
-  function dropboxToRaw(u) {
-    try {
-      var url = new URL(u);
-      if (!/\.dropbox\.com$/i.test(url.hostname)) return u;
-      url.hostname = "dl.dropboxusercontent.com";
-      var rlkey = url.searchParams.get("rlkey");
-      url.search = "";
-      if (rlkey) url.searchParams.set("rlkey", rlkey);
-      url.searchParams.set("raw", "1");
-      return url.toString();
-    } catch (e) {
-      return u
-        .replace("www.dropbox.com", "dl.dropboxusercontent.com")
-        .replace(/[\?&]dl=0\b/, "")
-        .replace(/[\?&]dl=1\b/, "")
-        .replace(/[\?&]raw=1\b/, "") + (u.includes("?") ? "&raw=1" : "?raw=1");
+  <!-- Hero background via Dropbox -->
+  <script>
+  (function () {
+    var DB_HERO = "https://www.dropbox.com/scl/fi/4pergmzlrrccsxu73puw9/hero-car.jpg?rlkey=houxno6c4dg230r4hxajiyk8j&st=p2xpzgb5&dl=0";
+    if (!DB_HERO) return;
+    function dropboxToRaw(u) {
+      try {
+        var url = new URL(u);
+        if (!/\.dropbox\.com$/i.test(url.hostname)) return u;
+        url.hostname = "dl.dropboxusercontent.com";
+        var rlkey = url.searchParams.get("rlkey");
+        url.search = "";
+        if (rlkey) url.searchParams.set("rlkey", rlkey);
+        url.searchParams.set("raw", "1");
+        return url.toString();
+      } catch (e) {
+        return u
+          .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+          .replace(/[\?&]dl=0\b/, "")
+          .replace(/[\?&]dl=1\b/, "")
+          .replace(/[\?&]raw=1\b/, "") + (u.includes("?") ? "&raw=1" : "?raw=1");
+      }
     }
-  }
-
-  // 3) Swap the background on the existing hero layer (and only that)
-  var hero = document.querySelector("div[style*='hero-car.jpg']");
-  if (hero) {
-    hero.style.backgroundImage = "url('" + dropboxToRaw(DB_HERO) + "')";
-  }
-})();
-</script>
+    var hero = document.querySelector("div[style*='hero-car.jpg']");
+    if (hero) {
+      hero.style.backgroundImage = "url('" + dropboxToRaw(DB_HERO) + "')";
+    }
+  })();
+  </script>
 </body>
 </html>
