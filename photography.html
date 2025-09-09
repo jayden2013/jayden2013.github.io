@@ -17,16 +17,14 @@ redirect_from:
 <script>
 (function () {
   // --- 0) Normalize /photography -> /photography/ and PRESERVE any hash ---
-  // (Jekyll serves the page at /photography/, so hitting /photography drops the hash on redirect)
   if (location.pathname === '/photography') {
     var dest = '/photography/';
     if (location.hash) dest += location.hash;
-    // replace() so history doesn't keep the wrong URL
     location.replace(dest);
-    return; // stop here; browser will load the canonical URL next
+    return;
   }
 
-  // --- 1) PROD-ONLY BASE TAG (so relative assets work at /photography/) ---
+  // --- 1) PROD-ONLY BASE TAG ---
   const PROD_HOSTS = new Set(['carsandcollectibles.com', 'www.carsandcollectibles.com']);
   const isGhPages  = /\.github\.io$/i.test(location.hostname);
   const isProd     = PROD_HOSTS.has(location.hostname) || isGhPages;
@@ -34,28 +32,24 @@ redirect_from:
   if (isProd && !document.querySelector('base')) {
     const base = document.createElement('base');
     base.href = '/';
-    document.head.prepend(base); // must appear before any <link>/<style> that uses relative URLs
+    document.head.prepend(base);
   }
 
   // --- 2) HASH-LINK BEHAVIOR UNDER <base> ---
-  // Make sure "#id" links target THIS PAGE's canonical path (with trailing slash)
   function getCanonicalPath() {
-    // Ensure trailing slash on directory paths (e.g., /photography/)
     const p = location.pathname;
     if (p === '/') return '/';
-    // if it looks like a file (has a dot), leave it alone; otherwise add trailing slash
     return /\.[a-z0-9]+$/i.test(p) ? p : (p.endsWith('/') ? p : p + '/');
   }
 
   function normalizeHashHrefs() {
     const path = getCanonicalPath();
     document.querySelectorAll('a[href^="#"]').forEach(a => {
-      const hash = a.getAttribute('href'); // e.g., "#book"
-      a.setAttribute('href', path + hash); // e.g., "/photography/#book"
+      const hash = a.getAttribute('href');
+      a.setAttribute('href', path + hash);
     });
   }
 
-  // Intercept clicks on same-page hash links so <base> can't bounce us to "/#id"
   function installHashClickHandler() {
     document.addEventListener('click', function (e) {
       const a = e.target.closest('a');
@@ -83,7 +77,6 @@ redirect_from:
         target.focus({ preventScroll: true });
       }
 
-      // Update URL to /photography/#id (or current canonical path)
       const newUrl = path + '#' + hash;
       if (location.href !== location.origin + newUrl) {
         history.pushState(null, '', newUrl);
@@ -98,8 +91,6 @@ redirect_from:
 })();
 </script>
 
-
-
   <!-- Tailwind -->
   <link rel="stylesheet" href="dist/tailwind.css">
 
@@ -110,7 +101,6 @@ redirect_from:
     body { background-color: #0b0b0b; }
     .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
 
-    /* Subtle hero motion */
     @keyframes heroPan {
       0%   { transform: scale(1.04) translateY(0); }
       50%  { transform: scale(1.08) translateY(-8px); }
@@ -118,10 +108,8 @@ redirect_from:
     }
     .animate-hero-pan { animation: heroPan 22s ease-in-out infinite; }
 
-    /* Title gradient (blue→green) */
     .title-gradient {
-      background: linear-gradient(90deg,
-        #bfdbfe 0%, #60a5fa 25%, #34d399 50%, #22c55e 75%, #a7f3d0 100%);
+      background: linear-gradient(90deg,#bfdbfe 0%,#60a5fa 25%,#34d399 50%,#22c55e 75%,#a7f3d0 100%);
       background-size: 200% 100%;
       -webkit-background-clip: text;
       background-clip: text;
@@ -138,53 +126,34 @@ redirect_from:
       .animate-hero-pan, .fade-in-up, .title-gradient { animation: none !important; transition: none !important; }
     }
 
-    /* Mobile-only text color override */
+    /* Mobile-only text adjustments */
     @media (max-width: 640px) {
-      body {
-        color: black !important;
-      }
-      body *:not(.title-gradient) {
-        color: black !important;
-      }
-	    #package-details { 
-    display: none !important; 
-  }
-	    input::placeholder,
-  textarea::placeholder {
-    color: black !important;
-    opacity: 0.7; /* optional: make it slightly lighter than normal text */
-  }
+      body { color: black !important; }
+      body *:not(.title-gradient) { color: black !important; }
+      #package-details { display: none !important; }
+      input::placeholder, textarea::placeholder { color: black !important; opacity: .7; }
+    }
+
+    /* Coming-soon badge */
+    .badge {
+      display:inline-block; padding:.25rem .5rem; border-radius:999px;
+      font-size:.70rem; letter-spacing:.03em;
+      background: rgba(234,179,8,.15); border:1px solid rgba(234,179,8,.35); color:#fde68a;
     }
   </style>
+
   <style>
-  /* Make native dropdown menus readable */
-  /* Approach A (recommended): use OS dark menu for the select */
-  #book select[name="package"] {
-    color-scheme: dark;           /* tells the browser to render the dropdown dark */
-    color: #fff;                  /* closed state text */
-    background-color: rgba(255,255,255,0.05);
-  }
-
-  /* Approach B (fallback): force option colors for engines that ignore color-scheme */
-  #book select[name="package"] option {
-    color: #111827;               /* slate-800 */
-    background-color: #ffffff;    /* white dropdown items */
-  }
-
-  /* Windows High Contrast / forced-colors support */
+  /* Dark native select menu */
+  #book select[name="package"] { color-scheme: dark; color:#fff; background-color: rgba(255,255,255,0.05); }
+  #book select[name="package"] option { color:#111827; background:#fff; }
   @media (forced-colors: active) {
-    #book select[name="package"] option {
-      forced-color-adjust: none;
-      color: ButtonText;
-      background: Canvas;
-    }
+    #book select[name="package"] option { forced-color-adjust: none; color: ButtonText; background: Canvas; }
   }
-</style>
-
+  </style>
 </head>
 <body class="text-white font-sans min-h-screen flex flex-col relative overflow-x-hidden bg-fallback">
 
-  <!-- Fixed background image layer (does NOT scroll) -->
+  <!-- Fixed background image layer -->
   <div style="background-image: url('images/hero-car.jpg');"
        class="pointer-events-none fixed inset-0 bg-cover bg-center opacity-60 blur-sm -z-10 animate-hero-pan"></div>
 
@@ -231,7 +200,7 @@ redirect_from:
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
         See Packages
       </a>
-	  <a href="gallery.html"
+      <a href="gallery.html"
          class="inline-flex items-center justify-center rounded-full px-8 py-4
                 text-base md:text-lg font-semibold text-white
                 bg-white/10 backdrop-blur border border-white/20
@@ -249,12 +218,11 @@ redirect_from:
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
         Book Now
       </a>
-
     </div>
   </div>
 </section>
 
-<!-- Promo banner (green) -->
+<!-- Promo banner -->
 <section class="max-w-6xl mx-auto w-full mt-4 px-6">
   <div id="promo-banner" class="bg-green-600/90 backdrop-blur border border-green-400/30 rounded-2xl shadow-lg px-6 py-4">
     <div class="text-2xl font-extrabold text-white">🚗 Enthusiast Pricing — Limited Time</div>
@@ -265,13 +233,21 @@ redirect_from:
   </div>
 </section>
 
-
-<!-- Packages (glass card) -->
+<!-- Packages -->
 <section id="packages" class="max-w-6xl mx-auto w-full mt-4 px-6">
   <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-left">
     <h2 class="text-3xl font-extrabold mb-6 text-center md:text-left">Packages</h2>
 
     <div id="package-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Mini (NEW) -->
+      <button type="button"
+              class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15"
+              data-package="mini" aria-pressed="false">
+        <h3 class="text-xl font-bold mb-2">Mini Session</h3>
+        <p class="text-gray-300 mb-4">5–8 edited photos.</p>
+        <div class="text-3xl font-extrabold"></div>
+      </button>
+
       <!-- Still -->
       <button type="button"
               class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15"
@@ -281,37 +257,31 @@ redirect_from:
         <div class="text-3xl font-extrabold"></div>
       </button>
 
-      <!-- Roller -->
-      <button type="button"
-              class="package-card rounded-2xl bg-white/10 backdrop-blur border border-emerald-500/30 p-6 text-left transition hover:bg-white/15 shadow-[0_0_0_1px_rgba(16,185,129,0.25)]"
-              data-package="roller" aria-pressed="false">
-        <div class="text-xs uppercase tracking-wider text-emerald-300 mb-1">Most Popular</div>
+      <!-- Roller (COMING SOON) — not interactive -->
+      <div class="rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left opacity-80">
+        <div class="badge mb-1">Coming Soon</div>
         <h3 class="text-xl font-bold mb-2">Roller Session</h3>
-        <p class="text-gray-300 mb-4">10–14 edited rollers.</p>
-        <div class="text-3xl font-extrabold"></div>
-      </button>
+        <p class="text-gray-300 mb-2">Cinematic motion shots.</p>
+      </div>
 
-      <!-- Full Feature -->
-      <button type="button"
-              class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15"
-              data-package="feature" aria-pressed="false">
+      <!-- Full Feature (COMING SOON) — not interactive -->
+      <div class="rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left opacity-80">
+        <div class="badge mb-1">Coming Soon</div>
         <h3 class="text-xl font-bold mb-2">Full Feature</h3>
-        <p class="text-gray-300 mb-4">Stills + rollers</p>
-        <div class="text-3xl font-extrabold"></div>
-      </button>
+        <p class="text-gray-300 mb-2">Stills + rollers in one package.</p>
+      </div>
     </div>
 
     <!-- Details panel -->
     <div id="package-details" class="mt-8 hidden rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 shadow-lg"></div>
 
-    <!-- Notes -->
     <p class="mt-2 text-emerald-300 text-sm font-semibold">
       🎯 Offer valid for a limited time — spots are filling fast!
     </p>
   </div>
 </section>
 
-<!-- Add-ons (clickable cards that sync with form) -->
+<!-- Add-ons -->
 <section id="addons" class="max-w-6xl mx-auto w-full mt-4 px-6">
   <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-left">
     <h2 class="text-3xl font-extrabold mb-2 text-center md:text-left">Add-ons</h2>
@@ -320,34 +290,22 @@ redirect_from:
     </p>
 
     <div id="addon-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- USB -->
-      <div
-        class="addon-card rounded-2xl bg-white/10 border border-white/20 p-5 cursor-pointer transition hover:bg-white/15 focus:outline-none"
+      <div class="addon-card rounded-2xl bg-white/10 border border-white/20 p-5 cursor-pointer transition hover:bg-white/15 focus:outline-none"
         data-addon="usb_drive" role="button" tabindex="0" aria-pressed="false">
         <div class="flex items-center">
           <h3 class="text-lg font-bold">USB Drive</h3>
-          <span class="ml-6 inline-flex items-center rounded-full border border-emerald-400 px-4 py-1 text-sm font-extrabold text-emerald-300">
-            $20
-          </span>
+          <span class="ml-6 inline-flex items-center rounded-full border border-emerald-400 px-4 py-1 text-sm font-extrabold text-emerald-300">$20</span>
         </div>
-        <p class="text-gray-300 text-sm mt-3">
-          Photos delivered on a USB drive.
-        </p>
+        <p class="text-gray-300 text-sm mt-3">Photos delivered on a USB drive.</p>
       </div>
 
-      <!-- CD / DVD -->
-      <div
-        class="addon-card rounded-2xl bg-white/10 border border-white/20 p-5 cursor-pointer transition hover:bg-white/15 focus:outline-none"
+      <div class="addon-card rounded-2xl bg-white/10 border border-white/20 p-5 cursor-pointer transition hover:bg-white/15 focus:outline-none"
         data-addon="cd_dvd" role="button" tabindex="0" aria-pressed="false">
         <div class="flex items-center">
           <h3 class="text-lg font-bold">CD / DVD</h3>
-          <span class="ml-6 inline-flex items-center rounded-full border border-emerald-400 px-4 py-1 text-sm font-extrabold text-emerald-300">
-            $10
-          </span>
+          <span class="ml-6 inline-flex items-center rounded-full border border-emerald-400 px-4 py-1 text-sm font-extrabold text-emerald-300">$10</span>
         </div>
-        <p class="text-gray-300 text-sm mt-3">
-          Photos delivered on a disc.
-        </p>
+        <p class="text-gray-300 text-sm mt-3">Photos delivered on a disc.</p>
       </div>
     </div>
 
@@ -357,10 +315,7 @@ redirect_from:
   </div>
 </section>
 
-
-
-
-<!-- Booking (glass card same width as others) -->
+<!-- Booking -->
 <section id="book" class="max-w-6xl mx-auto w-full mt-4 px-6">
   <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-left">
     <h2 class="text-3xl font-extrabold mb-6 text-center md:text-left">Book a Session</h2>
@@ -381,41 +336,36 @@ redirect_from:
 
       <label class="block">Package
         <select class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="package">
+          <option>Mini Session</option>
           <option>Still Session</option>
-          <option>Roller Session</option>
-          <option>Full Feature</option>
+          <option disabled>Roller Session (Coming Soon)</option>
+          <option disabled>Full Feature (Coming Soon)</option>
         </select>
       </label>
 
       <label class="block">Message
         <textarea rows="4" class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white placeholder:text-gray-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="message" placeholder="Preferred dates, location, references…"></textarea>
       </label>
-	  
-<!-- Add-ons -->
-<fieldset class="grid gap-2">
-  <legend class="font-semibold">Add-ons (optional)</legend>
 
-  <label class="flex items-center gap-2">
-    <input type="checkbox" name="addons" value="usb_drive"
-           class="rounded bg-white/5 border-white/30">
-    <span>USB Drive — $20</span>
-  </label>
+      <!-- Add-ons -->
+      <fieldset class="grid gap-2">
+        <legend class="font-semibold">Add-ons (optional)</legend>
 
-  <label class="flex items-center gap-2">
-    <input type="checkbox" name="addons" value="cd_dvd"
-           class="rounded bg-white/5 border-white/30">
-    <span>CD / DVD — $10</span>
-  </label>
-</fieldset>
+        <label class="flex items-center gap-2">
+          <input type="checkbox" name="addons" value="usb_drive" class="rounded bg-white/5 border-white/30">
+          <span>USB Drive — $20</span>
+        </label>
 
-<p class="text-sm text-emerald-300 -mb-2">Email delivery is always free. Files are print-ready.</p>
-<p class="text-sm text-emerald-300 -mb-2">Sessions are reserved with a $50 booking deposit (applied to your balance). Flexible rescheduling with 48 hours’ notice.</p>
+        <label class="flex items-center gap-2">
+          <input type="checkbox" name="addons" value="cd_dvd" class="rounded bg-white/5 border-white/30">
+          <span>CD / DVD — $10</span>
+        </label>
+      </fieldset>
 
-<!-- Total Cost -->
-<div id="total-cost" class="text-lg font-bold text-emerald-300 mt-4">
-  Total: $0
-</div>
+      <p class="text-sm text-emerald-300 -mb-2">Email delivery is always free. Files are print-ready.</p>
+      <p class="text-sm text-emerald-300 -mb-2">Sessions are reserved with a $50 booking deposit (applied to your balance). Flexible rescheduling with 48 hours’ notice.</p>
 
+      <div id="total-cost" class="text-lg font-bold text-emerald-300 mt-4">Total: $0</div>
 
       <button type="submit"
               class="inline-flex items-center justify-center rounded-full px-8 py-3 text-lg font-semibold
@@ -432,10 +382,10 @@ redirect_from:
 
   <footer class="mt-20 py-6 text-sm text-gray-300 text-center">© 2025 Cars & Collectibles LLC. All rights reserved.</footer>
 
-  <!-- Booking form script -->
+  <!-- Booking form total (quick calc) -->
   <script>
 (function () {
-  const form = document.getElementById('booking-form');
+  const form   = document.getElementById('booking-form');
   if (!form) return;
 
   const totalEl = document.getElementById('total-cost');
@@ -448,9 +398,8 @@ redirect_from:
   function getPackageKey() {
     if (!pkgSel) return null;
     const t = (pkgSel.options[pkgSel.selectedIndex]?.textContent || '').toLowerCase();
-    if (t.includes('full feature')) return 'feature';
-    if (t.includes('roller'))       return 'roller';
-    if (t.includes('still'))        return 'still';
+    if (t.includes('mini'))  return 'mini';
+    if (t.includes('still')) return 'still';
     return null;
   }
 
@@ -477,97 +426,102 @@ redirect_from:
 })();
 </script>
 
-  
+<!-- Booking submit -->
 <script>
 (function () {
   const form = document.getElementById('booking-form');
   if (!form) return;
 
-  const totalEl = document.getElementById('total-cost');
-  const usbCb   = form.querySelector('input[value="usb_drive"]');
-  const cdCb    = form.querySelector('input[value="cd_dvd"]');
-  const pkgSel  = form.querySelector('select[name="package"]');
+  const statusEl  = document.getElementById('form-status');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const endpoint  = form.getAttribute('data-endpoint') || '/api/contact';
 
-  const ADDON_PRICES = { usb_drive: 20, cd_dvd: 10 };
+  const nameEl  = form.querySelector('input[name="name"]');
+  const emailEl = form.querySelector('input[type="email"][name="email"]');
+  const hpEl    = form.querySelector('input[name="website"]');
 
-  // Map the select text to our keys in detailsData
-  function getPackageKey() {
-    if (!pkgSel) return null;
-    const t = (pkgSel.options[pkgSel.selectedIndex]?.textContent || '').toLowerCase();
-    if (t.includes('full feature')) return 'feature';
-    if (t.includes('roller'))       return 'roller';
-    if (t.includes('still'))        return 'still';
-    return null;
+  function setStatus(msg, cls) {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.hidden = false;
+    statusEl.className = 'text-sm ' + (cls || 'text-gray-300');
   }
 
-  function getPackagePrice() {
-    const cfg = window.PHOTO_CONFIG || {};
-    const key = getPackageKey();
-    if (!key || !cfg.detailsData) return 0;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-    // $0 during promo; otherwise oldPrice from your config
-    if (cfg.promoActive) return 0;
-    const price = Number(cfg.detailsData[key]?.oldPrice || 0);
-    return Number.isFinite(price) ? price : 0;
-  }
+    if (hpEl && hpEl.value && hpEl.value.trim() !== '') {
+      setStatus("Thanks! We'll be in touch shortly.", 'text-emerald-300');
+      form.reset();
+      return;
+    }
 
-  function getAddonsTotal() {
-    let total = 0;
-    if (usbCb?.checked) total += ADDON_PRICES.usb_drive;
-    if (cdCb?.checked)  total += ADDON_PRICES.cd_dvd;
-    return total;
-  }
+    const name  = nameEl ? String(nameEl.value || '').trim() : '';
+    const email = emailEl ? String(emailEl.value || '').trim() : '';
+    const emailLooksGood = emailEl ? (emailEl.value = email, emailEl.checkValidity()) : false;
+    const nameLooksGood  = name.length > 0;
 
-  function updateTotal() {
-    const grand = getPackagePrice() + getAddonsTotal();
-    if (totalEl) totalEl.textContent = `Total: $${grand}`;
-  }
+    if (!nameLooksGood || !emailLooksGood) {
+      setStatus('Please provide your name and a valid email.', 'text-red-400');
+      return;
+    }
 
-  // Update when anything relevant changes
-  [usbCb, cdCb, pkgSel].forEach(el => el && el.addEventListener('change', updateTotal));
+    const fd = new FormData(form);
+    const data = {};
+    for (const [k, v] of fd.entries()) {
+      if (k === 'addons') continue;
+      if (data[k] === undefined) data[k] = v;
+    }
+    const addons = fd.getAll('addons');
+    if (addons.length) data.addons = addons;
 
-  // Initialize on load
-  updateTotal();
+    data.name = name;
+    data.email = email;
+
+    setStatus('Sending…', 'text-gray-300');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70','cursor-not-allowed'); }
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'photography', payload: data }),
+      });
+
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      setStatus("Thanks! We'll get back to you shortly.", 'text-emerald-300');
+      form.reset();
+    } catch (err) {
+      console.error('Booking form error:', err);
+      setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70','cursor-not-allowed'); }
+    }
+  });
 })();
 </script>
 
-
-
+<!-- Card logic, pricing, countdown -->
 <script>
 (function () {
-  // ====== EDIT THESE PRICES ONLY ======
-  // List (standard) prices:
-  const LIST = { still: 150, roller: 200, feature: 300 };
-
-  // Promo control:
-  const PROMO_END_ISO = '2025-09-15T23:59:59';  // when your intro pricing ends
-  const PROMO_ACTIVE  = Date.now() < new Date(PROMO_END_ISO).getTime();
-
-  // Choose ONE style:
-  // 1) Per-package promo prices (recommended)
-  const PROMO_PER_PACKAGE = { still: 100, roller: 180, feature: 250 };
-
-  // 2) OR a flat percent off everything (set to a number like 20 for 20% off, or 0 to disable)
-  const PROMO_PERCENT = 0;
-
-  // ====== DO NOT EDIT BELOW UNLESS YOU WANT TO TWEAK UI ======
-  const cards         = Array.from(document.querySelectorAll(".package-card"));
+  const cards         = Array.from(document.querySelectorAll(".package-card")); // only interactive cards
   const panel         = document.getElementById("package-details");
   const banner        = document.getElementById("promo-banner");
   const countdownEl   = document.getElementById("promo-countdown");
   const packageSelect = document.querySelector('select[name="package"]');
-  const PROMO_END     = new Date(PROMO_END_ISO);
 
-  // Public API for other scripts (e.g., total calculator)
+  // ====== EDIT THESE PRICES ONLY ======
+  const LIST = { mini: 100, still: 150, roller: 200, feature: 300 }; // roller/feature shown as Coming Soon
+  const PROMO_END_ISO = '2025-09-15T23:59:59';
+  const PROMO_ACTIVE  = Date.now() < new Date(PROMO_END_ISO).getTime();
+  const PROMO_PER_PACKAGE = { mini: 50, still: 100, roller: 180, feature: 250 };
+  const PROMO_PERCENT = 0;
+
   function computePromoPrice(key) {
     if (!PROMO_ACTIVE) return null;
-
-    // Prefer explicit per-package prices
     if (PROMO_PER_PACKAGE && Number.isFinite(PROMO_PER_PACKAGE[key])) {
       return Math.max(0, Math.round(PROMO_PER_PACKAGE[key]));
     }
-
-    // Otherwise percent-off fallback
     if (PROMO_PERCENT > 0) {
       const discounted = LIST[key] * (1 - PROMO_PERCENT / 100);
       return Math.max(0, Math.round(discounted));
@@ -591,29 +545,23 @@ redirect_from:
   };
 
   const detailsData = {
+    mini: {
+      name: "Mini Session",
+      bullets: [
+        "<strong>5–8 edited photos</strong> (web + print-ready files)",
+        "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>",
+		"1 Location (each additional $50)"
+      ],
+      blurb: "Perfect quick-hit shoot for clean coverage without a full session."
+    },
     still: {
       name: "Still Session",
       bullets: [
         "<strong>12–18 edited photos</strong> (web + print-ready files)",
-        "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>"
+        "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>",
+		"1 Location (each additional $50)"
       ],
-      blurb: "Great for clean feature shots, for sale listings, or garage portraits."
-    },
-    roller: {
-      name: "Roller Session",
-      bullets: [
-        "<strong>10–14 edited rollers</strong> (web + print-ready files)",
-        "Delivery in <strong>3–5 days</strong> via <strong>free email</strong>"
-      ],
-      blurb: "Perfect for motion shots that show off stance, aero, and road presence."
-    },
-    feature: {
-      name: "Full Feature",
-      bullets: [
-        "<strong>Stills + rollers</strong> in one session",
-        "Delivery in <strong>3–7 days</strong> via <strong>free email</strong>"
-      ],
-      blurb: "Best value if you want a complete feature for social + print."
+      blurb: "Great for feature shots, listings, or garage portraits."
     }
   };
 
@@ -656,15 +604,14 @@ redirect_from:
   function initSelectOptions() {
     if (!packageSelect) return;
     const map = {
-      still:   labelForSelect('still'),
-      roller:  labelForSelect('roller'),
-      feature: labelForSelect('feature')
+      mini:  labelForSelect('mini'),
+      still: labelForSelect('still')
     };
     Array.from(packageSelect.options).forEach(opt => {
       const txt = (opt.textContent || '').toLowerCase();
-      if (txt.includes('full feature')) opt.textContent = map.feature;
-      else if (txt.includes('roller'))  opt.textContent = map.roller;
-      else if (txt.includes('still'))   opt.textContent = map.still;
+      if (txt.includes('mini'))  opt.textContent  = map.mini;
+      if (txt.includes('still')) opt.textContent  = map.still;
+      // the disabled "coming soon" options are left as-is
     });
   }
 
@@ -696,11 +643,10 @@ redirect_from:
       </a>`;
     panel.classList.remove("hidden");
 
-    // keep the <select> synced so totals update
     if (packageSelect) {
-      const label = key === 'feature' ? 'full feature' : key;
+      const label = key === 'mini' ? 'mini' : 'still';
       const match = Array.from(packageSelect.options).find(o =>
-        o.textContent.toLowerCase().includes(label)
+        o.textContent.toLowerCase().includes(label) && !o.disabled
       );
       if (match) {
         packageSelect.value = match.value;
@@ -710,6 +656,7 @@ redirect_from:
   }
 
   // Countdown
+  const PROMO_END = new Date(PROMO_END_ISO);
   const PROMO_TIMER = { id: null };
   function formatRemaining(ms) {
     if (ms <= 0) return "Offer ended";
@@ -725,7 +672,7 @@ redirect_from:
       countdownEl.textContent = "Offer ended";
       if (PROMO_TIMER.id) clearInterval(PROMO_TIMER.id);
       toggleBanner();
-      initCardPrices();  // ensure prices revert to list
+      initCardPrices();
       initSelectOptions();
       return;
     }
@@ -744,108 +691,24 @@ redirect_from:
     });
   });
 
-  // Kickoff
+  // Init
   initCardPrices();
   initSelectOptions();
   toggleBanner();
 
-  // Auto-open default
-  const defaultKey = 'roller';
+  // Default open: Mini
+  const defaultKey = 'mini';
   const defaultCard = cards.find(c => c.dataset.package === defaultKey);
   if (defaultCard) selectPackage(defaultKey, defaultCard);
 
-  if (PROMO_ACTIVE && countdownEl) {
+  if (window.PHOTO_PRICING.promoActive && countdownEl) {
     PROMO_TIMER.id = setInterval(updateCountdown, 1000);
     updateCountdown();
   }
 })();
 </script>
 
-
-<script>
-(function () {
-  const form = document.getElementById('booking-form');
-  if (!form) return;
-
-  const statusEl  = document.getElementById('form-status');
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const endpoint  = form.getAttribute('data-endpoint') || '/api/contact';
-
-  const nameEl  = form.querySelector('input[name="name"]');
-  const emailEl = form.querySelector('input[type="email"][name="email"]');
-  const hpEl    = form.querySelector('input[name="website"]');
-
-  function setStatus(msg, cls) {
-    if (!statusEl) return;
-    statusEl.textContent = msg;
-    statusEl.hidden = false;
-    statusEl.className = 'text-sm ' + (cls || 'text-gray-300');
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    // Honeypot
-    if (hpEl && hpEl.value && hpEl.value.trim() !== '') {
-      setStatus("Thanks! We'll be in touch shortly.", 'text-emerald-300');
-      form.reset();
-      return;
-    }
-
-    // Read + trim
-    const name  = nameEl ? String(nameEl.value || '').trim() : '';
-    const email = emailEl ? String(emailEl.value || '').trim() : '';
-    const emailLooksGood = emailEl ? (emailEl.value = email, emailEl.checkValidity()) : false;
-    const nameLooksGood  = name.length > 0;
-
-    if (!nameLooksGood || !emailLooksGood) {
-      setStatus('Please provide your name and a valid email.', 'text-red-400');
-      return;
-    }
-
-    // Build payload (JSON), including multi-value addons
-    const fd = new FormData(form);
-    const data = {};
-    for (const [k, v] of fd.entries()) {
-      if (k === 'addons') continue; // handle below
-      if (k === 'prints') continue; // handle below
-      if (data[k] === undefined) data[k] = v;
-    }
-    const addons = fd.getAll('addons');
-    if (addons.length) data.addons = addons;
-
-    const printsInterested = fd.getAll('prints').includes('interested');
-    data.prints_interested = printsInterested;
-
-    data.name = name;
-    data.email = email;
-
-    setStatus('Sending…', 'text-gray-300');
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70','cursor-not-allowed'); }
-
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        // IMPORTANT: only Content-Type header; NO 'Accept' header
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source: 'photography', payload: data }),
-      });
-
-      // Optional: quick debugging in case of errors
-      // console.log('booking submit status', res.status, await res.clone().text());
-
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      setStatus("Thanks! We'll get back to you shortly.", 'text-emerald-300');
-      form.reset();
-    } catch (err) {
-      console.error('Booking form error:', err);
-      setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
-    } finally {
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70','cursor-not-allowed'); }
-    }
-  });
-})();
-</script>
+<!-- Add-on cards <-> checkbox sync -->
 <script>
 (function () {
   const form = document.getElementById('booking-form');
@@ -855,11 +718,7 @@ redirect_from:
   const checkUsb   = form.querySelector('input[name="addons"][value="usb_drive"]');
   const checkCd    = form.querySelector('input[name="addons"][value="cd_dvd"]');
 
-  // Map card key -> checkbox element
-  const ADDON_CHECKBOX = {
-    usb_drive: checkUsb,
-    cd_dvd:    checkCd
-  };
+  const ADDON_CHECKBOX = { usb_drive: checkUsb, cd_dvd: checkCd };
 
   function setCardSelected(card, selected) {
     card.setAttribute('aria-pressed', selected ? 'true' : 'false');
@@ -879,15 +738,12 @@ redirect_from:
     if (!cb) return;
     cb.checked = !cb.checked;
     syncFromCheckbox(key);
-    // Notify the total-cost calculator
     cb.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  // Bind card interactions (click + keyboard)
   addonCards.forEach(card => {
     const key = card.dataset.addon;
     if (!key) return;
-
     card.addEventListener('click', () => toggleAddon(key));
     card.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -897,25 +753,17 @@ redirect_from:
     });
   });
 
-  // Keep visuals in sync if user clicks the checkboxes directly
-  [checkUsb, checkCd].forEach(cb => {
-    if (!cb) return;
-    cb.addEventListener('change', () => syncFromCheckbox(cb.value));
-  });
-
-  // Initialize selection state on load
+  [checkUsb, checkCd].forEach(cb => cb && cb.addEventListener('change', () => syncFromCheckbox(cb.value)));
   Object.keys(ADDON_CHECKBOX).forEach(syncFromCheckbox);
 })();
 </script>
 
-<!-- Hero background via Dropbox (non-destructive; only overrides the image URL) -->
+<!-- Hero background via Dropbox -->
 <script>
 (function () {
-  // 1) Paste your Dropbox *share* link here:
   var DB_HERO = "https://www.dropbox.com/scl/fi/4pergmzlrrccsxu73puw9/hero-car.jpg?rlkey=houxno6c4dg230r4hxajiyk8j&st=p2xpzgb5&dl=0";
   if (!DB_HERO) return;
 
-  // 2) Convert to a direct file URL
   function dropboxToRaw(u) {
     try {
       var url = new URL(u);
@@ -935,11 +783,8 @@ redirect_from:
     }
   }
 
-  // 3) Swap the background on the existing hero layer (and only that)
   var hero = document.querySelector("div[style*='hero-car.jpg']");
-  if (hero) {
-    hero.style.backgroundImage = "url('" + dropboxToRaw(DB_HERO) + "')";
-  }
+  if (hero) hero.style.backgroundImage = "url('" + dropboxToRaw(DB_HERO) + "')";
 })();
 </script>
 
