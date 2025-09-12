@@ -59,6 +59,66 @@
     .table thead th { position: sticky; top: 0; z-index: 2; }
     .table-hover tbody tr { transition: transform .08s ease, box-shadow .12s ease; }
     .table-hover tbody tr:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,.06); }
+
+    /* ---------- Sticky Notes ---------- */
+    .sticky-note {
+      position: fixed; /* viewport-level so they float over tabs */
+      top: 120px; left: 120px;
+      width: 220px; min-width: 160px; min-height: 120px;
+      background: #fffbe6;
+      border: 1px solid #e5d47b;
+      border-radius: 10px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.15);
+      display: flex; flex-direction: column;
+      resize: both; overflow: hidden;
+      z-index: 2000;
+    }
+    .sticky-note .sticky-header {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:.5rem;
+      padding: .35rem .5rem;
+      background: rgba(0,0,0,.04);
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      cursor: move;
+      user-select:none;
+    }
+    .sticky-note .sticky-title {
+      font-size: .9rem; font-weight:600; color:#444; margin:0;
+    }
+    .sticky-note .sticky-actions .btn {
+      --bs-btn-padding-y: .1rem;
+      --bs-btn-padding-x: .3rem;
+      --bs-btn-font-size: .8rem;
+    }
+    .sticky-note .sticky-body {
+      padding: .5rem .6rem .8rem .6rem;
+      flex:1; overflow:auto;
+    }
+    .sticky-note .sticky-body[contenteditable="true"]:focus {
+      outline: none;
+    }
+    .sticky-color {
+      width: 14px; height: 14px; border-radius: 3px; display:inline-block; border:1px solid rgba(0,0,0,.2);
+    }
+    /* color themes */
+    .sticky-note.yellow { background:#fffbe6; border-color:#e5d47b; }
+    .sticky-note.blue   { background:#eaf3ff; border-color:#93b7f0; }
+    .sticky-note.pink   { background:#ffeaf2; border-color:#f59bb5; }
+    .sticky-note.green  { background:#e9ffe8; border-color:#98d79b; }
+
+    /* dark mode tweaks */
+    .dark-mode .sticky-note {
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      border-color: rgba(255,255,255,.15);
+    }
+    .dark-mode .sticky-note .sticky-header { background: rgba(255,255,255,.06); border-bottom-color: rgba(255,255,255,.08); }
+    .dark-mode .sticky-note .sticky-title { color:#e8e8e8; }
+
+    /* FAB group (Add Sticky) */
+    #stickyFab {
+      position: fixed; right: 16px; bottom: 16px; z-index: 2100;
+      display: none; gap: .5rem; flex-direction: column;
+    }
   </style>
 </head>
 
@@ -104,8 +164,11 @@
           <div class="small">Cars and Collectibles LLC • <a href="https://carsandcollectibles.com" target="_blank">carsandcollectibles.com</a></div>
           <div class="small text-muted" id="signedInEmail" style="display:none;">Signed in as: <span id="signedInEmailValue"></span></div>
         </div>
-        <div>
+        <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary" id="settingsBtn"><i class="bi bi-gear"></i> Settings</button>
+          <button class="btn btn-outline-primary" id="addStickyBtn" title="Add Sticky (Shift+N)">
+            <i class="bi bi-sticky"></i> Add Sticky
+          </button>
         </div>
       </div>
 
@@ -126,6 +189,10 @@
         <li class="nav-item">
           <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pricesTab" type="button">Prices</button>
         </li>
+		<li class="nav-item">
+			<button class="nav-link" data-bs-toggle="tab" data-bs-target="#trendsTab" type="button">Trends</button>
+		</li>
+
       </ul>
 
       <!-- Tab Content -->
@@ -255,6 +322,78 @@
             <div class="text-muted">Coming soon: Prices</div>
           </div>
         </div>
+		
+		<!-- Trends -->
+<div class="tab-pane fade" id="trendsTab">
+  <div class="tab-card">
+    <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+      <div>
+        <label class="form-label mb-1">Time Window</label>
+        <select id="trendsWindow" class="form-select form-select-sm" style="width:140px">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label mb-1">Min Sales</label>
+        <input id="trendsMinCount" type="number" class="form-control form-control-sm" value="3" min="1" style="width:100px"/>
+      </div>
+      <div class="ms-auto">
+        <button id="refreshTrendsBtn" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-arrow-repeat"></i> Refresh Trends
+        </button>
+      </div>
+	  <div>
+  <label class="form-label mb-1">Yard</label>
+  <select id="trendsYard" class="form-select form-select-sm" style="width:200px">
+    <option value="auto" selected>Auto (follow Jalopy)</option>
+    <option value="all">All yards</option>
+    <option value="vehicles_of_interest">Vehicles of Interest</option>
+    <option value="boise">Boise</option>
+    <option value="caldwell">Caldwell</option>
+    <option value="garden_city">Garden City</option>
+    <option value="nampa">Nampa</option>
+    <option value="twin_falls">Twin Falls</option>
+  </select>
+</div>
+      <div>
+        <label class="form-label mb-1">Search</label>
+        <input id="trendsSearch" class="form-control form-control-sm"
+               placeholder="year, make, model, or search term">
+      </div>
+
+
+    </div>
+
+    <div class="table-responsive" id="trendsScroll" style="max-height:60vh; overflow:auto;">
+<!-- inside #trendsTab -->
+<table class="table table-striped table-bordered table-hover" id="trendsTable">
+  <thead class="table-dark">
+    <tr>
+      <th>Year</th>
+	  <th>Make</th>
+	  <th>Model</th>
+      <th>Search Term</th>
+      <th>Listing Title</th>
+      <th>Last Sold Price</th>
+      <th>Date Sold</th>
+      <th>Time To Sell</th>
+      <th>Total Sold</th>
+    </tr>
+  </thead>
+  <tbody id="trendsTableBody"></tbody>
+</table>
+
+<div class="small text-muted mt-2" id="trendsSummary"></div>
+
+    </div>
+
+    <div class="small text-muted mt-2" id="trendsSummary"></div>
+  </div>
+</div>
+
+		
       </div>
     </div>
 
@@ -418,6 +557,16 @@
     <!-- Toast container for favorite-vehicle alerts -->
     <div id="favToastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
   </div><!-- /#appRoot -->
+
+  <!-- Sticky FAB -->
+  <div id="stickyFab" aria-hidden="true">
+    <button class="btn btn-primary rounded-circle" id="fabAddSticky" title="Add Sticky (Shift+N)">
+      <i class="bi bi-plus-lg"></i>
+    </button>
+    <button class="btn btn-outline-danger rounded-circle" id="fabClearStickies" title="Clear All Stickies">
+      <i class="bi bi-trash"></i>
+    </button>
+  </div>
 
   <!-- Bootstrap Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1489,6 +1638,507 @@
   // Start the serial gate flow
   validateStoredKey();
 
+  </script>
+  
+<script>
+// ======== TRENDS (Latest sold-data only) ========
+
+const T_YARDS = ['boise','caldwell','garden_city','nampa','twin_falls'];
+const RE_TAIL_DATE = /_ebay_sales_(\d{4}-\d{2}-\d{2})\.csv$/;
+
+const $ = id => document.getElementById(id);
+const setTrendsSummary = msg => { const el = $('trendsSummary'); if (el) el.textContent = msg || ''; };
+
+// Yard source: "Auto" follows Jalopy; others are explicit
+function getCurrentLocKeyFromJalopy(){
+  const opt = $('csvSelector')?.selectedOptions?.[0];
+  return opt?.dataset?.loc || '';
+}
+function getTrendsLocKey(){
+  const sel = $('trendsYard');
+  const v = sel?.value || 'auto';
+  return v === 'auto' ? getCurrentLocKeyFromJalopy() : v; // 'all' | 'vehicles_of_interest' | yard token
+}
+
+// Load index (expects ./ebay-sales/ebay-sales.json)
+async function loadEbayIndex(){
+  try {
+    const r = await fetch('./ebay-sales/ebay-sales.json', { cache: 'no-store' });
+    const data = await r.json();
+    const files = Array.isArray(data) ? data : (Array.isArray(data?.files) ? data.files : []);
+    return files;
+  } catch(e) {
+    console.error('[Trends/latest] Could not load ebay-sales.json', e);
+    return [];
+  }
+}
+
+function detectYardTokenFromFile(f) {
+  const pre = f.split('_ebay_sales_')[0].toLowerCase();
+  if (pre.startsWith('vehicles_of_interest')) return 'vehicles_of_interest';
+  for (const y of T_YARDS) if (pre.includes(`_${y}_`)) return y; // strong match
+  for (const y of T_YARDS) if (pre.includes(y)) return y;        // loose match
+  return 'unknown';
+}
+function tailDateKey(f) {
+  const m = f.match(RE_TAIL_DATE);
+  return m ? m[1] : '';
+}
+function humanYard(token){
+  const map = { boise:'Boise', caldwell:'Caldwell', garden_city:'Garden City', nampa:'Nampa', twin_falls:'Twin Falls', vehicles_of_interest:'Vehicles of Interest' };
+  return map[token] || token;
+}
+
+// Pick newest file(s) for the selection
+function pickLatestTargets(filesIndex, locKey) {
+  // group files by detected yard
+  const byYard = new Map();
+  for (const f of filesIndex) {
+    if (!RE_TAIL_DATE.test(f)) continue;
+    const y = detectYardTokenFromFile(f);
+    if (!byYard.has(y)) byYard.set(y, []);
+    byYard.get(y).push(f);
+  }
+  for (const arr of byYard.values()) {
+    arr.sort((a,b) => (tailDateKey(b)).localeCompare(tailDateKey(a))); // newest first
+  }
+
+  // 'all' => newest for each known yard (skip unknown)
+  if (locKey === 'all') {
+    const out = [];
+    for (const y of T_YARDS) {
+      const arr = byYard.get(y);
+      if (arr?.length) out.push({ yard:y, file:arr[0] });
+    }
+    // also include vehicles_of_interest if present as a convenience
+    const voi = byYard.get('vehicles_of_interest');
+    if (voi?.length) out.push({ yard:'vehicles_of_interest', file:voi[0] });
+    return out;
+  }
+
+  // specific corpus
+  const want = locKey || ''; // '' can happen if Auto before Jalopy chosen
+  if (!want) return []; // no yard yet
+
+  if (want === 'vehicles_of_interest') {
+    const voi = byYard.get('vehicles_of_interest');
+    return voi?.length ? [{ yard:'vehicles_of_interest', file:voi[0] }] : [];
+  }
+
+  // specific yard
+  const yardFiles = byYard.get(want);
+  if (yardFiles?.length) return [{ yard:want, file:yardFiles[0] }];
+
+  // fallback: vehicles_of_interest if yard missing
+  const voi = byYard.get('vehicles_of_interest');
+  return voi?.length ? [{ yard:'vehicles_of_interest', file:voi[0] }] : [];
+}
+
+// CSV utilities
+function normalizeSoldRow(r) {
+  return {
+    year:  r['Year'] ?? r['year'] ?? '',
+    make:  r['Make'] ?? r['make'] ?? '',
+    model: r['Model'] ?? r['model'] ?? '',
+    term:  r['Search Term'] ?? r['search_term'] ?? r['Term'] ?? '',
+    title: r['Listing Title'] ?? r['Title'] ?? r['listing_title'] ?? '',
+    price: r['Last Sold Price'] ?? r['Sold Price'] ?? r['Price'] ?? r['last_sold_price'] ?? '',
+    date:  r['Date Sold'] ?? r['Sold Date'] ?? r['date_sold'] ?? '',
+    tts:   r['Time to Sell'] ?? r['Time To Sell'] ?? r['tts'] ?? '',
+    total: r['Total Sold'] ?? r['total_sold'] ?? r['Count'] ?? ''
+  };
+}
+
+function parseCSV(path) {
+  return new Promise((resolve, reject) => {
+    Papa.parse(path, {
+      download: true, header: true,
+      complete: res => resolve(res.data || []),
+      error: err => reject(err)
+    });
+  });
+}
+
+let TRENDS_LATEST_ALL_ROWS = []; // master, unfiltered rows from latest file(s)
+
+function debounce(fn, ms=150){
+  let t; 
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+function matchesQuery(row, q){
+  if (!q) return true;
+  const s = q.toLowerCase().trim();
+  const hay = [
+    row.year || '', row.make || '', row.model || '',
+    row.term || ''
+  ].join(' ').toLowerCase();
+  return hay.includes(s);
+}
+
+// Render rows into Trends table (raw sold data)
+function renderTrendsLatest(rows) {
+  const tbody = document.getElementById('trendsTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  // Group by Year/Make/Model
+  const groups = new Map();
+  rows.forEach(r => {
+    const key = [r.year||'', r.make||'', r.model||''].map(s => String(s).trim()).join('|');
+    if (!groups.has(key)) groups.set(key, { meta: { year:r.year||'', make:r.make||'', model:r.model||'' }, items: [] });
+    groups.get(key).items.push(r);
+  });
+
+  // Render each group: a clickable header row + a collapsed block of its rows
+  let idx = 0;
+  for (const [key, group] of groups.entries()) {
+    const { year, make, model } = group.meta;
+    const gid = `grp-${(++idx)}-${Math.random().toString(36).slice(2,8)}`; // unique collapse id
+    const count = group.items.length;
+
+    // Group header row (click to expand/collapse)
+    const headerTr = document.createElement('tr');
+    headerTr.className = 'table-secondary group-row';
+    headerTr.setAttribute('role', 'button');
+    headerTr.setAttribute('data-bs-toggle', 'collapse');
+    headerTr.setAttribute('data-bs-target', `#${gid}`);
+    headerTr.innerHTML = `
+      <td colspan="9" class="fw-semibold">
+        <span class="me-2">▶</span>
+        ${year || '—'} ${make || ''} ${model || ''} 
+        <span class="text-muted ms-2">(${count} sale${count===1?'':'s'})</span>
+      </td>
+    `;
+    tbody.appendChild(headerTr);
+
+    // Collapsible detail block containing the rows for this vehicle
+    const detailsTr = document.createElement('tr');
+    detailsTr.className = 'collapse-row';
+    detailsTr.innerHTML = `
+      <td colspan="9" class="p-0">
+        <div class="collapse show" id="${gid}">
+          <table class="table table-sm mb-0">
+            <tbody></tbody>
+          </table>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(detailsTr);
+
+    const innerTbody = detailsTr.querySelector('tbody');
+
+    // Child rows (the actual sold entries)
+    group.items.forEach(it => {
+      const rtr = document.createElement('tr');
+      rtr.innerHTML = `
+        <td class="d-none">${year || ''}</td>
+        <td class="d-none">${make || ''}</td>
+        <td class="d-none">${model || ''}</td>
+        <td>${it.term || ''}</td>
+        <td>${it.title || ''}</td>
+        <td>${it.price || ''}</td>
+        <td>${it.date || ''}</td>
+        <td>${it.tts || ''}</td>
+        <td>${it.total || ''}</td>
+      `;
+      innerTbody.appendChild(rtr);
+    });
+
+    // Rotate the caret on toggle
+    headerTr.addEventListener('click', () => {
+      const caret = headerTr.querySelector('span');
+      // let Bootstrap handle the collapse; we just flip the symbol after a tick
+      setTimeout(() => {
+        const isShown = detailsTr.querySelector('.collapse')?.classList.contains('show');
+        caret.textContent = isShown ? '▼' : '▶';
+      }, 160);
+    });
+  }
+
+  // If there were no rows at all
+  if (!rows.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="9" class="text-center text-muted">No rows in the latest sold-data file(s).</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+
+
+// Main loader for Trends (latest only)
+async function refreshTrends() {
+  setTrendsSummary('Loading latest sold data…');
+  const locKey = getTrendsLocKey(); // 'all' | 'vehicles_of_interest' | yard | '' (auto before jalopy)
+  const index = await loadEbayIndex();
+
+  if (!index.length) {
+    setTrendsSummary('No files listed in ebay-sales.json.');
+    renderTrendsLatest([]);
+    return;
+  }
+
+  const targets = pickLatestTargets(index, locKey);
+  if (!targets.length) {
+    setTrendsSummary('No latest sold-data file found for the selected yard.');
+    renderTrendsLatest([]);
+    return;
+  }
+
+  // Load and combine
+  let totalRows = 0, used = [];
+  const combined = [];
+  for (const { yard, file } of targets) {
+    const path = file.includes('/') ? file : `./ebay-sales/${file}`;
+    try {
+      const raw = await parseCSV(path);
+      const normRows = raw.map(normalizeSoldRow);
+      normRows.forEach(n => combined.push({ ...n, _yard: yard }));
+      used.push(`${yard}:${file}`);
+      totalRows += normRows.length;
+    } catch (e) {
+      console.warn('[Trends/latest] Failed to parse', path, e);
+    }
+  }
+
+  renderTrendsLatest(combined);
+  renderTrendsLatest(combined);
+  TRENDS_LATEST_ALL_ROWS = combined;
+  const q = document.getElementById('trendsSearch')?.value || '';
+  const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
+  renderTrendsLatest(filtered);
+
+  setTrendsSummary(
+    totalRows
+      ? `Loaded ${totalRows} rows from latest file${targets.length>1?'s':''}. (${used.join(' • ')})`
+      : 'No rows found in the latest file(s).'
+  );
+
+  // Debug
+  console.debug('[Trends/latest] locKey:', locKey, 'targets:', targets);
+}
+
+// Wire up: refresh on tab show, button, and yard changes
+document.addEventListener('DOMContentLoaded', () => {
+  // Refresh when Trends tab becomes visible
+  document.querySelector('button[data-bs-target="#trendsTab"]')
+    ?.addEventListener('shown.bs.tab', refreshTrends);
+
+  // Optional: a "Refresh" button you might have in Trends controls
+  document.getElementById('refreshTrendsBtn')
+    ?.addEventListener('click', refreshTrends);
+
+  // If yard selector exists in Trends, refresh on change
+  document.getElementById('trendsYard')
+    ?.addEventListener('change', () => {
+      const active = document.querySelector('#trendsTab.show');
+      if (active) refreshTrends();
+    });
+
+  // If following Jalopy (Auto) and Jalopy yard changes, refresh only if Trends is visible
+  document.getElementById('csvSelector')
+    ?.addEventListener('change', () => {
+      const isAuto = (document.getElementById('trendsYard')?.value || 'auto') === 'auto';
+      const active = document.querySelector('#trendsTab.show');
+      if (isAuto && active) refreshTrends();
+    });
+	
+	const trendsSearch = document.getElementById('trendsSearch');
+if (trendsSearch){
+  const runFilter = debounce(() => {
+    const q = trendsSearch.value || '';
+    const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
+    renderTrendsLatest(filtered); // re-render grouped view with filtered rows
+  }, 180);
+  trendsSearch.addEventListener('input', runFilter);
+}
+
+});
+</script>
+
+
+
+
+  <!-- ===== Sticky Notes JS (non-intrusive; waits until unlocked) ===== -->
+  <script>
+  (() => {
+    const STICKY_KEY = 'profitStickyNotes';
+    const STICKY_Z   = 'profitStickyZ';
+    let stickyZCounter = parseInt(localStorage.getItem(STICKY_Z) || '2100', 10);
+
+    const save = (arr) => localStorage.setItem(STICKY_KEY, JSON.stringify(arr));
+    const load = () => { try { return JSON.parse(localStorage.getItem(STICKY_KEY) || '[]'); } catch { return []; } };
+    const front = (el) => { stickyZCounter += 1; el.style.zIndex = stickyZCounter; localStorage.setItem(STICKY_Z, String(stickyZCounter)); };
+
+    function createStickyDOM(sticky, persist=true) {
+      const el = document.createElement('div');
+      el.className = `sticky-note ${sticky.color || 'yellow'}`;
+      el.dataset.id = sticky.id;
+      el.style.left = (sticky.x ?? 120) + 'px';
+      el.style.top  = (sticky.y ?? 120) + 'px';
+      el.style.width  = (sticky.w ?? 220) + 'px';
+      el.style.height = (sticky.h ?? 160) + 'px';
+      el.style.zIndex = sticky.z ?? (stickyZCounter += 1);
+
+      const header = document.createElement('div');
+      header.className = 'sticky-header';
+      header.innerHTML = `
+        <span class="sticky-title"><i class="bi bi-grip-vertical me-1"></i> Note</span>
+        <div class="sticky-actions btn-group">
+          <button class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" title="Color">
+            <span class="sticky-color sticky-${sticky.color || 'yellow'}"></span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" data-color="yellow"><span class="sticky-color sticky-yellow me-2"></span>Yellow</a></li>
+            <li><a class="dropdown-item" data-color="blue"><span class="sticky-color sticky-blue me-2"></span>Blue</a></li>
+            <li><a class="dropdown-item" data-color="pink"><span class="sticky-color sticky-pink me-2"></span>Pink</a></li>
+            <li><a class="dropdown-item" data-color="green"><span class="sticky-color sticky-green me-2"></span>Green</a></li>
+          </ul>
+          <button class="btn btn-outline-danger btn-sm" title="Delete"><i class="bi bi-trash"></i></button>
+        </div>
+      `;
+
+      const body = document.createElement('div');
+      body.className = 'sticky-body';
+      body.contentEditable = 'true';
+      body.innerText = sticky.text || '';
+
+      el.appendChild(header);
+      el.appendChild(body);
+      document.body.appendChild(el);
+
+      // drag
+      let dragging = false, startX=0, startY=0, baseX=0, baseY=0;
+      header.addEventListener('mousedown', (e) => {
+        dragging = true;
+        front(el);
+        startX = e.clientX; startY = e.clientY;
+        baseX = parseInt(el.style.left,10); baseY = parseInt(el.style.top,10);
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        el.style.left = (baseX + dx) + 'px';
+        el.style.top  = (baseY + dy) + 'px';
+      });
+      document.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        persistPositionSize(el);
+      });
+
+      // resize persistence
+      const resizeObserver = new ResizeObserver(() => persistPositionSize(el));
+      resizeObserver.observe(el);
+
+      // focus brings to front
+      body.addEventListener('focus', () => front(el));
+
+      // text save (debounced)
+      let t;
+      body.addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(() => {
+          const all = load();
+          const idx = all.findIndex(s => s.id === sticky.id);
+          if (idx >= 0) {
+            all[idx].text = body.innerText;
+            save(all);
+          }
+        }, 250);
+      });
+
+      // color change
+      header.querySelectorAll('.dropdown-menu .dropdown-item').forEach(a => {
+        a.addEventListener('click', () => {
+          const color = a.getAttribute('data-color');
+          el.classList.remove('yellow','blue','pink','green');
+          el.classList.add(color);
+          header.querySelector('.sticky-color').className = `sticky-color sticky-${color}`;
+          const all = load();
+          const idx = all.findIndex(s => s.id === sticky.id);
+          if (idx >= 0) { all[idx].color = color; save(all); }
+        });
+      });
+
+      // delete
+      header.querySelector('.btn-outline-danger').addEventListener('click', () => {
+        const all = load().filter(s => s.id !== sticky.id);
+        save(all);
+        el.remove();
+      });
+
+      function persistPositionSize(elRef) {
+        const rect = elRef.getBoundingClientRect();
+        const all = load();
+        const idx = all.findIndex(s => s.id === sticky.id);
+        if (idx >= 0) {
+          all[idx].x = Math.max(0, Math.round(rect.left));
+          all[idx].y = Math.max(0, Math.round(rect.top));
+          all[idx].w = Math.round(rect.width);
+          all[idx].h = Math.round(rect.height);
+          all[idx].z = parseInt(elRef.style.zIndex || '2100', 10);
+          save(all);
+        }
+      }
+
+      // initial persist if new
+      if (persist) {
+        const all = load();
+        all.push(sticky);
+        save(all);
+      }
+
+      return el;
+    }
+
+    function addSticky(defaults={}) {
+      const id = 's_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+      const base = {
+        id, text:'', x: 140 + Math.floor(Math.random()*80), y: 120 + Math.floor(Math.random()*80),
+        w: 220, h: 160, color: 'yellow', z: ++stickyZCounter
+      };
+      localStorage.setItem(STICKY_Z, String(stickyZCounter));
+      createStickyDOM({ ...base, ...defaults }, true);
+    }
+
+    function renderAllStickies() {
+      load().forEach(s => createStickyDOM(s, false));
+      const fab = document.getElementById('stickyFab'); if (fab) fab.style.display = '';
+    }
+
+    // quick actions
+    function wireUI() {
+      document.getElementById('addStickyBtn')?.addEventListener('click', () => addSticky());
+      document.getElementById('fabAddSticky')?.addEventListener('click', () => addSticky());
+      document.getElementById('fabClearStickies')?.addEventListener('click', () => {
+        if (!confirm('Delete all sticky notes?')) return;
+        localStorage.setItem(STICKY_KEY, '[]');
+        document.querySelectorAll('.sticky-note').forEach(n => n.remove());
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.shiftKey && (e.key === 'N' || e.key === 'n')) {
+          e.preventDefault(); addSticky();
+        }
+      });
+    }
+
+    // Wait until blur (serial-locked) is removed, then init stickies
+    function whenUnlocked(fn) {
+      if (!document.body.classList.contains('serial-locked')) { fn(); return; }
+      const mo = new MutationObserver(() => {
+        if (!document.body.classList.contains('serial-locked')) { mo.disconnect(); fn(); }
+      });
+      mo.observe(document.body, { attributes:true, attributeFilter:['class'] });
+    }
+
+    // Boot
+    document.addEventListener('DOMContentLoaded', () => {
+      wireUI();
+      whenUnlocked(() => renderAllStickies());
+    });
+  })();
   </script>
 </body>
 </html>
