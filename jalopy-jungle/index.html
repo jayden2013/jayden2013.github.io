@@ -119,6 +119,11 @@
       position: fixed; right: 16px; bottom: 16px; z-index: 2100;
       display: none; gap: .5rem; flex-direction: column;
     }
+	
+	/* Trends: clickable headers + little caret */
+#trendsTable thead th { cursor: pointer; user-select: none; }
+#trendsTable thead th .sort-caret { margin-left:.35rem; opacity:.7; }
+
   </style>
 </head>
 
@@ -389,7 +394,6 @@
 
     </div>
 
-    <div class="small text-muted mt-2" id="trendsSummary"></div>
   </div>
 </div>
 
@@ -1823,6 +1827,49 @@ function matchesQuery(row, q){
   return hay.includes(s);
 }
 
+// ---- Sorting state for Trends (default newest first) ----
+let TRENDS_SORT = { col: 'Date Sold', dir: 'desc' }; // dir: 'asc' | 'desc'
+
+// Parse helpers
+function parsePriceNum(s){
+  if (s == null) return NaN;
+  const n = String(s).replace(/[^0-9.\-]/g,'');
+  return n ? parseFloat(n) : NaN;
+}
+function parseTTSNum(s){
+  if (s == null) return NaN;
+  const m = String(s).match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : NaN;
+}
+function parseISODate(s){
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? NaN : d.getTime();
+}
+
+function cmpStr(a,b){ return String(a).localeCompare(String(b), undefined, {sensitivity:'base', numeric:true}); }
+function cmpNum(a,b){
+  const an = (isNaN(a)? -Infinity : a);
+  const bn = (isNaN(b)? -Infinity : b);
+  return an - bn;
+}
+
+function getGroupComparator(col, dir){
+  const mul = dir === 'desc' ? -1 : 1;
+  switch(col){
+    case 'Year':            return (a,b)=> mul * cmpStr(a.meta.year||'', b.meta.year||'');
+    case 'Make':            return (a,b)=> mul * cmpStr(a.meta.make||'', b.meta.make||'');
+    case 'Model':           return (a,b)=> mul * cmpStr(a.meta.model||'', b.meta.model||'');
+    case 'Search Term':     return (a,b)=> mul * cmpStr(a.agg.firstTerm||'',  b.agg.firstTerm||'');
+    case 'Listing Title':   return (a,b)=> mul * cmpStr(a.agg.firstTitle||'', b.agg.firstTitle||'');
+    case 'Last Sold Price': return (a,b)=> mul * cmpNum(a.agg.avgPrice,  b.agg.avgPrice);
+    case 'Date Sold':       return (a,b)=> mul * cmpNum(a.agg.latestDate,b.agg.latestDate);
+    case 'Time To Sell':    return (a,b)=> mul * cmpNum(a.agg.avgTTS,    b.agg.avgTTS);
+    case 'Total Sold':      return (a,b)=> mul * cmpNum(a.agg.sumTotal,  b.agg.sumTotal);
+    default:                return ()=>0;
+  }
+}
+
+
 // ===== Paged + Lazy Grouped Renderer for Trends (Latest) =====
 const PAGE_GROUPS = 25;               // how many vehicle groups per “page”
 let TRENDS_LATEST_ALL_ROWS = [];      // full dataset (already in your code)
@@ -1835,19 +1882,40 @@ function buildGroups(rows) {
   const map = new Map();
   rows.forEach(r => {
     const key = [r.year||'', r.make||'', r.model||''].map(s => String(s).trim()).join('|');
-    if (!map.has(key)) map.set(key, { key, meta: { year:r.year||'', make:r.make||'', model:r.model||'' }, items: [] });
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        meta: { year:r.year||'', make:r.make||'', model:r.model||'' },
+        items: [],
+        agg: { avgPrice:NaN, latestDate:NaN, avgTTS:NaN, sumTotal:0, firstTitle:'', firstTerm:'' }
+      });
+    }
     map.get(key).items.push(r);
   });
-  // Sort groups by Make/Model/Year for stable order (tweak as you like)
-  const groups = Array.from(map.values()).sort((a,b) =>
-    (a.meta.make||'').localeCompare(b.meta.make||'') ||
-    (a.meta.model||'').localeCompare(b.meta.model||'') ||
-    String(b.meta.year||'').localeCompare(String(a.meta.year||''))
-  );
-  return groups;
+
+  // compute aggregates for each group
+  for (const g of map.values()) {
+    const prices = g.items.map(it => parsePriceNum(it.price)).filter(v => !isNaN(v));
+    const tts    = g.items.map(it => parseTTSNum(it.tts)).filter(v => !isNaN(v));
+    const dates  = g.items.map(it => parseISODate(it.date)).filter(v => !isNaN(v));
+    const totals = g.items.map(it => parseFloat(it.total)).filter(v => !isNaN(v));
+
+    g.agg.avgPrice   = prices.length ? prices.reduce((a,b)=>a+b,0)/prices.length : NaN;
+    g.agg.latestDate = dates.length  ? Math.max(...dates) : NaN;
+    g.agg.avgTTS     = tts.length    ? tts.reduce((a,b)=>a+b,0)/tts.length : NaN;
+    g.agg.sumTotal   = totals.length ? totals.reduce((a,b)=>a+b,0) : 0;
+    g.agg.firstTitle = g.items[0]?.title || '';
+    g.agg.firstTerm  = g.items[0]?.term  || '';
+  }
+
+  // sort groups by current sort selection
+  const arr = Array.from(map.values());
+  const cmp = getGroupComparator(TRENDS_SORT.col, TRENDS_SORT.dir);
+  arr.sort(cmp);
+  return arr;
 }
 
-// Render a single group header + (collapsed) container. Child rows are added on first expand.
+
 function appendGroupDOM(tbody, group, idx) {
   const { year, make, model } = group.meta;
   const gid = `grp-${idx}-${Math.random().toString(36).slice(2,8)}`;
@@ -1855,11 +1923,8 @@ function appendGroupDOM(tbody, group, idx) {
   // Group header row
   const headerTr = document.createElement('tr');
   headerTr.className = 'table-secondary group-row';
-  headerTr.setAttribute('role', 'button');
-  headerTr.setAttribute('data-bs-toggle', 'collapse');
-  headerTr.setAttribute('data-bs-target', `#${gid}`);
   headerTr.innerHTML = `
-    <td colspan="9" class="fw-semibold">
+    <td colspan="9" class="fw-semibold" data-gid="${gid}">
       <span class="caret me-2">▶</span>
       ${year || '—'} ${make || ''} ${model || ''}
       <span class="text-muted ms-2">(${group.items.length} sale${group.items.length===1?'':'s'})</span>
@@ -1867,52 +1932,53 @@ function appendGroupDOM(tbody, group, idx) {
   `;
   tbody.appendChild(headerTr);
 
-  // Collapsible container (start collapsed for perf)
-  const detailsTr = document.createElement('tr');
-  detailsTr.className = 'collapse-row';
-  detailsTr.innerHTML = `
-    <td colspan="9" class="p-0">
-      <div class="collapse" id="${gid}">
-        <table class="table table-sm mb-0">
-          <tbody></tbody>
-        </table>
-      </div>
-    </td>
-  `;
-  tbody.appendChild(detailsTr);
+  // We'll insert/remove real body rows directly under headerTr
+  let expanded = false;
+  let children = []; // keep references so we can remove on collapse
 
-  const collapseEl = detailsTr.querySelector('.collapse');
-  const innerTbody = detailsTr.querySelector('tbody');
-  let renderedChildren = false;
+  function expand() {
+    if (expanded) return;
+    const insertAfter = headerTr.nextSibling;
 
-  // On toggle, lazily render children if needed; rotate caret
-  collapseEl.addEventListener('shown.bs.collapse', () => {
-    if (!renderedChildren) {
-      group.items.forEach(it => {
-        const rtr = document.createElement('tr');
-        rtr.innerHTML = `
-          <td class="d-none">${year || ''}</td>
-          <td class="d-none">${make || ''}</td>
-          <td class="d-none">${model || ''}</td>
-          <td>${it.term || ''}</td>
-          <td>${it.title || ''}</td>
-          <td>${it.price || ''}</td>
-          <td>${it.date || ''}</td>
-          <td>${it.tts || ''}</td>
-          <td>${it.total || ''}</td>
-        `;
-        innerTbody.appendChild(rtr);
-      });
-      renderedChildren = true;
-    }
+    group.items.forEach(it => {
+      const rtr = document.createElement('tr');
+      rtr.className = `child-of-${gid}`;
+      rtr.innerHTML = `
+        <td>${year || ''}</td>
+        <td>${make || ''}</td>
+        <td>${model || ''}</td>
+        <td>${it.term || ''}</td>
+        <td>${it.title || ''}</td>
+        <td>${it.price || ''}</td>
+        <td>${it.date || ''}</td>
+        <td>${it.tts || ''}</td>
+        <td>${it.total || ''}</td>
+      `;
+      // insert right after the header (keeps order while paging)
+      tbody.insertBefore(rtr, insertAfter);
+      children.push(rtr);
+    });
+
+    expanded = true;
     const caret = headerTr.querySelector('.caret');
     if (caret) caret.textContent = '▼';
-  });
-  collapseEl.addEventListener('hidden.bs.collapse', () => {
+  }
+
+  function collapse() {
+    if (!expanded) return;
+    children.forEach(tr => tr.remove());
+    children = [];
+    expanded = false;
     const caret = headerTr.querySelector('.caret');
     if (caret) caret.textContent = '▶';
-  });
+  }
+
+  // Toggle expand/collapse on click
+  headerTr.addEventListener('click', () => {
+    expanded ? collapse() : expand();
+  }, { passive:true });
 }
+
 
 // Reset and render the first page
 function renderTrendsLatestPagedReset(rows) {
@@ -1960,6 +2026,58 @@ function renderNextGroupsChunk() {
       : 'No rows in the latest sold-data file(s).'
   );
 }
+
+function buildTrendsSortableHeaders(){
+  const thead = document.querySelector('#trendsTable thead');
+  if (!thead) return;
+  const headerRow = thead.querySelector('tr');
+  if (!headerRow) return;
+
+  const ths = Array.from(headerRow.querySelectorAll('th'));
+  ths.forEach(th => {
+    // add caret span once
+    if (!th.querySelector('.sort-caret')) {
+      const caret = document.createElement('span');
+      caret.className = 'sort-caret';
+      caret.textContent = '';
+      th.appendChild(caret);
+    }
+    th.addEventListener('click', () => {
+      const col = th.textContent.replace(/▼|▲/g,'').trim();
+      if (!col) return;
+
+      if (TRENDS_SORT.col === col) {
+        TRENDS_SORT.dir = (TRENDS_SORT.dir === 'asc') ? 'desc' : 'asc';
+      } else {
+        TRENDS_SORT.col = col;
+        TRENDS_SORT.dir = ['Date Sold','Last Sold Price','Total Sold'].includes(col) ? 'desc' : 'asc';
+      }
+
+      const q = document.getElementById('trendsSearch')?.value || '';
+      const base = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
+      renderTrendsLatestPagedReset(base); // buildGroups() will apply sort
+      updateTrendsSortCarets();
+    }, { passive:true });
+  });
+
+  updateTrendsSortCarets();
+}
+
+function updateTrendsSortCarets(){
+  const headerRow = document.querySelector('#trendsTable thead tr');
+  if (!headerRow) return;
+  Array.from(headerRow.children).forEach(th => {
+    const label = th.textContent.replace(/▼|▲/g,'').trim();
+    const caret = th.querySelector('.sort-caret');
+    if (!caret) return;
+    if (label === TRENDS_SORT.col) {
+      caret.textContent = (TRENDS_SORT.dir === 'asc') ? '▲' : '▼';
+    } else {
+      caret.textContent = '';
+    }
+  });
+}
+
 
 // Hook Infinite Scroll on the scroll container
 function ensureTrendsInfiniteScroll() {
@@ -2029,6 +2147,8 @@ async function refreshTrends() {
   const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
   renderTrendsLatestPagedReset(filtered);
   ensureTrendsInfiniteScroll();
+  buildTrendsSortableHeaders();
+  updateTrendsSortCarets();
 
   setTrendsSummary(
     totalRows
@@ -2074,7 +2194,7 @@ if (trendsSearch){
   }, 180);
   trendsSearch.addEventListener('input', runFilter);
 }
-
+buildTrendsSortableHeaders();
 });
 </script>
 
