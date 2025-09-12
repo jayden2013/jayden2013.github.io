@@ -1759,7 +1759,7 @@ function parseCSV(path) {
   });
 }
 
-let TRENDS_LATEST_ALL_ROWS = []; // master, unfiltered rows from latest file(s)
+
 
 function debounce(fn, ms=150){
   let t; 
@@ -1776,93 +1776,167 @@ function matchesQuery(row, q){
   return hay.includes(s);
 }
 
-// Render rows into Trends table (raw sold data)
-function renderTrendsLatest(rows) {
-  const tbody = document.getElementById('trendsTableBody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
+// ===== Paged + Lazy Grouped Renderer for Trends (Latest) =====
+const PAGE_GROUPS = 25;               // how many vehicle groups per “page”
+let TRENDS_LATEST_ALL_ROWS = [];      // full dataset (already in your code)
+let TRENDS_FILTERED_ROWS = [];        // rows after search filter
+let TRENDS_GROUPS = [];               // [{key, meta:{year,make,model}, items:[...]}, ...]
+let TRENDS_VISIBLE_COUNT = 0;         // how many groups currently rendered
+let TRENDS_SCROLL_EL = null;
 
-  // Group by Year/Make/Model
-  const groups = new Map();
+function buildGroups(rows) {
+  const map = new Map();
   rows.forEach(r => {
     const key = [r.year||'', r.make||'', r.model||''].map(s => String(s).trim()).join('|');
-    if (!groups.has(key)) groups.set(key, { meta: { year:r.year||'', make:r.make||'', model:r.model||'' }, items: [] });
-    groups.get(key).items.push(r);
+    if (!map.has(key)) map.set(key, { key, meta: { year:r.year||'', make:r.make||'', model:r.model||'' }, items: [] });
+    map.get(key).items.push(r);
   });
+  // Sort groups by Make/Model/Year for stable order (tweak as you like)
+  const groups = Array.from(map.values()).sort((a,b) =>
+    (a.meta.make||'').localeCompare(b.meta.make||'') ||
+    (a.meta.model||'').localeCompare(b.meta.model||'') ||
+    String(b.meta.year||'').localeCompare(String(a.meta.year||''))
+  );
+  return groups;
+}
 
-  // Render each group: a clickable header row + a collapsed block of its rows
-  let idx = 0;
-  for (const [key, group] of groups.entries()) {
-    const { year, make, model } = group.meta;
-    const gid = `grp-${(++idx)}-${Math.random().toString(36).slice(2,8)}`; // unique collapse id
-    const count = group.items.length;
+// Render a single group header + (collapsed) container. Child rows are added on first expand.
+function appendGroupDOM(tbody, group, idx) {
+  const { year, make, model } = group.meta;
+  const gid = `grp-${idx}-${Math.random().toString(36).slice(2,8)}`;
 
-    // Group header row (click to expand/collapse)
-    const headerTr = document.createElement('tr');
-    headerTr.className = 'table-secondary group-row';
-    headerTr.setAttribute('role', 'button');
-    headerTr.setAttribute('data-bs-toggle', 'collapse');
-    headerTr.setAttribute('data-bs-target', `#${gid}`);
-    headerTr.innerHTML = `
-      <td colspan="9" class="fw-semibold">
-        <span class="me-2">▶</span>
-        ${year || '—'} ${make || ''} ${model || ''} 
-        <span class="text-muted ms-2">(${count} sale${count===1?'':'s'})</span>
-      </td>
-    `;
-    tbody.appendChild(headerTr);
+  // Group header row
+  const headerTr = document.createElement('tr');
+  headerTr.className = 'table-secondary group-row';
+  headerTr.setAttribute('role', 'button');
+  headerTr.setAttribute('data-bs-toggle', 'collapse');
+  headerTr.setAttribute('data-bs-target', `#${gid}`);
+  headerTr.innerHTML = `
+    <td colspan="9" class="fw-semibold">
+      <span class="caret me-2">▶</span>
+      ${year || '—'} ${make || ''} ${model || ''}
+      <span class="text-muted ms-2">(${group.items.length} sale${group.items.length===1?'':'s'})</span>
+    </td>
+  `;
+  tbody.appendChild(headerTr);
 
-    // Collapsible detail block containing the rows for this vehicle
-    const detailsTr = document.createElement('tr');
-    detailsTr.className = 'collapse-row';
-    detailsTr.innerHTML = `
-      <td colspan="9" class="p-0">
-        <div class="collapse show" id="${gid}">
-          <table class="table table-sm mb-0">
-            <tbody></tbody>
-          </table>
-        </div>
-      </td>
-    `;
-    tbody.appendChild(detailsTr);
+  // Collapsible container (start collapsed for perf)
+  const detailsTr = document.createElement('tr');
+  detailsTr.className = 'collapse-row';
+  detailsTr.innerHTML = `
+    <td colspan="9" class="p-0">
+      <div class="collapse" id="${gid}">
+        <table class="table table-sm mb-0">
+          <tbody></tbody>
+        </table>
+      </div>
+    </td>
+  `;
+  tbody.appendChild(detailsTr);
 
-    const innerTbody = detailsTr.querySelector('tbody');
+  const collapseEl = detailsTr.querySelector('.collapse');
+  const innerTbody = detailsTr.querySelector('tbody');
+  let renderedChildren = false;
 
-    // Child rows (the actual sold entries)
-    group.items.forEach(it => {
-      const rtr = document.createElement('tr');
-      rtr.innerHTML = `
-        <td class="d-none">${year || ''}</td>
-        <td class="d-none">${make || ''}</td>
-        <td class="d-none">${model || ''}</td>
-        <td>${it.term || ''}</td>
-        <td>${it.title || ''}</td>
-        <td>${it.price || ''}</td>
-        <td>${it.date || ''}</td>
-        <td>${it.tts || ''}</td>
-        <td>${it.total || ''}</td>
-      `;
-      innerTbody.appendChild(rtr);
-    });
+  // On toggle, lazily render children if needed; rotate caret
+  collapseEl.addEventListener('shown.bs.collapse', () => {
+    if (!renderedChildren) {
+      group.items.forEach(it => {
+        const rtr = document.createElement('tr');
+        rtr.innerHTML = `
+          <td class="d-none">${year || ''}</td>
+          <td class="d-none">${make || ''}</td>
+          <td class="d-none">${model || ''}</td>
+          <td>${it.term || ''}</td>
+          <td>${it.title || ''}</td>
+          <td>${it.price || ''}</td>
+          <td>${it.date || ''}</td>
+          <td>${it.tts || ''}</td>
+          <td>${it.total || ''}</td>
+        `;
+        innerTbody.appendChild(rtr);
+      });
+      renderedChildren = true;
+    }
+    const caret = headerTr.querySelector('.caret');
+    if (caret) caret.textContent = '▼';
+  });
+  collapseEl.addEventListener('hidden.bs.collapse', () => {
+    const caret = headerTr.querySelector('.caret');
+    if (caret) caret.textContent = '▶';
+  });
+}
 
-    // Rotate the caret on toggle
-    headerTr.addEventListener('click', () => {
-      const caret = headerTr.querySelector('span');
-      // let Bootstrap handle the collapse; we just flip the symbol after a tick
-      setTimeout(() => {
-        const isShown = detailsTr.querySelector('.collapse')?.classList.contains('show');
-        caret.textContent = isShown ? '▼' : '▶';
-      }, 160);
-    });
+// Reset and render the first page
+function renderTrendsLatestPagedReset(rows) {
+  const tbody = document.getElementById('trendsTableBody');
+  if (!tbody) return;
+
+  // Build state
+  TRENDS_FILTERED_ROWS = rows;
+  TRENDS_GROUPS = buildGroups(TRENDS_FILTERED_ROWS);
+  TRENDS_VISIBLE_COUNT = 0;
+
+  // Clear DOM and render first chunk
+  tbody.innerHTML = '';
+  renderNextGroupsChunk();
+
+  // Update summary
+  const totalGroups = TRENDS_GROUPS.length;
+  const totalRows = TRENDS_FILTERED_ROWS.length;
+  setTrendsSummary(
+    totalRows
+      ? `Showing ${Math.min(TRENDS_VISIBLE_COUNT, totalGroups)} of ${totalGroups} vehicles • ${totalRows} total sales (scroll to load more).`
+      : 'No rows in the latest sold-data file(s).'
+  );
+}
+
+// Append the next chunk of groups
+function renderNextGroupsChunk() {
+  const tbody = document.getElementById('trendsTableBody');
+  if (!tbody) return;
+  if (!TRENDS_GROUPS.length) return;
+
+  const start = TRENDS_VISIBLE_COUNT;
+  const end = Math.min(start + PAGE_GROUPS, TRENDS_GROUPS.length);
+  for (let i = start; i < end; i++) {
+    appendGroupDOM(tbody, TRENDS_GROUPS[i], i+1);
   }
+  TRENDS_VISIBLE_COUNT = end;
 
-  // If there were no rows at all
-  if (!rows.length) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="9" class="text-center text-muted">No rows in the latest sold-data file(s).</td>`;
-    tbody.appendChild(tr);
+  // Update summary incrementally
+  const totalGroups = TRENDS_GROUPS.length;
+  const totalRows = TRENDS_FILTERED_ROWS.length;
+  setTrendsSummary(
+    totalRows
+      ? `Showing ${TRENDS_VISIBLE_COUNT} of ${totalGroups} vehicles • ${totalRows} total sales${TRENDS_VISIBLE_COUNT<totalGroups?' • keep scrolling…':''}`
+      : 'No rows in the latest sold-data file(s).'
+  );
+}
+
+// Hook Infinite Scroll on the scroll container
+function ensureTrendsInfiniteScroll() {
+  if (TRENDS_SCROLL_EL) return; // already wired
+  TRENDS_SCROLL_EL = document.getElementById('trendsScroll') || window;
+  const targetEl = document.getElementById('trendsScroll');
+
+  const onScroll = () => {
+    const el = targetEl;
+    // Near bottom?
+    const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 100;
+    if (nearBottom && TRENDS_VISIBLE_COUNT < TRENDS_GROUPS.length) {
+      renderNextGroupsChunk();
+    }
+  };
+
+  // If we have a dedicated scroll div, listen on it; else listen on window
+  if (targetEl) {
+    targetEl.addEventListener('scroll', onScroll);
+  } else {
+    window.addEventListener('scroll', onScroll);
   }
 }
+
 
 
 
@@ -1874,14 +1948,14 @@ async function refreshTrends() {
 
   if (!index.length) {
     setTrendsSummary('No files listed in ebay-sales.json.');
-    renderTrendsLatest([]);
+    renderTrendsLatestPagedReset([]);
     return;
   }
 
   const targets = pickLatestTargets(index, locKey);
   if (!targets.length) {
     setTrendsSummary('No latest sold-data file found for the selected yard.');
-    renderTrendsLatest([]);
+    renderTrendsLatestPagedReset([]);
     return;
   }
 
@@ -1901,12 +1975,13 @@ async function refreshTrends() {
     }
   }
 
-  renderTrendsLatest(combined);
-  renderTrendsLatest(combined);
+  renderTrendsLatestPagedReset(combined);
+  renderTrendsLatestPagedReset(combined);
   TRENDS_LATEST_ALL_ROWS = combined;
   const q = document.getElementById('trendsSearch')?.value || '';
   const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
-  renderTrendsLatest(filtered);
+  renderTrendsLatestPagedReset(filtered);
+  ensureTrendsInfiniteScroll();
 
   setTrendsSummary(
     totalRows
@@ -1948,7 +2023,7 @@ if (trendsSearch){
   const runFilter = debounce(() => {
     const q = trendsSearch.value || '';
     const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
-    renderTrendsLatest(filtered); // re-render grouped view with filtered rows
+    renderTrendsLatestPagedReset(filtered); // re-render grouped view with filtered rows
   }, 180);
   trendsSearch.addEventListener('input', runFilter);
 }
