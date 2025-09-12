@@ -1759,6 +1759,53 @@ function parseCSV(path) {
   });
 }
 
+// ---------- Normalization helpers ----------
+function normBasic(s){
+  return String(s||'')
+    .toLowerCase()
+    .normalize('NFKD')                 // strip accents
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/&/g,' and ')
+    .replace(/[^a-z0-9]+/g,' ')        // non-alnum -> space
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+// Keep tokens worth matching: length >= 2 and not in stoplist
+const STOP = new Set(['the','a','an','and','or','for','to','of','with','on','at','by','in','from','this','that','these','those']);
+function tokenizeQ(s){
+  const base = normBasic(s);
+  const raw = base.split(' ');
+  // Also generate fused tokens to catch things like "f 150" vs "f150"
+  const fused = raw.join('');
+  const tokens = raw.filter(w => w && w.length >= 2 && !STOP.has(w));
+  if (fused.length >= 3) tokens.push(fused);
+  return Array.from(new Set(tokens));
+}
+
+// Title normalization that also keeps a fused variant (e.g. "F-150" -> "f150")
+function prepTitle(s){
+  const base = normBasic(s);
+  const fused = base.replace(/ /g,'');
+  return { base, fused };
+}
+
+// ---------- Main predicate: keep row if title contains ANY token from search term ----------
+function titleContainsAnySearchWord(searchTerm, listingTitle){
+  if (!searchTerm) return true; // if no query provided in the CSV, don't drop it
+  const tokens = tokenizeQ(searchTerm);
+  if (!tokens.length) return true;
+
+  const { base, fused } = prepTitle(listingTitle || '');
+  // require at least one token present in base OR fused
+  return tokens.some(t => base.includes(t) || fused.includes(t));
+}
+
+// Convenience wrapper for your normalized row object
+function keepRowByTitleTerm(row){
+  return titleContainsAnySearchWord(row.term, row.title);
+}
+
 
 
 function debounce(fn, ms=150){
@@ -1966,7 +2013,7 @@ async function refreshTrends() {
     const path = file.includes('/') ? file : `./ebay-sales/${file}`;
     try {
       const raw = await parseCSV(path);
-      const normRows = raw.map(normalizeSoldRow);
+      const normRows = raw.map(normalizeSoldRow).filter(keepRowByTitleTerm);
       normRows.forEach(n => combined.push({ ...n, _yard: yard }));
       used.push(`${yard}:${file}`);
       totalRows += normRows.length;
