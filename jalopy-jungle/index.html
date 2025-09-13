@@ -370,6 +370,16 @@
 
 
     </div>
+	
+	<!-- Heatmap (Make × Year) -->
+<div id="trendsHeatmapBox" class="mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-1">
+    <strong>Heatmap — Sales Count by Make × Year</strong>
+    <small id="trendsHeatmapNote" class="text-muted"></small>
+  </div>
+  <canvas id="trendsHeatmapCanvas" height="260"></canvas>
+</div>
+
 
     <div class="table-responsive" id="trendsScroll" style="max-height:60vh; overflow:auto;">
 <!-- inside #trendsTab -->
@@ -2146,6 +2156,7 @@ async function refreshTrends() {
   const q = document.getElementById('trendsSearch')?.value || '';
   const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
   renderTrendsLatestPagedReset(filtered);
+  renderTrendsHeatmap(filtered);
   ensureTrendsInfiniteScroll();
   buildTrendsSortableHeaders();
   updateTrendsSortCarets();
@@ -2187,11 +2198,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	const trendsSearch = document.getElementById('trendsSearch');
 if (trendsSearch){
-  const runFilter = debounce(() => {
-    const q = trendsSearch.value || '';
-    const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
-    renderTrendsLatestPagedReset(filtered); // re-render grouped view with filtered rows
-  }, 180);
+const runFilter = debounce(() => {
+  const q = trendsSearch.value || '';
+  const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
+  renderTrendsLatestPagedReset(filtered);
+  renderTrendsHeatmap(filtered);
+}, 180);
+
   trendsSearch.addEventListener('input', runFilter);
 }
 buildTrendsSortableHeaders();
@@ -2381,6 +2394,164 @@ buildTrendsSortableHeaders();
       whenUnlocked(() => renderAllStickies());
     });
   })();
+  </script>
+  
+  <script>
+  // ---------- HEATMAP (Make × Year; metric = count of sales) ----------
+let TRENDS_HEATMAP_LAST = []; // cache last rows for resize re-render
+
+function renderTrendsHeatmap(rows){
+  TRENDS_HEATMAP_LAST = rows || [];
+  const noteEl = document.getElementById('trendsHeatmapNote');
+  const cv = document.getElementById('trendsHeatmapCanvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+
+  // Clear
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  // Guard
+  const valid = (rows||[]).filter(r => r && r.make && r.year);
+  if (!valid.length){
+    if (noteEl) noteEl.textContent = 'Nothing to show (no rows with Make + Year).';
+    return;
+  }
+
+  // Aggregate: count by Make × Year
+  const yearsSet = new Set();
+  const perKey = new Map(); // key = make|year -> count
+  const perMakeTotal = new Map();
+
+  valid.forEach(r => {
+    const y = parseInt(String(r.year).replace(/[^\d]/g,''),10);
+    const make = String(r.make || '').trim();
+    if (!make || isNaN(y)) return;
+    yearsSet.add(y);
+    const key = make+'|'+y;
+    perKey.set(key, (perKey.get(key)||0)+1);
+    perMakeTotal.set(make, (perMakeTotal.get(make)||0)+1);
+  });
+
+  const years = Array.from(yearsSet).sort((a,b)=>a-b);
+  if (!years.length){
+    if (noteEl) noteEl.textContent = 'Nothing to show (no valid Year values).';
+    return;
+  }
+
+  // Pick top N makes by total volume
+  const TOP_MAKES = 12;
+  const makes = Array.from(perMakeTotal.entries())
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0, TOP_MAKES)
+    .map(([m])=>m);
+
+  if (!makes.length){
+    if (noteEl) noteEl.textContent = 'Nothing to show (no valid Make values).';
+    return;
+  }
+
+  // Canvas sizing (fit container width)
+  const parent = cv.parentElement || cv;
+  const cssW = parent.clientWidth || 800;
+  cv.width = cssW;
+
+  // Layout
+  const leftPad   = 90;     // y-axis labels (makes)
+  const bottomPad = 28;     // x-axis labels (years)
+  const rightPad  = 10;
+  const topPad    = 8;
+
+  const gridW = cv.width  - leftPad - rightPad;
+  const gridH = cv.height - topPad   - bottomPad;
+
+  const cols = years.length;
+  const rowsCount = makes.length;
+  const cw = Math.max(10, Math.floor(gridW / Math.max(1, cols)));
+  const ch = Math.max(14, Math.floor(gridH / Math.max(1, rowsCount)));
+
+  // Recompute grid size to tightly fit
+  const usedW = cw * cols;
+  const usedH = ch * rowsCount;
+  const gx0 = leftPad + Math.floor((gridW - usedW)/2);
+  const gy0 = topPad  + Math.floor((gridH - usedH)/2);
+
+  // Find max value for color scale
+  let vmax = 0;
+  makes.forEach(m => years.forEach(y => {
+    const v = perKey.get(m+'|'+y) || 0;
+    if (v > vmax) vmax = v;
+  }));
+
+  // Color scale (0 -> light, max -> saturated)
+  function colorFor(v){
+    if (!vmax) return 'rgba(0,0,0,0.04)';
+    const t = Math.max(0, Math.min(1, v / vmax));
+    // HSL: from 210 (cool) to 10 (warm)
+    const hue = 210 - 200 * t;
+    const sat = 70;
+    const lgt = 92 - 42 * t;
+    return `hsl(${hue}, ${sat}%, ${lgt}%)`;
+  }
+
+  // Draw cells
+  ctx.save();
+  ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+  ctx.textBaseline = 'middle';
+
+  for (let ri=0; ri<rowsCount; ri++){
+    for (let ci=0; ci<cols; ci++){
+      const make = makes[ri];
+      const year = years[ci];
+      const v = perKey.get(make+'|'+year) || 0;
+      const x = gx0 + ci*cw;
+      const y = gy0 + ri*ch;
+
+      ctx.fillStyle = colorFor(v);
+      ctx.fillRect(x+0.5, y+0.5, cw-1, ch-1);
+
+      // Optional tiny value text if big enough cell
+      if (cw >= 28 && ch >= 18 && v){
+        ctx.fillStyle = (v / vmax > 0.6) ? 'rgba(255,255,255,0.85)' : '#222';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(v), x + cw/2, y + ch/2);
+      }
+    }
+  }
+
+  // Axis labels
+  ctx.fillStyle = '#888';
+  ctx.textAlign = 'right';
+  for (let ri=0; ri<rowsCount; ri++){
+    const make = makes[ri];
+    const y = gy0 + ri*ch + ch/2;
+    ctx.fillText(make, leftPad-8, y);
+  }
+  ctx.textAlign = 'center';
+  for (let ci=0; ci<cols; ci++){
+    const year = years[ci];
+    const x = gx0 + ci*cw + cw/2;
+    ctx.fillText(String(year), x, topPad + usedH + 14);
+  }
+  ctx.restore();
+
+  // Note
+  if (noteEl){
+    noteEl.textContent =
+      `Top ${makes.length} makes • ${years[0]}–${years[years.length-1]} • max cell ${vmax}`;
+  }
+}
+
+// Re-render heatmap on resize (debounced)
+(function(){
+  let t;
+  window.addEventListener('resize', () => {
+    clearTimeout(t);
+    t = setTimeout(() => renderTrendsHeatmap(TRENDS_HEATMAP_LAST), 120);
+  });
+})();
+
+
+  
   </script>
 </body>
 </html>
