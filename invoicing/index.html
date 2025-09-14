@@ -49,6 +49,43 @@
     .kv{display:grid;grid-template-columns:120px 1fr;gap:8px}
 
     .footer-note{color:var(--muted);font-size:12px;margin-top:8px}
+
+    /* === Mobile responsiveness (colors unchanged) === */
+    @media (max-width: 900px){
+      .container{padding:12px}
+      .grid{grid-template-columns:1fr}
+      .kv{grid-template-columns:1fr}
+      .btn, input[type="text"], input[type="number"], textarea, select{min-height:44px}
+      .totals{grid-template-columns:auto 1fr} /* label/value pairs stack neatly */
+
+      /* Table becomes card-style rows */
+      table thead{display:none}
+      table, tbody, tr, td{display:block;width:100%}
+      table{border:0}
+      tbody{display:block}
+      tr{background:#0f1117;border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+      td{display:flex;justify-content:space-between;gap:12px;padding:10px}
+      td.right{text-align:left} /* right-align not useful in label/value layout */
+
+      /* Per-cell labels via nth-child (no markup changes) */
+      td:nth-child(1)::before{content:"Description";color:var(--muted);font-weight:600}
+      td:nth-child(2)::before{content:"Qty";color:var(--muted);font-weight:600}
+      td:nth-child(3)::before{content:"Rate";color:var(--muted);font-weight:600}
+      td:nth-child(4)::before{content:"Amount";color:var(--muted);font-weight:600}
+
+      /* Make first cell (description) stack label over input cleanly */
+      td:nth-child(1){flex-direction:column;align-items:stretch}
+      td:nth-child(1)::before{margin-bottom:6px}
+      td input[type="text"], td input[type="number"]{width:55%;min-width:140px;text-align:right;background:#0f121a}
+
+      /* Menus stay on-screen */
+      .menu .menu-panel{right:0;left:auto;min-width:180px}
+    }
+
+    /* Slightly wider phones / small tablets */
+    @media (max-width: 600px){
+      .help{display:none}
+    }
   </style>
 </head>
 <body>
@@ -151,7 +188,7 @@
         </div>
       </div>
 	  
-	        <!-- quick actions bar -->
+      <!-- quick actions bar -->
       <div class="bar row">
         <button class="btn" id="addRowBtn">Add row</button>
         <button class="btn" id="removeRowBtn">Remove row</button>
