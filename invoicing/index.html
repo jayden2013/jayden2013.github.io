@@ -87,6 +87,10 @@
       .help{display:none}
     }
   </style>
+
+  <!-- Added for export features -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -95,14 +99,12 @@
       <div class="title">Sign in</div>
       <div class="row">
         <div style="flex:1">
-          <div class="label">Username</div>
-          <input id="lgUser" type="text" autocomplete="username" />
+          <div class="label">Username</div><input id="lgUser" type="text" autocomplete="username" />
         </div>
       </div>
       <div class="row">
         <div style="flex:1">
-          <div class="label">Password</div>
-          <input id="lgPass" type="password" autocomplete="current-password" />
+          <div class="label">Password</div><input id="lgPass" type="password" autocomplete="current-password" />
         </div>
       </div>
       <div class="row">
@@ -247,6 +249,9 @@
           </div>
           <button class="btn" id="exportBtn">Export HTML</button>
           <button class="btn" id="openBtn">Open in Browser</button>
+          <!-- Added buttons -->
+          <button class="btn" id="exportPdfBtn">Export PDF</button>
+          <button class="btn" id="exportPngBtn">Export PNG</button>
         </div>
       </div>
 
@@ -393,6 +398,10 @@
     // Subtotal-dependent fields
     ['currency','terms','accepted','instructions','notes','invPrefix','invNumber','invDate','dueDate','poNumber','bizName','bizEmail','bizPhone','bizWebsite','bizAddress','custName','custEmail','custPhone','custAddress']
       .forEach(id => { const el = $('#'+id); el && el.addEventListener('input', () => {/* no-op now */}); });
+
+    // === Added: export buttons ===
+    $('#exportPdfBtn').addEventListener('click', exportPDF);
+    $('#exportPngBtn').addEventListener('click', exportPNG);
 
     recalc();
   }
@@ -573,6 +582,125 @@
       .replaceAll('{due_label}', dueLabel);
   }
 
+  // === Added: Export helpers ===
+  async function exportPNG(){
+    const html = renderHtml();
+    const iframe = await makeFrame(html);
+    try {
+      await waitForImages(iframe);
+      const doc = iframe.contentDocument;
+      const el = doc.body;
+      const width = doc.documentElement.scrollWidth;
+      const height = doc.documentElement.scrollHeight;
+      const canvas = await html2canvas(el, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: width,
+        windowHeight: height
+      });
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      downloadBlob(blob, fileBase()+'.png');
+    } catch (e){ alert('PNG export failed: '+e.message); }
+    finally { iframe.remove(); }
+  }
+
+async function exportPDF(){
+    const html = renderHtml();
+    const iframe = await makeFrame(html);
+    try{
+      await waitForImages(iframe);
+
+      // 1) Render exactly what the PNG export sees
+      const docEl = iframe.contentDocument.documentElement;
+      const bodyEl = iframe.contentDocument.body;
+      const canvas = await html2canvas(bodyEl, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: docEl.scrollWidth,
+        windowHeight: docEl.scrollHeight
+      });
+
+      // 2) Build a letter-sized PDF and fit width with 0.5" margins
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: 'pt', format: 'letter', compress: true });
+
+      const pageWidth  = pdf.internal.pageSize.getWidth();   // 612 pt
+      const pageHeight = pdf.internal.pageSize.getHeight();  // 792 pt
+      const margin = 36;                                     // 0.5"
+      const usableWidth  = pageWidth  - margin * 2;
+      const usableHeight = pageHeight - margin * 2;
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgRatio = canvas.height / canvas.width;
+      const imgWidthPt  = usableWidth;
+      const imgHeightPt = imgWidthPt * imgRatio;
+
+      // 3) Add first page
+      pdf.addImage(imgData, 'PNG', margin, margin, imgWidthPt, imgHeightPt);
+
+      // 4) Paginate if the rendered content is taller than one page
+      let heightLeft = imgHeightPt - usableHeight;
+      let yOffset = margin + usableHeight;
+
+      while (heightLeft > 0) {
+        pdf.addPage();
+        // Shift the big image upward so the "next slice" is visible on the new page
+        pdf.addImage(imgData, 'PNG', margin, margin - (imgHeightPt - heightLeft), imgWidthPt, imgHeightPt);
+        heightLeft -= usableHeight;
+        yOffset += usableHeight;
+      }
+
+      pdf.save(fileBase() + '.pdf');
+    } catch(e){
+      alert('PDF export failed: ' + e.message);
+    } finally {
+      iframe.remove();
+    }
+  }
+
+  function fileBase(){
+    return ($('#invNumber').value || 'invoice').replace(/\//g,'-');
+  }
+
+  function makeFrame(html){
+    return new Promise(resolve => {
+      const iframe = document.createElement('iframe');
+      iframe.style.position='fixed';
+      iframe.style.left='-10000px';
+      iframe.style.top='0';
+      iframe.style.width='816px';  // ~8.5in @96dpi
+      iframe.style.height='1120px'; // tall enough; html2canvas will read scrollHeight anyway
+      document.body.appendChild(iframe);
+      iframe.onload = () => resolve(iframe);
+      iframe.srcdoc = html;
+    });
+  }
+
+  function waitForImages(iframe){
+    const doc = iframe.contentDocument;
+    const imgs = Array.from(doc.images || []);
+    if (imgs.length === 0) return Promise.resolve();
+    return new Promise((resolve) => {
+      let left = imgs.length;
+      const done = () => (--left <= 0) && resolve();
+      imgs.forEach(img => {
+        if (img.complete) done();
+        else {
+          img.addEventListener('load', done);
+          img.addEventListener('error', done);
+        }
+      });
+      // Fallback timeout in case an image never fires
+      setTimeout(resolve, 1500);
+    });
+  }
+
   function saveDraft() {
     const data = toJson();
     const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
@@ -684,6 +812,13 @@
     const btn = $(btnSel), panel = $(panelSel); const host = btn.parentElement; host.classList.remove('open');
     btn.addEventListener('click', (e) => { e.stopPropagation(); host.classList.toggle('open'); });
     document.addEventListener('click', () => host.classList.remove('open'));
+  }
+
+  function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 500);
   }
 })();
 </script>
