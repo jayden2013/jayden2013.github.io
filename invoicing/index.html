@@ -56,39 +56,34 @@
       .grid{grid-template-columns:1fr}
       .kv{grid-template-columns:1fr}
       .btn, input[type="text"], input[type="number"], textarea, select{min-height:44px}
-      .totals{grid-template-columns:auto 1fr} /* label/value pairs stack neatly */
+      .totals{grid-template-columns:auto 1fr}
 
-      /* Table becomes card-style rows */
       table thead{display:none}
       table, tbody, tr, td{display:block;width:100%}
       table{border:0}
       tbody{display:block}
       tr{background:#0f1117;border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
       td{display:flex;justify-content:space-between;gap:12px;padding:10px}
-      td.right{text-align:left} /* right-align not useful in label/value layout */
+      td.right{text-align:left}
 
-      /* Per-cell labels via nth-child (no markup changes) */
       td:nth-child(1)::before{content:"Description";color:var(--muted);font-weight:600}
       td:nth-child(2)::before{content:"Qty";color:var(--muted);font-weight:600}
       td:nth-child(3)::before{content:"Rate";color:var(--muted);font-weight:600}
       td:nth-child(4)::before{content:"Amount";color:var(--muted);font-weight:600}
 
-      /* Make first cell (description) stack label over input cleanly */
       td:nth-child(1){flex-direction:column;align-items:stretch}
       td:nth-child(1)::before{margin-bottom:6px}
       td input[type="text"], td input[type="number"]{width:55%;min-width:140px;text-align:right;background:#0f121a}
 
-      /* Menus stay on-screen */
       .menu .menu-panel{right:0;left:auto;min-width:180px}
     }
 
-    /* Slightly wider phones / small tablets */
     @media (max-width: 600px){
       .help{display:none}
     }
   </style>
 
-  <!-- Added for export features -->
+  <!-- Export libs -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
@@ -99,12 +94,14 @@
       <div class="title">Sign in</div>
       <div class="row">
         <div style="flex:1">
-          <div class="label">Username</div><input id="lgUser" type="text" autocomplete="username" />
+          <div class="label">Username</div>
+          <input id="lgUser" type="text" autocomplete="username" />
         </div>
       </div>
       <div class="row">
         <div style="flex:1">
-          <div class="label">Password</div><input id="lgPass" type="password" autocomplete="current-password" />
+          <div class="label">Password</div>
+          <input id="lgPass" type="password" autocomplete="current-password" />
         </div>
       </div>
       <div class="row">
@@ -135,18 +132,7 @@
       <!-- top forms -->
       <div class="panel">
         <div class="grid">
-          <div>
-            <div class="section-title">Business</div>
-            <div class="kv">
-              <div class="label">Name</div><input id="bizName" type="text" value="Cars & Collectibles LLC" />
-              <div class="label">Email</div><input id="bizEmail" type="text" value="sales@carsandcollectibles.com" />
-              <div class="label">Phone</div><input id="bizPhone" type="text" value="2089187761" />
-              <div class="label">Website</div><input id="bizWebsite" type="text" value="https://carsandcollectibles.com" />
-              <div class="label">Address</div><input id="bizAddress" type="text" value="Boise, Idaho" />
-              <div class="label">Logo</div>
-              <div class="row"><input id="logoFile" type="file" accept="image/*" style="flex:1"/><span id="logoHint" class="help">Optional</span></div>
-            </div>
-          </div>
+          <!-- Removed Business section (locked constants used instead) -->
           <div>
             <div class="section-title">Bill To</div>
             <div class="kv">
@@ -249,7 +235,6 @@
           </div>
           <button class="btn" id="exportBtn">Export HTML</button>
           <button class="btn" id="openBtn">Open in Browser</button>
-          <!-- Added buttons -->
           <button class="btn" id="exportPdfBtn">Export PDF</button>
           <button class="btn" id="exportPngBtn">Export PNG</button>
         </div>
@@ -261,17 +246,27 @@
 
 <script>
 (() => {
-  // ===== CONFIG (match your Java) =====
+  // ===== CONFIG =====
   const AUTH_USER = 'carsandcollectibles';
   const AUTH_PASSWORD_SHA256 = 'a185c321c381be70dce7271b1016e96e01a7a75041a6a74e68b43c23af374738'; // cars2024
   const PRICE_MINI = 50.0, PRICE_STILL = 100.0, PRICE_ROLLER = 200.0, PRICE_FEATURE = 400.0;
   const DEFAULT_TAX = 6.0;
 
+  // Locked business info (no UI)
+  const BUSINESS = {
+    name: 'Cars & Collectibles LLC',
+    email: 'sales@carsandcollectibles.com',
+    phone: '2089187761',
+    website: 'https://carsandcollectibles.com',
+    address: 'Boise, Idaho',
+    logo: 'logo.png'
+  };
+
   // ===== STATE =====
   let items = []; // {desc, qty, rate}
   let selectedIndex = -1;
   let discount = 0.0;
-  let logoDataUrl = 'logo.png';
+  let logoDataUrl = BUSINESS.logo; // fixed
   let docType = 'invoice'; // or 'quote'
 
   // ===== DOM =====
@@ -297,7 +292,6 @@
     const hex = await sha256Hex(pass);
     return hex === AUTH_PASSWORD_SHA256;
   }
-
   async function sha256Hex(s) {
     const buf = new TextEncoder().encode(s);
     const digest = await crypto.subtle.digest('SHA-256', buf);
@@ -314,7 +308,7 @@
     // Add first blank row
     addBlankRow();
 
-    // Menu toggles
+    // Menus
     attachMenu('#fileMenuBtn', '#fileMenu');
     attachMenu('#discountBtn', '#discountMenu');
 
@@ -353,8 +347,8 @@
       if (kind === 'pct') {
         let pct = (val === 'custom') ? parseFloat(prompt('Percent off (e.g. 12.5):')||'0') : parseFloat(val);
         if (!isFinite(pct) || pct < 0) pct = 0;
-        const amt = round2(subtotal() * (pct/100));
-        discount = amt; recalc();
+        discount = round2(subtotal() * (pct/100));
+        recalc();
       } else if (kind === 'flat') {
         let amt = (val === 'custom') ? parseFloat(prompt('Flat amount:')||'0') : parseFloat(val);
         if (!isFinite(amt) || amt < 0) amt = 0;
@@ -375,31 +369,22 @@
       if (pfx === '' || pfx === 'INV-' || pfx === 'Q-') {
         $('#invPrefix').value = (docType === 'quote') ? 'Q-' : 'INV-';
       }
-      // Update number prefix in-place
       const curNo = $('#invNumber').value || '';
       const dash = curNo.indexOf('-');
       if (dash > 0) {
         $('#invNumber').value = (docType === 'quote' ? 'Q-' : 'INV-') + curNo.substring(dash+1);
       }
-      // Labels
       $('#docNumberLabel').textContent = (docType === 'quote') ? 'Quote #' : 'Invoice #';
       $('#dueLabel').textContent = (docType === 'quote') ? 'Valid until' : 'Due';
       document.title = (docType === 'quote' ? 'Quote' : 'Invoice') + ' — Cars & Collectibles';
     });
 
-    // Logo upload
-    $('#logoFile').addEventListener('change', async (e) => {
-      const f = e.target.files && e.target.files[0];
-      if (!f) { logoDataUrl = ''; return; }
-      logoDataUrl = await fileToDataURL(f);
-      $('#logoHint').textContent = f.name + ' (' + Math.round(f.size/1024) + ' KB)';
-    });
+    // NOTE: Logo upload removed (no UI, fixed logo)
+    // Subtotal-dependent fields (safe, no-op if missing)
+    ['currency','terms','accepted','instructions','notes','invPrefix','invNumber','invDate','dueDate','poNumber','custName','custEmail','custPhone','custAddress']
+      .forEach(id => { const el = $('#'+id); el && el.addEventListener('input', () => {}); });
 
-    // Subtotal-dependent fields
-    ['currency','terms','accepted','instructions','notes','invPrefix','invNumber','invDate','dueDate','poNumber','bizName','bizEmail','bizPhone','bizWebsite','bizAddress','custName','custEmail','custPhone','custAddress']
-      .forEach(id => { const el = $('#'+id); el && el.addEventListener('input', () => {/* no-op now */}); });
-
-    // === Added: export buttons ===
+    // Export buttons
     $('#exportPdfBtn').addEventListener('click', exportPDF);
     $('#exportPngBtn').addEventListener('click', exportPNG);
 
@@ -554,11 +539,11 @@
     return HTML_TEMPLATE
       .replace('{css}', BASE_CSS.replace('__PAGE_SIZE__', 'letter'))
       .replaceAll('{logo_img}', logoImg)
-      .replaceAll('{business_name}', esc($('#bizName').value))
-      .replaceAll('{business_email}', esc($('#bizEmail').value))
-      .replaceAll('{business_phone}', safeDiv($('#bizPhone').value))
-      .replaceAll('{business_website}', esc($('#bizWebsite').value))
-      .replaceAll('{business_address}', safeDiv($('#bizAddress').value))
+      .replaceAll('{business_name}', esc(BUSINESS.name))
+      .replaceAll('{business_email}', esc(BUSINESS.email))
+      .replaceAll('{business_phone}', safeDiv(BUSINESS.phone))
+      .replaceAll('{business_website}', esc(BUSINESS.website))
+      .replaceAll('{business_address}', safeDiv(BUSINESS.address))
       .replaceAll('{cust_name}', esc($('#custName').value))
       .replaceAll('{cust_email}', esc($('#custEmail').value))
       .replaceAll('{cust_phone}', esc($('#custPhone').value))
@@ -582,7 +567,7 @@
       .replaceAll('{due_label}', dueLabel);
   }
 
-  // === Added: Export helpers ===
+  // === Export helpers ===
   async function exportPNG(){
     const html = renderHtml();
     const iframe = await makeFrame(html);
@@ -607,13 +592,13 @@
     finally { iframe.remove(); }
   }
 
-async function exportPDF(){
+  // Fixed-scale PDF export (no zoom)
+  async function exportPDF(){
     const html = renderHtml();
     const iframe = await makeFrame(html);
     try{
       await waitForImages(iframe);
 
-      // 1) Render exactly what the PNG export sees
       const docEl = iframe.contentDocument.documentElement;
       const bodyEl = iframe.contentDocument.body;
       const canvas = await html2canvas(bodyEl, {
@@ -626,7 +611,6 @@ async function exportPDF(){
         windowHeight: docEl.scrollHeight
       });
 
-      // 2) Build a letter-sized PDF and fit width with 0.5" margins
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ unit: 'pt', format: 'letter', compress: true });
 
@@ -641,19 +625,13 @@ async function exportPDF(){
       const imgWidthPt  = usableWidth;
       const imgHeightPt = imgWidthPt * imgRatio;
 
-      // 3) Add first page
       pdf.addImage(imgData, 'PNG', margin, margin, imgWidthPt, imgHeightPt);
 
-      // 4) Paginate if the rendered content is taller than one page
       let heightLeft = imgHeightPt - usableHeight;
-      let yOffset = margin + usableHeight;
-
       while (heightLeft > 0) {
         pdf.addPage();
-        // Shift the big image upward so the "next slice" is visible on the new page
         pdf.addImage(imgData, 'PNG', margin, margin - (imgHeightPt - heightLeft), imgWidthPt, imgHeightPt);
         heightLeft -= usableHeight;
-        yOffset += usableHeight;
       }
 
       pdf.save(fileBase() + '.pdf');
@@ -667,21 +645,19 @@ async function exportPDF(){
   function fileBase(){
     return ($('#invNumber').value || 'invoice').replace(/\//g,'-');
   }
-
   function makeFrame(html){
     return new Promise(resolve => {
       const iframe = document.createElement('iframe');
       iframe.style.position='fixed';
       iframe.style.left='-10000px';
       iframe.style.top='0';
-      iframe.style.width='816px';  // ~8.5in @96dpi
-      iframe.style.height='1120px'; // tall enough; html2canvas will read scrollHeight anyway
+      iframe.style.width='816px';
+      iframe.style.height='1120px';
       document.body.appendChild(iframe);
       iframe.onload = () => resolve(iframe);
       iframe.srcdoc = html;
     });
   }
-
   function waitForImages(iframe){
     const doc = iframe.contentDocument;
     const imgs = Array.from(doc.images || []);
@@ -696,7 +672,6 @@ async function exportPDF(){
           img.addEventListener('error', done);
         }
       });
-      // Fallback timeout in case an image never fires
       setTimeout(resolve, 1500);
     });
   }
@@ -722,12 +697,13 @@ async function exportPDF(){
 
   function toJson() {
     return {
-      biz_name: $('#bizName').value,
-      biz_email: $('#bizEmail').value,
-      biz_phone: $('#bizPhone').value,
-      biz_website: $('#bizWebsite').value,
-      biz_address: $('#bizAddress').value,
-      logo_data_url: logoDataUrl,
+      // Save locked business info too (for completeness)
+      biz_name: BUSINESS.name,
+      biz_email: BUSINESS.email,
+      biz_phone: BUSINESS.phone,
+      biz_website: BUSINESS.website,
+      biz_address: BUSINESS.address,
+      logo_data_url: BUSINESS.logo,
       cust_name: $('#custName').value,
       cust_email: $('#custEmail').value,
       cust_phone: $('#custPhone').value,
@@ -749,13 +725,8 @@ async function exportPDF(){
     };
   }
   function fromJson(m) {
-    $('#bizName').value = m.biz_name || '';
-    $('#bizEmail').value = m.biz_email || '';
-    $('#bizPhone').value = m.biz_phone || '';
-    $('#bizWebsite').value = m.biz_website || '';
-    $('#bizAddress').value = m.biz_address || '';
-    logoDataUrl = m.logo_data_url || '';
-    $('#logoHint').textContent = logoDataUrl ? 'logo loaded' : 'Optional';
+    // Ignore business fields (locked)
+    logoDataUrl = BUSINESS.logo;
 
     $('#custName').value = m.cust_name || '';
     $('#custEmail').value = m.cust_email || '';
@@ -807,13 +778,11 @@ async function exportPDF(){
       return (prefix||'INV-') + Math.floor(Math.random()*9000+1000);
     }
   }
-
   function attachMenu(btnSel, panelSel){
     const btn = $(btnSel), panel = $(panelSel); const host = btn.parentElement; host.classList.remove('open');
     btn.addEventListener('click', (e) => { e.stopPropagation(); host.classList.toggle('open'); });
     document.addEventListener('click', () => host.classList.remove('open'));
   }
-
   function downloadBlob(blob, filename){
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
