@@ -1,7 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
   /*** Config ***/
-  const ENDPOINT = "https://vanity-plate.profit-alerts.workers.dev/api/validate";
-  const PROXY_KEY = "";
+  // IDAHO proxy you already have (returns { Available: boolean })
+  const ID_ENDPOINT = "https://vanity-plate.profit-alerts.workers.dev/api/validate";
+  const PROXY_KEY = ""; // optional shared secret header
+
+  // NEW: California proxy (must be a simple server/worker you own).
+  // It should accept JSON { plateText } and return { Available: boolean }.
+  // Leave blank to see a helpful error in the UI.
+  const CA_PROXY = "https://vanity-plate-ca.profit-alerts.workers.dev/api/validate-ca"; // e.g., "https://your-worker.example.com/api/validate-ca"
+
   const CHECK_DELAY_MS = 1200;
   const REFRESH_CUTOFF_HOURS = 24;
 
@@ -21,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function debounce(fn, wait=120){ let to; return (...a)=>{ clearTimeout(to); to=setTimeout(()=>fn(...a), wait); } }
 
-  /*** Normalize plate text ***/
+  /*** Plate text ***/
   function normalizePlateText(s){
     return String(s||"").toUpperCase().replace(/O/g,'0').replace(/[^A-Z0-9]/g,'').slice(0,7);
   }
@@ -33,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     arr.sort((a,b)=>(a.plateText||"").localeCompare(b.plateText||"","en",{sensitivity:"base"}));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
   }
-  function mkKey(p){ return [(p.plateText||"").toUpperCase(), p.selectedVehicleType||"PassengerVehicle", p.selectedKindOfPlate||"Personalized", p.selectedPlateProgram||"Select", p.selectedPlateProgramID||"", p.selectedPlateProgramSubCategory||"Select"].join("|"); }
+  function mkKey(p){ return [ (p.plateText||"").toUpperCase(), p.state||"ID", p.selectedVehicleType||"PassengerVehicle", p.selectedKindOfPlate||"Personalized", p.selectedPlateProgram||"Select", p.selectedPlateProgramID||"", p.selectedPlateProgramSubCategory||"Select" ].join("|"); }
   function upsertPlate(entry){
     const list=loadPlates(); const key=mkKey(entry);
     const i=list.findIndex(p=>mkKey(p)===key);
@@ -41,11 +48,12 @@ document.addEventListener('DOMContentLoaded', () => {
     savePlates(list); return list;
   }
 
-  /*** Migrate ***/
+  /*** One-time migration: add state=ID to old entries ***/
   (function migrate(){
     const list=loadPlates(); let changed=false;
     for(const p of list){
       const n=normalizePlateText(p.plateText); if(n!==p.plateText){p.plateText=n; changed=true;}
+      p.state = p.state || "ID";
       p.selectedVehicleType=p.selectedVehicleType||"PassengerVehicle";
       p.selectedKindOfPlate=p.selectedKindOfPlate||"Personalized";
       p.selectedPlateProgram=p.selectedPlateProgram||"Select";
@@ -55,22 +63,47 @@ document.addEventListener('DOMContentLoaded', () => {
     if(changed) savePlates(list);
   })();
 
-  /*** Proxy ***/
-  async function postValidate(payload){
+  /*** Idaho check (your existing proxy) ***/
+  async function postValidateID(payload){
     const headers={"Content-Type":"application/json","Accept":"application/json"};
     if(PROXY_KEY) headers["x-proxy-key"]=PROXY_KEY;
-    const res=await fetch(ENDPOINT,{method:"POST",headers,body:JSON.stringify(payload)});
+    const res=await fetch(ID_ENDPOINT,{method:"POST",headers,body:JSON.stringify(payload)});
     const text=await res.text(); let data;
     try{ data=JSON.parse(text); }catch{ throw new Error(`Non-JSON response (${res.status}): ${text.slice(0,200)}`); }
     if(!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     return !!data.Available;
   }
-  function basePayload(p){ return { plateText:p.plateText, selectedVehicleType:"PassengerVehicle", selectedKindOfPlate:"Personalized", selectedPlateProgram:"Select", selectedPlateProgramID:"", selectedPlateProgramSubCategory:"Select" }; }
+  function basePayloadID(p){ return { plateText:p.plateText, selectedVehicleType:"PassengerVehicle", selectedKindOfPlate:"Personalized", selectedPlateProgram:"Select", selectedPlateProgramID:"", selectedPlateProgramSubCategory:"Select" }; }
 
-  /*** Status helpers ***/
+  /*** California check (via your proxy) ***/
+  async function postValidateCA(plateText){
+    if (!CA_PROXY) {
+      throw new Error("California requires a simple proxy. Set CA_PROXY in app.js.");
+    }
+    const headers={"Content-Type":"application/json","Accept":"application/json"};
+    if(PROXY_KEY) headers["x-proxy-key"]=PROXY_KEY;
+    const res=await fetch(CA_PROXY,{method:"POST",headers,body:JSON.stringify({ plateText })});
+    const text=await res.text(); let data;
+    try{ data=JSON.parse(text); }catch{ throw new Error(`CA proxy non-JSON (${res.status}): ${text.slice(0,200)}`); }
+    if(!res.ok) throw new Error(data.error || `CA proxy HTTP ${res.status}`);
+    return !!data.Available;
+  }
+
+  /*** High-level status helpers ***/
   function isDue(p){ if(!p.lastCheckedUtc) return true; const t=Date.parse(p.lastCheckedUtc); if(Number.isNaN(t)) return true; return (Date.now()-t)>=REFRESH_CUTOFF_HOURS*3600*1000; }
   function markChecked(p,status,note){ const ts=new Date().toISOString(); p.lastStatus=status; p.lastCheckedUtc=ts; p.history=p.history||[]; const e={status,checkedUtc:ts}; if(note) e.note=note; p.history.push(e); }
   function statusClass(s){ if(s==="Available")return"available"; if(s==="Unavailable")return"unavailable"; if(s==="Error")return"error"; if(s==="Unknown"||!s)return"unknown"; return"unknown"; }
+
+  /*** Route to correct checker ***/
+  async function checkAvailability(p){
+    if ((p.state||"ID") === "CA") {
+      const a = await postValidateCA(p.plateText);
+      return a ? "Available" : "Unavailable";
+    } else {
+      const a = await postValidateID(basePayloadID(p));
+      return a ? "Available" : "Unavailable";
+    }
+  }
 
   /*** Fit text ***/
   function fitTileText(el){
@@ -86,40 +119,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function fitAll(){ $$('#board .fit').forEach(fitTileText); const t=document.getElementById('titleFit'); if(t) fitTileText(t); }
   window.addEventListener('resize', debounce(fitAll,120));
 
-  /*** Zoom persistence ***/
-  const ZOOM_KEY = "plates_zoom_v1";
-  const ZOOM_MIN = 40;   // matches input[min]
-  const ZOOM_MAX = 180;  // matches input[max]
-  function clampZoom(v){
-    const n = Number(v);
-    if (Number.isNaN(n)) return 100;
-    return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, n));
-  }
-  function setZoom(valPct){
-    const clamped = clampZoom(valPct);
-    const scale = clamped / 100;
-    document.documentElement.style.setProperty('--zoom', scale);
-    const slider = document.getElementById('zoom');
-    if (slider) slider.value = String(clamped);
-    localStorage.setItem(ZOOM_KEY, String(clamped));
-    requestAnimationFrame(fitAll);
-  }
-  function getSavedZoom(){
-    const raw = localStorage.getItem(ZOOM_KEY);
-    if (raw == null) return null;
-    return clampZoom(raw);
-  }
-
   /*** Render ***/
   function render(){
     const rows=loadPlates();
     const q=$("#q").value.trim().toLowerCase();
     const st=$("#status").value;
+    const sf=$("#stateFilter")?.value || ""; // <-- NEW: state filter value
 
     const filtered=rows.filter(r=>{
       const mq=!q || (r.plateText||"").toLowerCase().includes(q);
       const ms=!st || (r.lastStatus||"Unknown")===st;
-      return mq && ms;
+      const mstate=!sf || (r.state||"ID")===sf; // <-- NEW: apply state filter
+      return mq && ms && mstate;
     });
 
     const latest=rows.reduce((a,b)=>{ const ta=a?.lastCheckedUtc?Date.parse(a.lastCheckedUtc):0; const tb=b?.lastCheckedUtc?Date.parse(b.lastCheckedUtc):0; return tb>ta?b:a; },null);
@@ -131,10 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const when=r.lastCheckedUtc?relTime(r.lastCheckedUtc):"—";
       const plateText=normalizePlateText(r.plateText);
       const key=mkKey(r);
+      const stateLabel = (r.state==="CA" ? "CALIFORNIA" : "IDAHO");
       return `<div class="plate ${cls}" data-key="${key}">
         <div class="face"></div>
         <div class="bolts"></div><div class="bolts btm"></div>
-        <div class="top"><div class="state">IDAHO</div><div class="status ${cls}">${statusLabel}</div></div>
+        <div class="top"><div class="state">${stateLabel}</div><div class="status ${cls}">${statusLabel}</div></div>
         <div class="text" title="${plateText}"><span class="fit">${plateText}</span></div>
         <div class="bottom"><div class="ago" title="${r.lastCheckedUtc?new Date(r.lastCheckedUtc).toLocaleString():""}">${when}</div></div>
         <div class="delete-overlay" data-action="delete" data-key="${key}">
@@ -157,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.disabled=true; const label=btn.textContent; btn.textContent="Refreshing…"; setRunStatus(`0/${targets.length}`);
     let i=0;
     for(const p of targets){
-      try{ const a=await postValidate(basePayload(p)); markChecked(p, a?"Available":"Unavailable"); }
+      try{ const status = await checkAvailability(p); markChecked(p, status); }
       catch(e){ markChecked(p,"Error",String(e?.message||e)); }
       savePlates(all); render(); i++; setRunStatus(`${i}/${targets.length}`); if(i<targets.length) await sleep(CHECK_DELAY_MS);
     }
@@ -181,9 +193,20 @@ document.addEventListener('DOMContentLoaded', () => {
   $("#m_submit").addEventListener("click", async ()=>{
     const msg=$("#m_msg"); msg.textContent="";
     try{
-      const entry={ plateText:validatePlateText($("#m_plateText").value), selectedVehicleType:"PassengerVehicle", selectedKindOfPlate:"Personalized", selectedPlateProgram:"Select", selectedPlateProgramID:"", selectedPlateProgramSubCategory:"Select", lastStatus:"Unknown", lastCheckedUtc:null, history:[] };
+      const entry={
+        plateText:validatePlateText($("#m_plateText").value),
+        state: ($("#m_state").value || "ID"),
+        selectedVehicleType:"PassengerVehicle",
+        selectedKindOfPlate:"Personalized",
+        selectedPlateProgram:"Select",
+        selectedPlateProgramID:"",
+        selectedPlateProgramSubCategory:"Select",
+        lastStatus:"Unknown",
+        lastCheckedUtc:null,
+        history:[]
+      };
       msg.textContent="Checking…";
-      try{ const avail=await postValidate(basePayload(entry)); markChecked(entry, avail?"Available":"Unavailable"); msg.textContent="Saved."; }
+      try{ const status = await checkAvailability(entry); markChecked(entry, status); msg.textContent="Saved."; }
       catch(e){ markChecked(entry,"Error",String(e?.message||e)); msg.textContent="Saved (check failed)."; }
       upsertPlate(entry); render(); setTimeout(()=>closeModal('#modal'),700);
     }catch(e){ msg.textContent="Error: "+e.message; }
@@ -217,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /*** Import/Export & Filters ***/
   $("#q").addEventListener("input", render);
   $("#status").addEventListener("change", render);
+  $("#stateFilter")?.addEventListener("change", render); // <-- NEW: re-render on state select
   $("#exportBtn").addEventListener("click", ()=>{
     const blob=new Blob([localStorage.getItem(STORAGE_KEY)||"[]"],{type:"application/json"});
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="plates-export.json"; a.click(); URL.revokeObjectURL(a.href);
@@ -227,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try{
       const arr=JSON.parse(text); if(!Array.isArray(arr)) throw new Error("Invalid JSON");
       arr.forEach(p=>{ if(p.plateText) p.plateText=normalizePlateText(p.plateText);
+        p.state = p.state || "ID";
         p.selectedVehicleType=p.selectedVehicleType||"PassengerVehicle";
         p.selectedKindOfPlate=p.selectedKindOfPlate||"Personalized";
         p.selectedPlateProgram=p.selectedPlateProgram||"Select";
@@ -237,14 +262,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }catch(err){ alert("Import failed: "+err.message); }
   });
 
-  /*** Zoom: load saved, wire slider, then fit ***/
-  (function initZoom(){
-    const slider = document.getElementById('zoom');
-    const saved = getSavedZoom();
-    if (saved != null) setZoom(saved);
-    else if (slider) setZoom(Number(slider.value) || 100);
-    slider?.addEventListener('input', e => setZoom(e.target.value));
-  })();
+  /*** Zoom persistence (unchanged from last update) ***/
+  const ZOOM_KEY = "plates_zoom_v1";
+  const ZOOM_MIN = 40; const ZOOM_MAX = 180;
+  function clampZoom(v){ const n=Number(v); if(Number.isNaN(n)) return 100; return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, n)); }
+  function setZoom(valPct){ const clamped=clampZoom(valPct); const scale=clamped/100; document.documentElement.style.setProperty('--zoom', scale); const slider=$("#zoom"); if(slider) slider.value=String(clamped); localStorage.setItem(ZOOM_KEY, String(clamped)); requestAnimationFrame(fitAll); }
+  function getSavedZoom(){ const raw=localStorage.getItem(ZOOM_KEY); if(raw==null) return null; return clampZoom(raw); }
+  (function initZoom(){ const slider=$("#zoom"); const saved=getSavedZoom(); if(saved!=null) setZoom(saved); else if(slider) setZoom(Number(slider.value)||100); slider?.addEventListener('input', e=> setZoom(e.target.value)); })();
 
   /*** Header date ***/
   (function setHeaderDate(){ const el=document.getElementById('hdrDate'); if(!el) return; const now=new Date(); el.textContent = now.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'}); })();
@@ -253,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
   requestAnimationFrame(fitAll);
   (function init(){
     if(loadPlates().length===0){
-      savePlates([{ plateText:"SWAG", selectedVehicleType:"PassengerVehicle", selectedKindOfPlate:"Personalized", selectedPlateProgram:"Select", selectedPlateProgramID:"", selectedPlateProgramSubCategory:"Select", lastStatus:"Unknown", lastCheckedUtc:null, history:[] }]);
+      savePlates([{ plateText:"SWAG", state:"ID", selectedVehicleType:"PassengerVehicle", selectedKindOfPlate:"Personalized", selectedPlateProgram:"Select", selectedPlateProgramID:"", selectedPlateProgramSubCategory:"Select", lastStatus:"Unknown", lastCheckedUtc:null, history:[] }]);
     }
     render();
     refreshDue({force:false});

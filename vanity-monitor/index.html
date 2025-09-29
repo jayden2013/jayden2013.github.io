@@ -3,31 +3,21 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Plate Lookup & Availability Tracking Eligibility System</title>
+  <title>Plate Lookup &amp; Availability Tracking Eligibility System</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="wrap" style="display:flex;flex-direction:column;min-height:100%">
   <header>
     <div class="bar">
-
       <div class="header-stack">
-        <!-- Black PLATES logo -->
         <div class="header-plate" title="PLATES">
           <div class="face"></div>
           <div class="bolts"></div>
           <div class="bolts btm"></div>
-
-          <div class="band-top">IDAHO</div>
           <div class="title"><span id="titleFit" class="fit">PLATES</span></div>
         </div>
-
-        <!-- Under the plate: long system name -->
-        <div class="under-name">
-          Plate Lookup &amp; Availability Tracking Eligibility System
-        </div>
-
-        <!-- Under that: site + date -->
+        <div class="under-name">Plate Lookup &amp; Availability Tracking Eligibility System</div>
         <div class="under-info">
           <span class="site">carsandcollectibles.com</span>
           <span class="date" id="hdrDate"></span>
@@ -42,6 +32,13 @@
           <option value="Unavailable">Unavailable</option>
           <option value="Error">Error</option>
           <option value="Unknown">Unknown</option>
+        </select>
+
+        <!-- NEW: State filter -->
+        <select id="stateFilter" title="State">
+          <option value="">All States</option>
+          <option value="ID">Idaho (ID)</option>
+          <option value="CA">California (CA)</option>
         </select>
 
         <button id="refresh" class="btn">Refresh</button>
@@ -75,6 +72,10 @@
     <h3 style="margin:0 0 10px">Add a Plate</h3>
     <div class="controls" style="margin:0 0 12px">
       <input id="m_plateText" placeholder="Plate text (e.g., B00ST)"/>
+      <select id="m_state" title="State">
+        <option value="ID" selected>Idaho</option>
+        <option value="CA">California</option>
+      </select>
     </div>
     <div class="controls small" style="margin:0 0 8px">
       <span>Vehicle: PassengerVehicle • Kind: Personalized</span>
