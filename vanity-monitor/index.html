@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Plate Lookup & Availability Tracking Eligibility System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap" style="display:flex;flex-direction:column;min-height:100%">
+  <header>
+    <div class="bar">
+
+      <div class="header-stack">
+        <!-- Black PLATES logo -->
+        <div class="header-plate" title="PLATES">
+          <div class="face"></div>
+          <div class="bolts"></div>
+          <div class="bolts btm"></div>
+
+          <div class="band-top">IDAHO</div>
+          <div class="title"><span id="titleFit" class="fit">PLATES</span></div>
+        </div>
+
+        <!-- Under the plate: long system name -->
+        <div class="under-name">
+          Plate Lookup &amp; Availability Tracking Eligibility System
+        </div>
+
+        <!-- Under that: site + date -->
+        <div class="under-info">
+          <span class="site">carsandcollectibles.com</span>
+          <span class="date" id="hdrDate"></span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input id="q" type="search" placeholder="Search…"/>
+        <select id="status">
+          <option value="">All</option>
+          <option value="Available">Available</option>
+          <option value="Unavailable">Unavailable</option>
+          <option value="Error">Error</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+
+        <button id="refresh" class="btn">Refresh</button>
+        <span id="runStatus" class="pill" style="display:none"></span>
+
+        <button id="addPlateBtn" class="btn secondary">Add Plate</button>
+        <button id="exportBtn" class="btn ghost">Export</button>
+        <label class="btn ghost" for="importFile" style="display:inline-block">Import</label>
+        <input id="importFile" type="file" accept="application/json" style="display:none"/>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="controls" style="margin-left:auto">
+        <label class="pill">Zoom
+          <input id="zoom" type="range" min="40" max="180" value="100" style="vertical-align:middle;margin-left:6px">
+        </label>
+        <span id="updated" class="pill">—</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="board-wrap">
+    <div id="board" class="board"></div>
+  </div>
+</div>
+
+<!-- Add Plate Modal -->
+<div id="modal">
+  <div class="box">
+    <h3 style="margin:0 0 10px">Add a Plate</h3>
+    <div class="controls" style="margin:0 0 12px">
+      <input id="m_plateText" placeholder="Plate text (e.g., B00ST)"/>
+    </div>
+    <div class="controls small" style="margin:0 0 8px">
+      <span>Vehicle: PassengerVehicle • Kind: Personalized</span>
+    </div>
+    <div class="controls">
+      <span id="m_msg" class="muted small" style="flex:1"></span>
+      <button id="m_cancel" class="pill">Cancel</button>
+      <button id="m_submit" class="btn">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Refresh confirmation modal -->
+<div id="confirmModal">
+  <div class="box">
+    <h3 style="margin:0 0 8px">Refresh checks?</h3>
+    <p class="small" style="margin-top:0">To protect the DMV endpoint, choose carefully. “Check due only” is safe and recommended.</p>
+    <div class="controls" style="justify-content:flex-end">
+      <button id="cfm_cancel" class="pill">Cancel</button>
+      <button id="cfm_due" class="btn ghost">Check due only</button>
+      <button id="cfm_force" class="btn" style="background:#ef4444">Force recheck all</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div id="deleteModal">
+  <div class="box">
+    <h3 style="margin:0 0 8px">Delete plate?</h3>
+    <p class="small" style="margin-top:0">
+      You are about to remove <strong id="delLabel"></strong> from this dashboard. You can re-add it later.
+    </p>
+    <div class="controls" style="justify-content:flex-end">
+      <button id="del_cancel" class="pill">Cancel</button>
+      <button id="del_confirm" class="btn" style="background:#ef4444">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script defer src="app.js"></script>
+</body>
+</html>
