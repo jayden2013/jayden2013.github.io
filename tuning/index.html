@@ -220,8 +220,15 @@
 
       <!-- Flex Fuel -->
       <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="flex_fuel" aria-pressed="false">
-        <h3 class="text-xl font-bold mb-2">Flex Fuel Setup & Tuning</h3>
+        <h3 class="text-xl font-bold mb-2">Flex Fuel Tuning</h3>
         <p class="text-gray-300 mb-4">Sensor scaling, stoich/blend mapping, and validation logs.</p>
+        <div class="text-3xl font-extrabold"></div>
+      </button>
+
+      <!-- NEW: Flex Fuel Sensor Install -->
+      <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="install_flex_sensor" aria-pressed="false">
+        <h3 class="text-xl font-bold mb-2">Flex Fuel Sensor Install</h3>
+        <p class="text-gray-300 mb-4">Install and wire OEM-style sensor; verify signal output to ECU.</p>
         <div class="text-3xl font-extrabold"></div>
       </button>
 
@@ -238,7 +245,7 @@
         <div class="text-3xl font-extrabold"></div>
       </button>
 
-      <!-- NEW: Cam/Head Installs — LS & LT (quote-only) -->
+      <!-- Cam/Head Installs — LS & LT (quote-only) -->
       <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="install_cam_heads" aria-pressed="false">
         <h3 class="text-xl font-bold mb-2">Cam/Head Installs — LS & LT</h3>
         <p class="text-gray-300 mb-4">Vehicle-specific quote. Timing depends on platform and parts.</p>
@@ -341,6 +348,7 @@
           <option>Street Tune — NA</option>
           <option>Street Tune — Cam/Heads</option>
           <option>Flex Fuel Setup & Tuning</option>
+          <option>Flex Fuel Sensor Install</option>
           <option>Email Tune — NA</option>
           <option>Email Tune — Cam/Heads</option>
           <option>Cam/Head Installs — LS & LT (Get Quote)</option>
@@ -385,6 +393,9 @@
     // Flex fuel service
     flex_fuel: 300,
 
+    // NEW: Flex fuel sensor install
+    install_flex_sensor: 600,
+
     // Email tunes
     email_na: 350,
     email_cam: 700,
@@ -400,6 +411,7 @@
     street_na: 799,
     street_head_cam: 899,
     flex_fuel: 270,
+    // no promo for sensor install so it shows standard $600
     email_na: 320,
     email_cam: 650,
     install_cam_heads: 0
@@ -469,6 +481,15 @@
         "Validation logs and <strong>VTQ/DD touch-up</strong> so it feels consistent on E0–E85."
       ],
       blurb: "Assumes a working flex sensor and wiring are installed; includes iterative log review."
+    },
+    install_flex_sensor: {
+      name: "Flex Fuel Sensor Install",
+      bullets: [
+        "Install OEM-style <strong>flex fuel sensor</strong> and plumbing.",
+        "Wire and verify <strong>frequency signal</strong> to ECU / input module.",
+        "Post-install check to confirm live ethanol content reading."
+      ],
+      blurb: "Hardware included in price. Tuning is billed separately under Flex Fuel Setup & Tuning."
     },
     email_na: {
       name: "Email Tune — NA",
@@ -632,7 +653,8 @@
     if (t.includes('log pack review')) return 'review';
     if (t.includes('street tune — na') || t.includes('street tune - na')) return 'street_na';
     if (t.includes('cam/heads') && !t.includes('installs')) return 'street_head_cam';
-    if (t.includes('flex fuel')) return 'flex_fuel';
+    if (t.includes('flex fuel setup')) return 'flex_fuel';
+    if (t.includes('flex fuel sensor')) return 'install_flex_sensor';
     if (t.includes('email tune') && t.includes('na')) return 'email_na';
     if (t.includes('email tune') && (t.includes('cam') || t.includes('heads'))) return 'email_cam';
     if (t.includes('cam/head installs') || (t.includes('installs') && (t.includes('ls') || t.includes('lt')))) return 'install_cam_heads';
