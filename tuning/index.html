@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="GM Gen V (LT1/LT4/L83/L86/LT2) street tuning — idle, VE/MAF, virtual torque, driver demand, spark, fueling, startup, DFCO. Remote log review and iterative revisions." />
+  <meta name="keywords" content="GM Gen V tuning, LT1 tuning, LT4 tuning, C7 tuning, HP Tuners, virtual torque, driver demand, Boise" />
+  <title>GM Gen V Tuning — Cars & Collectibles</title>
+
+<script>
+(function () {
+  // --- Normalize /tuning -> /tuning/ and PRESERVE hash ---
+  if (location.pathname === '/tuning') {
+    var dest = '/tuning/';
+    if (location.hash) dest += location.hash;
+    location.replace(dest);
+    return;
+  }
+
+  // --- PROD-ONLY BASE TAG ---
+  const PROD_HOSTS = new Set(['carsandcollectibles.com','www.carsandcollectibles.com']);
+  const isGhPages  = /\.github\.io$/i.test(location.hostname);
+  const isProd     = PROD_HOSTS.has(location.hostname) || isGhPages;
+
+  if (isProd && !document.querySelector('base')) {
+    const base = document.createElement('base');
+    base.href = '/';
+    document.head.prepend(base);
+  }
+
+  // --- HASH LINKS under <base> ---
+  function getCanonicalPath() {
+    const p = location.pathname;
+    if (p === '/') return '/';
+    return /\.[a-z0-9]+$/i.test(p) ? p : (p.endsWith('/') ? p : p + '/');
+  }
+  function normalizeHashHrefs() {
+    const path = getCanonicalPath();
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      const hash = a.getAttribute('href');
+      a.setAttribute('href', path + hash);
+    });
+  }
+  function installHashClickHandler() {
+    document.addEventListener('click', function (e) {
+      const a = e.target.closest('a');
+      if (!a) return;
+      const href = a.getAttribute('href') || '';
+      const path = getCanonicalPath();
+      const isSamePageHash = href === '#' || href.startsWith('#') || href.startsWith(path + '#');
+      if (!isSamePageHash) return;
+      e.preventDefault();
+      const hash = href.includes('#') ? href.slice(href.indexOf('#') + 1) : '';
+      if (!hash) return;
+      const target = document.getElementById(hash) || document.querySelector(`[name="${CSS.escape(hash)}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+      }
+      const newUrl = path + '#' + hash;
+      if (location.href !== location.origin + newUrl) history.pushState(null, '', newUrl);
+    }, { capture: true });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    normalizeHashHrefs();
+    installHashClickHandler();
+  });
+})();
+</script>
+
+  <!-- Tailwind (relative to /tuning/) -->
+  <link rel="stylesheet" href="../dist/tailwind.css">
+
+  <style>
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity: 0; }
+
+    body { background-color: #0b0b0b; }
+    .bg-fallback { background: linear-gradient(135deg, #0f0f0f, #1a1a1a); }
+
+    @keyframes heroPan {
+      0%   { transform: scale(1.04) translateY(0); }
+      50%  { transform: scale(1.08) translateY(-8px); }
+      100% { transform: scale(1.04) translateY(0); }
+    }
+    .animate-hero-pan { animation: heroPan 22s ease-in-out infinite; }
+
+    .title-gradient {
+      background: linear-gradient(90deg,#bfdbfe 0%,#60a5fa 25%,#34d399 50%,#22c55e 75%,#a7f3d0 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: titleGradientSlide 8s ease-in-out infinite;
+    }
+    @keyframes titleGradientSlide {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animate-hero-pan, .fade-in-up, .title-gradient { animation: none !important; transition: none !important; }
+    }
+
+    /* Mobile-only text adjustments */
+    @media (max-width: 640px) {
+      body { color: black !important; }
+      body *:not(.title-gradient) { color: black !important; }
+      #package-details { display: none !important; }
+      input::placeholder, textarea::placeholder { color: black !important; opacity: .7; }
+    }
+
+    .badge {
+      display:inline-block; padding:.25rem .5rem; border-radius:999px;
+      font-size:.70rem; letter-spacing:.03em;
+      background: rgba(234,179,8,.15); border:1px solid rgba(234,179,8,.35); color:#fde68a;
+    }
+  </style>
+
+  <style>
+    /* Dark native select menu */
+    #tune-intake select, #tune-intake input, #tune-intake textarea { color-scheme: dark; }
+    #tune-intake select option { color:#111827; background:#fff; }
+    @media (forced-colors: active) {
+      #tune-intake select option { forced-color-adjust: none; color: ButtonText; background: Canvas; }
+    }
+  </style>
+</head>
+<body class="text-white font-sans min-h-screen flex flex-col relative overflow-x-hidden bg-fallback">
+
+  <!-- Fixed background image layer -->
+  <div style="background-image: url('../images/hero-car.jpg');"
+       class="pointer-events-none fixed inset-0 bg-cover bg-center opacity-60 blur-sm -z-10 animate-hero-pan"></div>
+
+  <!-- Fixed overlays -->
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-b from-white/24 via-white/16 to-white/10"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.04)_65%,rgba(0,0,0,0.12)_100%)]"></div>
+    <div class="absolute inset-0 mix-blend-overlay" style="
+         opacity:.01;
+         background-image:url('data:image/svg+xml;utf8,\
+         <svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22>\
+           <filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%222%22/></filter>\
+           <rect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22 opacity=%220.25%22/>\
+         </svg>');
+         background-size:200px 200px;"></div>
+  </div>
+
+  <main class="flex-1 w-full max-w-6xl mx-auto px-6 pt-12 text-center fade-in-up">
+    <a href="/" class="inline-block mb-6 text-emerald-300 hover:text-emerald-400 text-lg underline">
+      ← Back to Home
+    </a>
+
+<!-- Hero -->
+<section class="max-w-6xl mx-auto w-full mt-8 px-6">
+  <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-center">
+    <h1 class="text-3xl sm:text-4xl md:text-6xl font-extrabold uppercase tracking-tight md:tracking-widest leading-tight break-words mb-3">
+      <span class="title-gradient">GM Gen V Tuning</span>
+    </h1>
+    <div class="mx-auto mb-6 h-1.5 w-28 rounded-full
+                bg-gradient-to-r from-sky-500 via-emerald-500 to-green-400
+                shadow-[0_0_24px_rgba(16,185,129,0.35)]"></div>
+
+    <p class="text-gray-200 text-lg sm:text-xl md:text-2xl mb-2">LT1 · LT4 · L83/L86 · LT2</p>
+    <p class="text-gray-300 text-base md:text-lg mb-6">
+      Enthusiast-grade street tuning focused on drivability, response, and reliability.
+    </p>
+    <div class="flex flex-wrap justify-center gap-4">
+      <a href="#pricing" class="inline-flex items-center justify-center rounded-full px-8 py-4
+          text-base md:text-lg font-semibold text-white bg-white/10 backdrop-blur border border-white/20
+          hover:bg-emerald-600/20 hover:border-emerald-500/50 transition-all duration-200 hover:-translate-y-0.5">
+        Pricing
+      </a>
+      <a href="#intake" class="inline-flex items-center justify-center rounded-full px-8 py-4
+          text-base md:text-lg font-semibold text-white bg-white/10 backdrop-blur border border-white/20
+          hover:bg-emerald-600/20 hover:border-emerald-500/50 transition-all duration-200 hover:-translate-y-0.5">
+        Contact Us
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Promo banner -->
+<section class="max-w-6xl mx-auto w-full mt-4 px-6">
+  <div id="promo-banner" class="bg-green-600/90 backdrop-blur border border-green-400/30 rounded-2xl shadow-lg px-6 py-4">
+    <div class="text-2xl font-extrabold text-white">🛠️ Intro Pricing — Limited Time</div>
+    <p class="text-sm mt-1 text-green-100">
+      Early access for enthusiasts while we refine our Gen V catalog.
+    </p>
+    <div id="promo-countdown" class="mt-2 text-sm font-semibold text-white/90"></div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing" class="max-w-6xl mx-auto w-full mt-4 px-6">
+  <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-left">
+    <h2 class="text-3xl font-extrabold mb-6 text-center md:text-left">Pricing</h2>
+
+    <div id="price-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="review" aria-pressed="false">
+        <h3 class="text-xl font-bold mb-2">Log Pack Review (Remote)</h3>
+        <p class="text-gray-300 mb-4">Submit 2–3 VCM Scanner logs + tune file; annotated feedback and next steps.</p>
+        <div class="text-3xl font-extrabold"></div>
+      </button>
+
+      <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="street_na" aria-pressed="false">
+        <h3 class="text-xl font-bold mb-2">Street Tune — NA</h3>
+        <p class="text-gray-300 mb-4">Gen V NA (e.g., LT1/L83) — drivability, idle, VTQ/DD, spark/fuel.</p>
+        <div class="text-3xl font-extrabold"></div>
+      </button>
+
+      <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="street_head_cam" aria-pressed="false">
+        <h3 class="text-xl font-bold mb-2">Street Tune — Cam/Heads</h3>
+        <p class="text-gray-300 mb-4">Idle chop vs. manners, airflow, VTQ/DD with bigger airmass.</p>
+        <div class="text-3xl font-extrabold"></div>
+      </button>
+
+      <!-- Flex Fuel -->
+      <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="flex_fuel" aria-pressed="false">
+        <h3 class="text-xl font-bold mb-2">Flex Fuel Setup & Tuning</h3>
+        <p class="text-gray-300 mb-4">Sensor scaling, stoich/blend mapping, and validation logs.</p>
+        <div class="text-3xl font-extrabold"></div>
+      </button>
+
+      <!-- Email tunes (include 2 free revisions) -->
+      <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="email_na" aria-pressed="false">
+        <h3 class="text-xl font-bold mb-2">Email Tune — NA</h3>
+        <p class="text-gray-300 mb-4">Iterative email-based revisions for bolt-on NA setups. <span class="font-semibold text-emerald-300">Includes 2 free revisions.</span></p>
+        <div class="text-3xl font-extrabold"></div>
+      </button>
+
+      <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="email_cam" aria-pressed="false">
+        <h3 class="text-xl font-bold mb-2">Email Tune — Cam/Heads</h3>
+        <p class="text-gray-300 mb-4">Cammed/heads builds; targeted email-driven calibration rounds. <span class="font-semibold text-emerald-300">Includes 2 free revisions.</span></p>
+        <div class="text-3xl font-extrabold"></div>
+      </button>
+
+      <!-- NEW: Cam/Head Installs — LS & LT (quote-only) -->
+      <button type="button" class="package-card rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 text-left transition hover:bg-white/15" data-package="install_cam_heads" aria-pressed="false">
+        <h3 class="text-xl font-bold mb-2">Cam/Head Installs — LS & LT</h3>
+        <p class="text-gray-300 mb-4">Vehicle-specific quote. Timing depends on platform and parts.</p>
+        <div class="text-3xl font-extrabold"></div>
+      </button>
+    </div>
+
+    <!-- Details panel -->
+    <div id="package-details" class="mt-8 hidden rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-6 shadow-lg"></div>
+
+    <p class="text-xs text-gray-400 mt-4">
+      Dyno calibration not included. Remote street tuning assumes safe, legal roads and driver responsibility.
+    </p>
+  </div>
+</section>
+
+<!-- Legal & Disclaimers -->
+<section id="legal" class="max-w-6xl mx-auto w-full mt-4 px-6">
+  <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-left">
+    <h2 class="text-2xl font-extrabold mb-3">Legal & Disclaimers</h2>
+    <ul class="list-disc pl-6 space-y-2 text-gray-300 text-sm">
+      <li>Tuning modifies vehicle calibrations and may affect emissions compliance. You are responsible for complying with all local, state, and federal laws and for determining on-road legality of any modifications.</li>
+      <li>All services are provided for off-road/competition use where prohibited by law. We do not disable, remove, or defeat emissions equipment.</li>
+      <li>Customer is responsible for ensuring vehicle health prior to tuning (no leaks, proper fuel quality, sufficient octane, plugs/coils/injectors/pump in good condition). Pre-existing or unrelated mechanical issues can limit results or cause failure.</li>
+      <li>Data logging and road testing must be performed legally and safely. You accept all risks associated with driving, testing, and data collection.</li>
+      <li>No warranty is expressed or implied on engine, drivetrain, or component longevity. Cars & Collectibles LLC is not liable for any damage, fines, or losses resulting from use of these services.</li>
+      <li>Remote/email tunes require accurate logs and configuration information. Incorrect or incomplete information may delay results.</li>
+      <li>HP Tuners hardware/credits and any dyno time are <em>not</em> included unless explicitly stated.</li>
+      <li>Email Tune packages include <strong>2 free revisions</strong>; additional revision rounds may be billed at our prevailing rate.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="intake" class="max-w-6xl mx-auto w-full mt-4 px-6">
+  <div class="bg-white/10 backdrop-blur border border-white/20 rounded-2xl shadow-xl p-6 md:p-8 text-left">
+    <h2 class="text-3xl font-extrabold mb-6 text-center md:text-left">Contact Us</h2>
+
+    <form id="tune-intake" class="grid gap-4" method="post" data-endpoint="https://tuning-intake.profit-alerts.workers.dev" novalidate>
+      <div class="hidden"><label>Do not fill<input type="text" name="website" autocomplete="off" tabindex="-1" /></label></div>
+
+      <label class="block">Name
+        <input class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white placeholder:text-gray-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="name" required />
+      </label>
+
+      <label class="block">Email
+        <input type="email" class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white placeholder:text-gray-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="email" required />
+      </label>
+
+      <label class="block">Vehicle (Year Make Model)
+        <input class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white placeholder:text-gray-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="vehicle" placeholder="2016 Chevrolet Corvette LT1 (M7)" />
+      </label>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <label class="block">Transmission
+          <select class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="trans">
+            <option>Manual</option>
+            <option>Automatic</option>
+          </select>
+        </label>
+
+        <label class="block">Fuel
+          <select class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="fuel">
+            <option>91/93 Octane</option>
+            <option>E85</option>
+            <option>Flex Fuel (Sensor Installed)</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="block">Current Mods
+        <textarea rows="3" class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white placeholder:text-gray-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="mods" placeholder="Headers, intake, cam specs, injectors, pump, throttle body, etc."></textarea>
+      </label>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <label class="block">HP Tuners Status
+          <select class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="hpt">
+            <option>Have MPVI & credits</option>
+            <option>Have MPVI, need credits</option>
+            <option>No interface yet</option>
+          </select>
+        </label>
+
+        <label class="block">Wideband Available?
+          <select class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="wideband">
+            <option>Yes (logged)</option>
+            <option>Yes (not logged)</option>
+            <option>No</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="block">Links to Logs / Tune (optional)
+        <input class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white placeholder:text-gray-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="links" placeholder="Dropbox/Drive links to .hpl and .hpt files" />
+      </label>
+
+      <label class="block">Service
+        <select class="mt-1 w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" name="service">
+          <option>Log Pack Review</option>
+          <option>Street Tune — NA</option>
+          <option>Street Tune — Cam/Heads</option>
+          <option>Flex Fuel Setup & Tuning</option>
+          <option>Email Tune — NA</option>
+          <option>Email Tune — Cam/Heads</option>
+          <option>Cam/Head Installs — LS & LT (Get Quote)</option>
+        </select>
+      </label>
+
+      <p class="text-sm text-emerald-300 -mb-2">Remote services are iterative; safety and legality remain the driver’s responsibility.</p>
+      <p class="text-sm text-emerald-300 -mb-2">A $50 deposit may be required to reserve a slot during promo periods.</p>
+
+      <div id="tune-total" class="text-lg font-bold text-emerald-300 mt-4">Total: $0</div>
+
+      <button type="submit"
+        class="inline-flex items-center justify-center rounded-full px-8 py-3 text-lg font-semibold
+               text-white bg-white/10 backdrop-blur border border-white/20
+               hover:bg-emerald-600/20 hover:border-emerald-500/50 transition-all duration-200 hover:-translate-y-0.5">
+        Send Email
+      </button>
+      <p id="tune-status" class="text-sm text-gray-300" hidden>Sending…</p>
+    </form>
+  </div>
+</section>
+
+  </main>
+
+  <footer class="mt-20 py-6 text-sm text-gray-300 text-center">© 2025 Cars & Collectibles LLC. All rights reserved.</footer>
+
+<!-- Pricing / Promotions / Card logic -->
+<script>
+(function () {
+  const cards       = Array.from(document.querySelectorAll(".package-card"));
+  const panel       = document.getElementById("package-details");
+  const banner      = document.getElementById("promo-banner");
+  const countdownEl = document.getElementById("promo-countdown");
+
+  // ====== EDIT THESE PRICES ONLY ======
+  const LIST = {
+    // Core
+    review: 120,
+    street_na: 850,
+    street_head_cam: 950,
+
+    // Flex fuel service
+    flex_fuel: 300,
+
+    // Email tunes
+    email_na: 350,
+    email_cam: 700,
+
+    // Quote-only install service (no fixed price)
+    install_cam_heads: 0
+  };
+
+  const PROMO_END_ISO = '2024-11-15T23:59:59';
+  const PROMO_ACTIVE  = Date.now() < new Date(PROMO_END_ISO).getTime();
+  const PROMO_PER_PACKAGE = {
+    review: 100,
+    street_na: 799,
+    street_head_cam: 899,
+    flex_fuel: 270,
+    email_na: 320,
+    email_cam: 650,
+    install_cam_heads: 0
+  };
+  const PROMO_PERCENT = 0;
+
+  function computePromoPrice(key) {
+    if (!PROMO_ACTIVE) return null;
+    if (PROMO_PER_PACKAGE && Number.isFinite(PROMO_PER_PACKAGE[key])) {
+      return Math.max(0, Math.round(PROMO_PER_PACKAGE[key]));
+    }
+    if (PROMO_PERCENT > 0) {
+      const discounted = LIST[key] * (1 - PROMO_PERCENT / 100);
+      return Math.max(0, Math.round(discounted));
+    }
+    return null;
+  }
+
+  window.TUNE_PRICING = {
+    promoActive: PROMO_ACTIVE,
+    getPrice(key) {
+      const promo = computePromoPrice(key);
+      return Number.isFinite(promo) ? promo : (LIST[key] || 0);
+    },
+    getListPrice(key) { return LIST[key] || 0; },
+    getSavingsPct(key) {
+      const list = LIST[key] || 0;
+      const now  = this.getPrice(key);
+      if (!list || now >= list) return 0;
+      return Math.round(((list - now) / list) * 100);
+    }
+  };
+
+  const detailsData = {
+    review: {
+      name: "Log Pack Review (Remote)",
+      bullets: [
+        "2–3 logs + current tune file.",
+        "Annotated feedback for key channels.",
+        "Concrete next-rev changes."
+      ],
+      blurb: "Asynchronous feedback to keep progress moving."
+    },
+    street_na: {
+      name: "Street Tune — NA",
+      bullets: [
+        "Idle/airflow, VE/MAF, VTQ/DD, spark.",
+        "Iterative logs and revisions.",
+        "Focus on <strong>drivability</strong> and response."
+      ],
+      blurb: "Great for bolt-ons."
+    },
+    street_head_cam: {
+      name: "Street Tune — Cam/Heads",
+      bullets: [
+        "<strong>Custom idle & airflow modeling</strong> for aftermarket cams.",
+        "<strong>Recalibrated VE, MAF & Virtual Torque</strong> for larger airmass.",
+        "<strong>Spark & fueling</strong> tuned for chop, manners, and power."
+      ],
+      blurb: "Full calibration for cammed/heads builds with multiple log/revision cycles."
+    },
+    flex_fuel: {
+      name: "Flex Fuel Setup & Tuning",
+      bullets: [
+        "Sensor scaling and <strong>stoich blend</strong> mapping across E% bands.",
+        "Enable logic, <strong>open/closed loop</strong> targets, and cold start trims.",
+        "Validation logs and <strong>VTQ/DD touch-up</strong> so it feels consistent on E0–E85."
+      ],
+      blurb: "Assumes a working flex sensor and wiring are installed; includes iterative log review."
+    },
+    email_na: {
+      name: "Email Tune — NA",
+      bullets: [
+        "Bolt-on NA setups; iterative <strong>email-based</strong> revisions.",
+        "You send logs; we send calibrated updates.",
+        "Targets trims, idle manners, and tip-in feel. <strong>Includes 2 free revisions.</strong>"
+      ],
+      blurb: "Budget-friendly remote calibration for stock cam cars."
+    },
+    email_cam: {
+      name: "Email Tune — Cam/Heads",
+      bullets: [
+        "Covers cam airflow, VE/MAF, and basic VTQ/DD alignment.",
+        "Multiple email rounds to dial in fueling and drivability.",
+        "Works best with <strong>logged wideband</strong> data. <strong>Includes 2 free revisions.</strong>"
+      ],
+      blurb: "For cammed/heads builds that want remote-only iteration."
+    },
+    install_cam_heads: {
+      name: "Cam/Head Installs — LS & LT",
+      bullets: [
+        "GM LS & Gen V LT <strong>camshaft and cylinder head installs</strong>.",
+        "Vehicle-specific quote. Typical turnaround is <strong>3-4 weeks</strong> after dropoff; timing varies by platform and parts.",
+        "Parts, fluids, gaskets, and tuning quoted separately."
+      ],
+      blurb: "Send your build details and we’ll reply with an itemized estimate and scheduling options."
+    }
+  };
+
+  function priceHTML(key) {
+    const list    = window.TUNE_PRICING.getListPrice(key);
+    const current = window.TUNE_PRICING.getPrice(key);
+
+    // Quote-only label when no price is set
+    if ((list ?? 0) <= 0 && (current ?? 0) <= 0) {
+      return `<div class="mt-3 text-xl font-extrabold text-emerald-300">Contact for Quote</div>`;
+    }
+
+    const savePct = window.TUNE_PRICING.getSavingsPct(key);
+
+    if (current < list) {
+      return `
+        <div class="mt-3 text-2xl font-extrabold">
+          <span class="line-through decoration-4 decoration-red-500 text-white/90">$${list}</span>
+          <span class="ml-3 text-emerald-400">$${current}</span>
+          <span class="ml-2 text-xs text-emerald-300 align-middle">Save ${savePct}%</span>
+        </div>`;
+    }
+    return `
+      <div class="mt-3 text-2xl font-extrabold">
+        $${list}
+        <span class="ml-2 text-xs text-gray-400 align-middle">Standard</span>
+      </div>`;
+  }
+
+  function initCardPrices() {
+    cards.forEach(card => {
+      const key = card.dataset.package;
+      const priceDiv = card.querySelector('.text-3xl.font-extrabold');
+      if (!key || !priceDiv) return;
+      priceDiv.innerHTML = priceHTML(key);
+    });
+  }
+
+  function toggleBanner() {
+    if (!banner) return;
+    if (!window.TUNE_PRICING.promoActive) banner.remove();
+  }
+
+  function selectPackage(key, cardEl) {
+    cards.forEach(c => {
+      c.classList.remove("ring-2","ring-emerald-400","border-emerald-400");
+      c.setAttribute("aria-pressed", "false");
+    });
+    cardEl.classList.add("ring-2","ring-emerald-400","border-emerald-400");
+    cardEl.setAttribute("aria-pressed", "true");
+
+    const d = detailsData[key];
+    if (!d || !panel) return;
+    const bullets = d.bullets.map(li => `<li>${li}</li>`).join("");
+    panel.innerHTML = `
+      <h3 class="text-2xl font-bold mb-2">${d.name}</h3>
+      ${priceHTML(key)}
+      <ul class="list-disc pl-6 space-y-2 text-gray-300 mt-4">${bullets}</ul>
+      <div class="mt-4 text-sm text-gray-400">${d.blurb}</div>
+      <a href="#intake"
+         class="inline-flex mt-6 items-center justify-center rounded-full px-6 py-3 font-bold
+                text-white bg-white/10 backdrop-blur border border-white/20
+                hover:bg-emerald-600/20 hover:border-emerald-500/50 transition">
+        Contact Us
+      </a>`;
+    panel.classList.remove("hidden");
+  }
+
+  // Countdown
+  const PROMO_END = new Date(PROMO_END_ISO);
+  const PROMO_TIMER = { id: null };
+  function formatRemaining(ms) {
+    if (ms <= 0) return "Offer ended";
+    const s = Math.floor(ms/1000), d = Math.floor(s/86400),
+          h = Math.floor((s%86400)/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    const dStr = d > 0 ? `${d}d ` : "";
+    return `Ends in ${dStr}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  }
+  function updateCountdown() {
+    if (!countdownEl) return;
+    const remaining = PROMO_END.getTime() - Date.now();
+    if (remaining <= 0) {
+      countdownEl.textContent = "Offer ended";
+      if (PROMO_TIMER.id) clearInterval(PROMO_TIMER.id);
+      toggleBanner();
+      initCardPrices();
+      return;
+    }
+    countdownEl.textContent = formatRemaining(remaining);
+  }
+
+  // Bind card events
+  cards.forEach(card => {
+    const key = card.dataset.package;
+    if (!key) return;
+    card.tabIndex = 0;
+    card.addEventListener("click", () => selectPackage(key, card));
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectPackage(key, card);
+      }
+    });
+  });
+
+  // Init
+  initCardPrices();
+  toggleBanner();
+
+  const first = cards.find(c => c.dataset.package === 'street_na') || cards[0];
+  if (first && first.dataset.package) selectPackage(first.dataset.package, first);
+
+  if (window.TUNE_PRICING.promoActive && countdownEl) {
+    PROMO_TIMER.id = setInterval(updateCountdown, 1000);
+    updateCountdown();
+  }
+})();
+</script>
+
+<!-- Contact form: total calculator + mailto popup -->
+<script>
+(function () {
+  const form = document.getElementById('tune-intake');
+  if (!form) return;
+
+  const totalEl = document.getElementById('tune-total');
+  const svcSel  = form.querySelector('select[name="service"]');
+  const statusEl  = document.getElementById('tune-status');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const hpEl      = form.querySelector('input[name="website"]');
+
+  function labelToKey(lbl) {
+    const t = (lbl || '').toLowerCase();
+    if (t.includes('log pack review')) return 'review';
+    if (t.includes('street tune — na') || t.includes('street tune - na')) return 'street_na';
+    if (t.includes('cam/heads') && !t.includes('installs')) return 'street_head_cam';
+    if (t.includes('flex fuel')) return 'flex_fuel';
+    if (t.includes('email tune') && t.includes('na')) return 'email_na';
+    if (t.includes('email tune') && (t.includes('cam') || t.includes('heads'))) return 'email_cam';
+    if (t.includes('cam/head installs') || (t.includes('installs') && (t.includes('ls') || t.includes('lt')))) return 'install_cam_heads';
+    return null;
+  }
+
+  function updateTotal() {
+    const key = labelToKey(svcSel?.value);
+    const base = key ? (window.TUNE_PRICING.getPrice(key) || 0) : 0;
+    if (totalEl) totalEl.textContent = `Total: $${base}`;
+  }
+
+  svcSel?.addEventListener('change', updateTotal);
+  updateTotal();
+
+  function setStatus(msg, cls) {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.hidden = false;
+    statusEl.className = 'text-sm ' + (cls || 'text-gray-300');
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    // honeypot: if filled, silently "succeed"
+    if (hpEl && hpEl.value && hpEl.value.trim() !== '') {
+      setStatus("Thanks! We'll be in touch shortly.", 'text-emerald-300');
+      form.reset();
+      updateTotal();
+      return;
+    }
+
+    // gather fields
+    const fd = new FormData(form);
+    const data = {};
+    for (const [k, v] of fd.entries()) {
+      if (data[k] === undefined) data[k] = v;
+    }
+
+    // build mailto
+    const to = 'jayden@carsandcollectibles.com';
+    const subject = `Tuning Inquiry: ${data.service || 'Service'} — ${data.vehicle || 'Vehicle'}`;
+    const lines = [
+      'TUNING INQUIRY',
+      '---------------------------',
+      `Name: ${data.name || ''}`,
+      `Email: ${data.email || ''}`,
+      `Vehicle: ${data.vehicle || ''}`,
+      `Transmission: ${data.trans || ''}`,
+      `Fuel: ${data.fuel || ''}`,
+      `HP Tuners Status: ${data.hpt || ''}`,
+      `Wideband Available: ${data.wideband || ''}`,
+      `Service: ${data.service || ''}`,
+      `Links: ${data.links || ''}`,
+      '',
+      'Mods:',
+      data.mods || ''
+    ];
+    const body = encodeURIComponent(lines.join('\n'));
+
+    // open email client
+    const href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${body}`;
+    window.location.href = href;
+
+    // UX message
+    setStatus('Email draft opened in your mail app. If it did not open, please email us directly at jayden@carsandcollectibles.com.', 'text-emerald-300');
+  });
+})();
+</script>
+
+<!-- Hero background via Dropbox -->
+<script>
+(function () {
+  var DB_HERO = "https://www.dropbox.com/scl/fi/4pergmzlrrccsxu73puw9/hero-car.jpg?rlkey=houxno6c4dg230r4hxajiyk8j&st=p2xpzgb5&dl=0";
+  if (!DB_HERO) return;
+
+  function dropboxToRaw(u) {
+    try {
+      var url = new URL(u);
+      if (!/\.dropbox\.com$/i.test(url.hostname)) return u;
+      url.hostname = "dl.dropboxusercontent.com";
+      var rlkey = url.searchParams.get("rlkey");
+      url.search = "";
+      if (rlkey) url.searchParams.set("rlkey", rlkey);
+      url.searchParams.set("raw", "1");
+      return url.toString();
+    } catch (e) {
+      return u
+        .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+        .replace(/[\?&]dl=0\b/, "")
+        .replace(/[\?&]dl=1\b/, "")
+        .replace(/[\?&]raw=1\b/, "") + (u.includes("?") ? "&raw=1" : "?raw=1");
+    }
+  }
+
+  var hero = document.querySelector("div[style*='hero-car.jpg']");
+  if (hero) {
+    hero.style.backgroundImage = "url('" + dropboxToRaw(DB_HERO) + "')";
+  }
+})();
+</script>
+
+</body>
+</html>
