@@ -384,29 +384,56 @@ body.printing #pickListPrintRoot { display: block; }
       <canvas id="ageChart" style="max-width:100%; margin-top:1em;"></canvas>
     </div>
 
-    <!-- PRICING SUBTAB -->
-    <div id="jalopyPricingSubtab" class="jalopy-subtab" style="display:none;">
-      <div class="mb-2 d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Jalopy Jungle Pricing</h5>
-        <small class="text-muted">Source: <code>pricing/jalopy-prices.csv</code></small>
-      </div>
+<!-- PRICING SUBTAB -->
+<div id="jalopyPricingSubtab" class="jalopy-subtab" style="display:none;">
+  <div class="mb-2 d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Jalopy Jungle Pricing</h5>
+    <small class="text-muted">Source: <code>pricing/jalopy-prices.csv</code></small>
+  </div>
 
-      <div class="table-responsive">
-        <table class="table table-striped table-bordered table-hover" id="jalopyPricingTable">
-          <thead class="table-dark">
-            <tr>
-              <th>Section</th>
-              <th>Part</th>
-              <th>AS IS</th>
-              <th>Car Price</th>
-              <th>Van/SUV/Truck Price</th>
-              <th>Core</th>
-            </tr>
-          </thead>
-          <tbody id="jalopyPricingBody"></tbody>
-        </table>
-      </div>
+  <!-- Filters / Search -->
+  <div class="row g-2 mb-3">
+    <div class="col-md-4">
+      <label class="form-label mb-1">Section</label>
+      <select id="pricingSectionFilter" class="form-select form-select-sm">
+        <option value="">All sections</option>
+        <!-- options populated by JS -->
+      </select>
     </div>
+    <div class="col-md-4">
+      <label class="form-label mb-1">AS IS</label>
+      <select id="pricingAsIsFilter" class="form-select form-select-sm">
+        <option value="">Any</option>
+        <option value="true">AS IS only</option>
+        <option value="false">Non-AS-IS</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label mb-1">Search</label>
+      <input
+        id="pricingSearch"
+        class="form-control form-control-sm"
+        placeholder="Search section, part, price…">
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered table-hover" id="jalopyPricingTable">
+      <thead class="table-dark">
+        <tr>
+          <th data-pricing-col="section">Section</th>
+          <th data-pricing-col="part">Part</th>
+          <th data-pricing-col="asIsBool">AS IS</th>
+          <th data-pricing-col="carPriceNum">Car Price</th>
+          <th data-pricing-col="vanPriceNum">Van/SUV/Truck Price</th>
+          <th data-pricing-col="coreNum">Core</th>
+        </tr>
+      </thead>
+      <tbody id="jalopyPricingBody"></tbody>
+    </table>
+  </div>
+</div>
+
 
   </div>
 </div>
