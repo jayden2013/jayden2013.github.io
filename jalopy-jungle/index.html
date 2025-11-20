@@ -2881,7 +2881,11 @@ document.addEventListener('DOMContentLoaded', () => {
   <!-- Print container (built dynamically; hidden until print) -->
 <div id="pickListPrintRoot" style="display:none"></div>
 <script>
-// ---------- Jalopy Inventory / Pricing subtabs ----------
+// ---------- Jalopy Inventory / Pricing subtabs + smart Pricing table ----------
+
+let jalopyPricingData = [];
+let jalopyPricingSort = { col: null, dir: 'asc' }; // col = one of section, part, asIsBool, carPriceNum, vanPriceNum, coreNum
+let jalopyPricingSortingInitialized = false;
 
 function initJalopySubtabs() {
   const buttons = Array.from(document.querySelectorAll('.jalopy-subtab-btn'));
@@ -2917,40 +2921,53 @@ function loadJalopyPricing() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // 👇 adjust filename/path here if needed
-  const csvPath = 'pricing/jalopy-prices.csv';
+  const csvPath = 'pricing/jalopy-prices.csv'; // adjust if needed
 
   Papa.parse(csvPath, {
     download: true,
     header: true,
     complete: function(result) {
-      const rows = (result.data || []).filter(r => r.section || r.part);
+      const rawRows = (result.data || []).filter(r => r.section || r.part);
 
-      const fmtMoney = (v) => {
-        const n = parseFloat(v);
-        if (isNaN(n)) return v || '';
-        return '$' + n.toFixed(2);
-      };
+      const normalized = rawRows.map(r => {
+        const section = (r.section ?? r.Section ?? '').trim();
+        const part    = (r.part ?? r.Part ?? '').trim();
 
-      rows.forEach(r => {
-        const tr = document.createElement('tr');
+        const rawAsIs = String(r.as_is ?? r.AS_IS ?? r.As_Is ?? '').toLowerCase();
+        const asIsBool = (rawAsIs === 'true' || rawAsIs === '1' || rawAsIs === 'yes' || rawAsIs === 'y');
 
-        // normalize AS IS value
-        const rawAsIs = String(r.as_is || r.AS_IS || '').toLowerCase();
-        const asIsBool = (rawAsIs === 'true' || rawAsIs === '1' || rawAsIs === 'yes');
-        const asIsDisplay = asIsBool ? 'Yes' : 'No';
+        const carRaw  = r.car_price ?? r.Car_Price ?? r['car price'] ?? '';
+        const vanRaw  = r.van_suv_truck_price ?? r.Van_SUV_Truck_Price ?? r['van_suv_truck_price'] ?? '';
+        const coreRaw = r.core ?? r.Core ?? '';
 
-        tr.innerHTML = `
-          <td>${r.section || ''}</td>
-          <td>${r.part || ''}</td>
-          <td>${asIsDisplay}</td>
-          <td>${fmtMoney(r.car_price)}</td>
-          <td>${fmtMoney(r.van_suv_truck_price)}</td>
-          <td>${fmtMoney(r.core)}</td>
-        `;
+        const carNum  = parseFloat(carRaw)  || 0;
+        const vanNum  = parseFloat(vanRaw)  || 0;
+        const coreNum = parseFloat(coreRaw) || 0;
 
-        tbody.appendChild(tr);
+        return {
+          section,
+          part,
+          asIsBool,
+          carPriceRaw:  carRaw,
+          vanPriceRaw:  vanRaw,
+          coreRaw:      coreRaw,
+          carPriceNum:  carNum,
+          vanPriceNum:  vanNum,
+          coreNum:      coreNum
+        };
       });
+
+      jalopyPricingData = normalized;
+
+      // populate Section filter options
+      populatePricingSectionFilter(normalized);
+
+      // wire filters/search
+      wirePricingFilters();
+
+      // initial render
+      applyPricingFilters();
+      setupPricingSorting();
     },
     error: function(err) {
       console.error('Error loading Jalopy pricing CSV:', err);
@@ -2958,8 +2975,188 @@ function loadJalopyPricing() {
   });
 }
 
+function populatePricingSectionFilter(rows) {
+  const select = document.getElementById('pricingSectionFilter');
+  if (!select) return;
+
+  const sections = Array.from(
+    new Set(
+      rows
+        .map(r => r.section)
+        .filter(Boolean)
+        .sort((a,b) => a.localeCompare(b))
+    )
+  );
+
+  // keep the first "All sections" option
+  select.innerHTML = '<option value="">All sections</option>';
+  sections.forEach(sec => {
+    const opt = document.createElement('option');
+    opt.value = sec;
+    opt.textContent = sec;
+    select.appendChild(opt);
+  });
+}
+
+function wirePricingFilters() {
+  const sectionFilter = document.getElementById('pricingSectionFilter');
+  const asIsFilter    = document.getElementById('pricingAsIsFilter');
+  const searchInput   = document.getElementById('pricingSearch');
+
+  if (sectionFilter) {
+    sectionFilter.addEventListener('change', applyPricingFilters);
+  }
+  if (asIsFilter) {
+    asIsFilter.addEventListener('change', applyPricingFilters);
+  }
+  if (searchInput) {
+    searchInput.addEventListener('input', applyPricingFilters);
+  }
+}
+
+function applyPricingFilters() {
+  const sectionFilter = document.getElementById('pricingSectionFilter');
+  const asIsFilter    = document.getElementById('pricingAsIsFilter');
+  const searchInput   = document.getElementById('pricingSearch');
+
+  const sectionVal = (sectionFilter?.value || '').trim();
+  const asIsVal    = (asIsFilter?.value || '').trim(); // '', 'true', 'false'
+  const searchVal  = (searchInput?.value || '').toLowerCase().trim();
+
+  let rows = jalopyPricingData.slice();
+
+  if (sectionVal) {
+    rows = rows.filter(r => r.section === sectionVal);
+  }
+
+  if (asIsVal === 'true') {
+    rows = rows.filter(r => r.asIsBool);
+  } else if (asIsVal === 'false') {
+    rows = rows.filter(r => !r.asIsBool);
+  }
+
+  if (searchVal) {
+    rows = rows.filter(r => {
+      const hay = [
+        r.section,
+        r.part,
+        r.carPriceRaw,
+        r.vanPriceRaw,
+        r.coreRaw
+      ].join(' ').toLowerCase();
+      return hay.includes(searchVal);
+    });
+  }
+
+  // apply sort, if any
+  rows = sortPricingRows(rows);
+
+  renderJalopyPricingTable(rows);
+}
+
+function sortPricingRows(rows) {
+  const { col, dir } = jalopyPricingSort;
+  if (!col) return rows;
+
+  const mul = dir === 'desc' ? -1 : 1;
+  const numericCols = new Set(['carPriceNum','vanPriceNum','coreNum']);
+
+  const sorted = rows.slice().sort((a, b) => {
+    const av = a[col];
+    const bv = b[col];
+
+    if (numericCols.has(col)) {
+      const an = Number(av) || 0;
+      const bn = Number(bv) || 0;
+      if (an < bn) return -1 * mul;
+      if (an > bn) return  1 * mul;
+      return 0;
+    } else {
+      const as = String(av ?? '');
+      const bs = String(bv ?? '');
+      return as.localeCompare(bs) * mul;
+    }
+  });
+
+  return sorted;
+}
+
+function renderJalopyPricingTable(rows) {
+  const tbody = document.getElementById('jalopyPricingBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const fmtMoney = (v) => {
+    const n = parseFloat(v);
+    if (isNaN(n)) return v || '';
+    return '$' + n.toFixed(2);
+  };
+
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.section}</td>
+      <td>${r.part}</td>
+      <td>${r.asIsBool ? 'Yes' : 'No'}</td>
+      <td>${fmtMoney(r.carPriceRaw)}</td>
+      <td>${fmtMoney(r.vanPriceRaw)}</td>
+      <td>${fmtMoney(r.coreRaw)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function setupPricingSorting() {
+  if (jalopyPricingSortingInitialized) return;
+  jalopyPricingSortingInitialized = true;
+
+  const headerRow = document.querySelector('#jalopyPricingTable thead tr');
+  if (!headerRow) return;
+
+  const ths = Array.from(headerRow.querySelectorAll('th[data-pricing-col]'));
+  ths.forEach(th => {
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', () => {
+      const col = th.getAttribute('data-pricing-col');
+      if (!col) return;
+
+      if (jalopyPricingSort.col === col) {
+        // toggle direction
+        jalopyPricingSort.dir = (jalopyPricingSort.dir === 'asc') ? 'desc' : 'asc';
+      } else {
+        jalopyPricingSort.col = col;
+        // default: numbers desc, text asc
+        jalopyPricingSort.dir = ['carPriceNum','vanPriceNum','coreNum'].includes(col) ? 'desc' : 'asc';
+      }
+
+      applyPricingFilters();
+      updatePricingSortHeaderStyles();
+    });
+  });
+
+  updatePricingSortHeaderStyles();
+}
+
+function updatePricingSortHeaderStyles() {
+  const headerRow = document.querySelector('#jalopyPricingTable thead tr');
+  if (!headerRow) return;
+
+  const ths = Array.from(headerRow.querySelectorAll('th[data-pricing-col]'));
+  ths.forEach(th => {
+    const col = th.getAttribute('data-pricing-col');
+    let label = th.textContent.replace(/[▲▼]/g,'').trim();
+    if (col === jalopyPricingSort.col) {
+      const caret = jalopyPricingSort.dir === 'asc' ? ' ▲' : ' ▼';
+      th.textContent = label + caret;
+    } else {
+      th.textContent = label;
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', initJalopySubtabs);
 </script>
+
 
 </body>
 </html>
