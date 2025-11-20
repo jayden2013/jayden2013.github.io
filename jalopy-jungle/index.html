@@ -13,6 +13,34 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
   <style>
+  
+  /* Jalopy subtabs */
+.jalopy-subtab-bar {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: .75rem;
+}
+
+.jalopy-subtab-btn {
+  padding: .35rem .75rem;
+  border-radius: 999px;
+  border: 1px solid #ced4da;
+  background: transparent;
+  font-size: .9rem;
+  cursor: pointer;
+}
+
+body.dark-mode .jalopy-subtab-btn {
+  border-color: #2b3745;
+  color: #f1f1f1;
+}
+
+.jalopy-subtab-btn.active {
+  background: orange;
+  color: #000;
+  border-color: orange;
+}
+
     /* ---------- Theme / base ---------- */
     body.dark-mode { background-color:#121212; color:#f1f1f1; }
     body.dark-mode .table { color:#f1f1f1; }
@@ -124,6 +152,119 @@
 #trendsTable thead th { cursor: pointer; user-select: none; }
 #trendsTable thead th .sort-caret { margin-left:.35rem; opacity:.7; }
 
+/* ===== Pick List: Clean Card Print (Tight top space) ===== */
+
+/* On-screen preview toggle (shown only while printing is triggered) */
+body.printing #pickListPrintRoot { display: block; }
+
+/* Optional: keep the print root hidden during normal browsing */
+#pickListPrintRoot { display: none; }
+
+@media print {
+  /* Hide everything except the print document */
+  body * { visibility: hidden !important; }
+  #pickListPrintRoot, #pickListPrintRoot * { visibility: visible !important; }
+  #pickListPrintRoot { position: relative !important; display: block !important; }
+
+  /* Force white background & crisp colors */
+  html, body {
+    background: #fff !important; color: #000 !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+
+  /* LETTER portrait with tight top margin (reduce white space above) */
+  @page { size: Letter portrait; margin: 6mm 8mm 8mm 8mm; }
+
+  /* ===== Repeating Header / Footer ===== */
+  .pl-header {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; gap: 10px;
+    padding: 2mm 0 1.5mm;
+    border-bottom: 0.2mm solid #d0d0d0;
+    font: 600 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+  .pl-header img { max-height: 18px; width: auto; object-fit: contain; }
+  .pl-header .brand { font-weight: 800; font-size: 11px; }
+  .pl-header .meta  { margin-left: auto; font-weight: 500; font-size: 10px; color: #444; }
+
+  .pl-footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 3mm 0;
+    border-top: 0.2mm solid #d0d0d0;
+    font: 10px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: #555;
+  }
+  .pl-footer .right { float: right; }
+  .pl-footer .pageno::after { content: "Page " counter(page) " of " counter(pages); }
+
+  /* Body: only as much top/bottom offset as header/footer need */
+  .pl-body { margin-top: 22mm; margin-bottom: 10mm; }
+
+  /* ===== Yard Sections ===== */
+  .pl-section { page-break-after: always; }
+  .pl-section:last-child { page-break-after: auto; }
+  .pl-section .pl-title {
+    font: 700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0 0 6px 0;
+  }
+  .pl-section .pl-sub {
+    font: 11px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: #666; margin: 0 0 8px 0;
+  }
+
+  /* ===== Two-column Card Grid (compact) ===== */
+  .pl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7mm 7mm; /* row gap / column gap */
+  }
+
+  /* ===== Vehicle Card ===== */
+  .pl-card {
+    border: 0.3mm solid #000;
+    border-radius: 2mm;
+    padding: 4mm;
+    page-break-inside: avoid;
+    display: flex; flex-direction: column; gap: 2.5mm;
+  }
+
+  .pl-top {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .pl-row-badge {
+    font: 800 12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: #000; color: #fff;
+    padding: 2px 8px; border-radius: 10px; letter-spacing: .2px;
+  }
+  .pl-yard-pill {
+    font: 600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: #000; border: 0.3mm solid #000; border-radius: 999px;
+    padding: 1px 8px; margin-left: auto;
+  }
+
+  .pl-titleline {
+    display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+  }
+  .pl-year  { font: 800 16px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  .pl-make  { font: 800 16px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  .pl-model { font: 600 14px/1.1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+
+  .pl-notes { font: 11px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #333; }
+  .pl-notes .label { font-weight: 700; margin-right: 4px; }
+
+  .pl-checks {
+    display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center;
+    font: 11px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+  .pl-box  { display: inline-block; width: 12px; height: 12px; border: 2px solid #000; margin-right: 6px; vertical-align: -2px; }
+  .pl-line { border-bottom: 1px dashed #000; display: inline-block; min-width: 42mm; height: 0; transform: translateY(-2px); }
+  .pl-line.sm { min-width: 22mm; }
+
+  /* Optional: mini metadata row under title, if used */
+  .pl-meta { font: 10px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #555; }
+}
+
+
   </style>
 </head>
 
@@ -204,27 +345,75 @@
       <div class="tab-content pt-3">
         <!-- Jalopy -->
         <div class="tab-pane fade show active" id="jalopyTab">
-          <div class="tab-card">
-            <div class="mb-3">
-              <select class="form-select" id="csvSelector"></select>
-            </div>
-            <div class="mb-3">
-              <input type="text" id="searchInput" class="form-control" placeholder="Filter rows...">
-            </div>
-            <div class="mb-3">
-              <button class="btn btn-success" id="exportBtn"><i class="bi bi-download"></i> Export Table to CSV</button>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-striped table-bordered table-hover" id="inventoryTable">
-                <thead class="table-dark"><tr id="tableHeader"></tr></thead>
-                <tbody id="tableBody"></tbody>
-              </table>
-            </div>
+  <div class="tab-card">
 
-            <div id="statistics" class="mt-3 small"></div>
-            <canvas id="ageChart" style="max-width:100%; margin-top:1em;"></canvas>
-          </div>
-        </div>
+    <!-- Jalopy subtabs -->
+    <div class="jalopy-subtab-bar">
+      <button
+        type="button"
+        class="jalopy-subtab-btn active"
+        data-jalopy-subtab="jalopyInventorySubtab">
+        Inventory
+      </button>
+      <button
+        type="button"
+        class="jalopy-subtab-btn"
+        data-jalopy-subtab="jalopyPricingSubtab">
+        Pricing
+      </button>
+    </div>
+
+    <!-- INVENTORY SUBTAB: existing Jalopy content moved here -->
+    <div id="jalopyInventorySubtab" class="jalopy-subtab" style="">
+      <div class="mb-3">
+        <select class="form-select" id="csvSelector"></select>
+      </div>
+      <div class="mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Filter rows...">
+      </div>
+      <div class="mb-3">
+        <button class="btn btn-success" id="exportBtn">
+          <i class="bi bi-download"></i> Export Table to CSV
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered table-hover" id="inventoryTable">
+          <thead class="table-dark"><tr id="tableHeader"></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div id="statistics" class="mt-3 small"></div>
+      <canvas id="ageChart" style="max-width:100%; margin-top:1em;"></canvas>
+    </div>
+
+    <!-- PRICING SUBTAB -->
+    <div id="jalopyPricingSubtab" class="jalopy-subtab" style="display:none;">
+      <div class="mb-2 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Jalopy Jungle Pricing</h5>
+        <small class="text-muted">Source: <code>pricing/jalopy-prices.csv</code></small>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered table-hover" id="jalopyPricingTable">
+          <thead class="table-dark">
+            <tr>
+              <th>Section</th>
+              <th>Part</th>
+              <th>AS IS</th>
+              <th>Car Price</th>
+              <th>Van/SUV/Truck Price</th>
+              <th>Core</th>
+            </tr>
+          </thead>
+          <tbody id="jalopyPricingBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 
         <!-- Trusty -->
         <div class="tab-pane fade" id="trustyTab">
@@ -256,6 +445,10 @@
             <div class="mb-3">
               <button class="btn btn-success" id="exportPickListBtn"><i class="bi bi-box-arrow-down"></i> Export Table to CSV</button>
             </div>
+			
+			<button class="btn btn-outline-secondary" id="printPickListBtn">
+  <i class="bi bi-printer"></i> Print Pick List
+</button>
 
             <div class="table-responsive">
               <table class="table table-striped table-bordered table-hover" id="pickListTable">
@@ -2553,5 +2746,230 @@ function renderTrendsHeatmap(rows){
 
   
   </script>
+  
+<script>
+/* ===== Pretty Print (Card layout) ===== */
+
+function _plEmail(){ return localStorage.getItem('premiumEmail') || ''; }
+function _plStamp(){ return new Date().toLocaleString(); }
+function _plLogo(){ return window.CAC_LOGO_URL || ''; }
+
+function groupRowsByYard(rows){
+  const map = new Map();
+  rows.forEach(r => {
+    const y = r.Yard || 'Unknown Yard';
+    if (!map.has(y)) map.set(y, []);
+    map.get(y).push(r);
+  });
+  for (const [yard, arr] of map.entries()) {
+    arr.sort((a,b) =>
+      (a.Make||'').localeCompare(b.Make||'') ||
+      (a.Model||'').localeCompare(b.Model||'') ||
+      (parseInt(a.Year)||0) - (parseInt(b.Year)||0) ||
+      String(a.Row||'').localeCompare(String(b.Row||''))
+    );
+  }
+  return Array.from(map.entries()).map(([yard, items]) => ({ yard, items }))
+               .sort((a,b) => a.yard.localeCompare(b.yard));
+}
+
+function buildCardHTML(r){
+  const year  = r.Year || '';
+  const make  = r.Make || '';
+  const model = r.Model || '';
+  const row   = r.Row || '';
+  const yard  = r.Yard || '';
+  const notes = (r.Notes || '').slice(0, 160);
+
+  return `
+    <div class="pl-card">
+      <div class="pl-top">
+        <span class="pl-row-badge">ROW ${row || '—'}</span>
+        <span class="pl-yard-pill">${yard || '—'}</span>
+      </div>
+
+      <div class="pl-titleline">
+        <span class="pl-year">${year}</span>
+        <span class="pl-make">${make}</span>
+        <span class="pl-model">${model}</span>
+      </div>
+
+      ${notes ? `<div class="pl-notes"><span class="label">Notes:</span>${notes}</div>` : ``}
+
+      <div class="pl-checks">
+        <span><span class="pl-box"></span>Pulled</span>
+        <span><span class="pl-box"></span>Condition</span>
+        <span>Price $ <span class="pl-line sm"></span></span>
+        <span>Bin <span class="pl-line sm"></span></span>
+      </div>
+    </div>
+  `;
+}
+
+function buildSectionHTML(yard, items){
+  const cards = items.map(buildCardHTML).join('');
+  return `
+    <section class="pl-section">
+      <div class="pl-title">Pick List — ${yard}</div>
+      <div class="pl-sub">Vehicles: ${items.length}</div>
+      <div class="pl-grid">${cards}</div>
+    </section>
+  `;
+}
+
+function buildPickListPrintHTML_CARDS(mode='grouped', yardFilter=''){
+  const root = document.getElementById('pickListPrintRoot');
+  if (!root) return;
+
+  let rows = (typeof gatherPickListRowsFromStorage === 'function')
+    ? gatherPickListRowsFromStorage()
+    : [];
+
+  if (!rows.length) {
+    root.innerHTML = '<div class="p-3">Pick List is empty.</div>';
+    return;
+  }
+
+  if (mode === 'single' && yardFilter) {
+    rows = rows.filter(r => (r.Yard || '') === yardFilter);
+  }
+
+  const sections = (mode === 'asis')
+    ? [{ yard: 'As Entered', items: rows }]
+    : groupRowsByYard(rows);
+
+  const logo = _plLogo();
+  const email = _plEmail();
+  const ts = _plStamp();
+
+  root.innerHTML = `
+    <div class="pl-header">
+      ${logo ? `<img src="${logo}" alt="Cars & Collectibles">` : ``}
+      <div class="brand">PROFIT — Cars & Collectibles</div>
+      <div class="meta">${email ? `User: ${email} • ` : ``}Generated: ${ts}</div>
+    </div>
+
+    <div class="pl-body">
+      ${sections.map(s => buildSectionHTML(s.yard, s.items)).join('')}
+    </div>
+
+    <div class="pl-footer">
+      <span>carsandcollectibles.com</span>
+      <span class="right pageno"></span>
+    </div>
+  `;
+}
+
+function triggerPrintPickList_CARDS(defaultMode='grouped'){
+  buildPickListPrintHTML_CARDS(defaultMode);
+  document.body.classList.add('printing');
+  const root = document.getElementById('pickListPrintRoot');
+  if (root) root.style.display = 'block';
+  window.print();
+  setTimeout(() => {
+    if (root) root.style.display = 'none';
+    document.body.classList.remove('printing');
+  }, 0);
+}
+
+/* Wire the existing button (replace previous handler if any) */
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('printPickListBtn');
+  if (btn) {
+    btn.onclick = () => triggerPrintPickList_CARDS('grouped');
+  }
+});
+</script>
+
+  
+  
+  
+  
+  
+  
+  
+  <!-- Print container (built dynamically; hidden until print) -->
+<div id="pickListPrintRoot" style="display:none"></div>
+<script>
+// ---------- Jalopy Inventory / Pricing subtabs ----------
+
+function initJalopySubtabs() {
+  const buttons = Array.from(document.querySelectorAll('.jalopy-subtab-btn'));
+  const panels  = Array.from(document.querySelectorAll('.jalopy-subtab'));
+
+  if (!buttons.length || !panels.length) return;
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-jalopy-subtab');
+
+      // toggle active button
+      buttons.forEach(b => b.classList.toggle('active', b === btn));
+
+      // show/hide panels
+      panels.forEach(p => {
+        p.style.display = (p.id === targetId) ? '' : 'none';
+      });
+
+      // lazy-load pricing on first open
+      if (targetId === 'jalopyPricingSubtab') {
+        if (!window._jalopyPricingLoaded) {
+          window._jalopyPricingLoaded = true;
+          loadJalopyPricing();
+        }
+      }
+    });
+  });
+}
+
+function loadJalopyPricing() {
+  const tbody = document.getElementById('jalopyPricingBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  // 👇 adjust filename/path here if needed
+  const csvPath = 'pricing/jalopy-prices.csv';
+
+  Papa.parse(csvPath, {
+    download: true,
+    header: true,
+    complete: function(result) {
+      const rows = (result.data || []).filter(r => r.section || r.part);
+
+      const fmtMoney = (v) => {
+        const n = parseFloat(v);
+        if (isNaN(n)) return v || '';
+        return '$' + n.toFixed(2);
+      };
+
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+
+        // normalize AS IS value
+        const rawAsIs = String(r.as_is || r.AS_IS || '').toLowerCase();
+        const asIsBool = (rawAsIs === 'true' || rawAsIs === '1' || rawAsIs === 'yes');
+        const asIsDisplay = asIsBool ? 'Yes' : 'No';
+
+        tr.innerHTML = `
+          <td>${r.section || ''}</td>
+          <td>${r.part || ''}</td>
+          <td>${asIsDisplay}</td>
+          <td>${fmtMoney(r.car_price)}</td>
+          <td>${fmtMoney(r.van_suv_truck_price)}</td>
+          <td>${fmtMoney(r.core)}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    },
+    error: function(err) {
+      console.error('Error loading Jalopy pricing CSV:', err);
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initJalopySubtabs);
+</script>
+
 </body>
 </html>
