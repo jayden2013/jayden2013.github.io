@@ -11,6 +11,10 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+  <!-- QR Code Libs -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
 
   <style>
   
@@ -335,6 +339,10 @@ body.printing #pickListPrintRoot { display: block; }
 		<li class="nav-item">
 			<button class="nav-link" data-bs-toggle="tab" data-bs-target="#trendsTab" type="button">Trends</button>
 		</li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#qrSyncTab" type="button">QR Sync</button>
+        </li>
+
 
       </ul>
 
@@ -617,6 +625,32 @@ body.printing #pickListPrintRoot { display: block; }
 
   </div>
 </div>
+
+        <!-- QR Sync Tab -->
+        <div class="tab-pane fade" id="qrSyncTab">
+          <div class="tab-card">
+            <h5 class="mb-1">Data Sync via QR Code</h5>
+            <p class="text-muted mb-4">Easily transfer your Pick List, Favorites, and Settings between devices.</p>
+
+            <div class="row g-4">
+              <!-- Generate QR -->
+              <div class="col-md-6">
+                <h6>1. Generate QR Code from this device</h6>
+                <p class="small">Click the button to generate a QR code containing all your current data. Scan this code on your other device.</p>
+                <button class="btn btn-primary" id="generateQrBtn"><i class="bi bi-qr-code"></i> Generate My QR Code</button>
+                <div id="qrCodeContainer" class="mt-3 text-center p-3 border rounded" style="min-height: 284px; background: #fff;"></div>
+              </div>
+
+              <!-- Scan QR -->
+              <div class="col-md-6">
+                <h6>2. Scan QR Code on this device</h6>
+                <p class="small">Click to start your camera, then point it at the QR code generated from your other device to import its data.</p>
+                <div id="qrScannerContainer" style="max-width: 500px;"></div>
+                <div id="qrScanStatus" class="small text-muted mt-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
 
 		
       </div>
@@ -1995,6 +2029,7 @@ body.printing #pickListPrintRoot { display: block; }
     listCSVFiles();      // Jalopy
     listTrustyFiles();   // Trusty
     loadPickListData();  // Pick list
+    initQrSyncTab();     // QR Sync
   }
 
   // Start the serial gate flow
@@ -3532,6 +3567,72 @@ document.getElementById('modalPricingSectionFilter')?.addEventListener('change',
 document.getElementById('modalPricingAsIsFilter')?.addEventListener('change', applyModalPricingFilters);
 document.getElementById('modalPricingSearch')?.addEventListener('input', applyModalPricingFilters);
 document.getElementById('confirmAddPartsFromPickList')?.addEventListener('click', confirmAddPartsFromPickList);
+</script>
+<script>
+  // ---------- QR Sync Tab Logic ----------
+  let html5QrCode = null;
+  let qrCodeInstance = null;
+
+  function initQrSyncTab() {
+    const generateBtn = document.getElementById('generateQrBtn');
+    const qrTabBtn = document.querySelector('button[data-bs-target="#qrSyncTab"]');
+
+    if (generateBtn) {
+      generateBtn.addEventListener('click', generateAndShowQrCode);
+    }
+
+    if (qrTabBtn) {
+      qrTabBtn.addEventListener('shown.bs.tab', startQrScanner);
+      qrTabBtn.addEventListener('hidden.bs.tab', stopQrScanner);
+    }
+  }
+
+  function generateAndShowQrCode() {
+    const container = document.getElementById('qrCodeContainer');
+    if (!container) return;
+
+    const dataCode = getDataCode();
+    container.innerHTML = ''; // Clear previous QR code
+
+    if (qrCodeInstance) {
+      qrCodeInstance.clear();
+      qrCodeInstance.makeCode(dataCode);
+    } else {
+      qrCodeInstance = new QRCode(container, {
+        text: dataCode,
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M // Medium correction for density
+      });
+    }
+  }
+
+  function startQrScanner() {
+    const statusEl = document.getElementById('qrScanStatus');
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode("qrScannerContainer");
+    }
+
+    const onScanSuccess = (decodedText, decodedResult) => {
+      stopQrScanner();
+      statusEl.textContent = `✅ Scan successful! Importing data...`;
+      applyDataCode(decodedText); // Use existing function to apply data
+    };
+
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess)
+      .then(() => statusEl.textContent = "Scanner started. Point camera at a QR code.")
+      .catch(err => statusEl.textContent = `❌ Error starting scanner: ${err}`);
+  }
+
+  function stopQrScanner() {
+    if (html5QrCode && html5QrCode.isScanning) {
+      html5QrCode.stop().then(() => {
+        document.getElementById('qrScanStatus').textContent = 'Scanner stopped.';
+      }).catch(err => console.warn("QR scanner stop error:", err));
+    }
+  }
 </script>
 
 </body>
