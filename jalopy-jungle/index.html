@@ -428,6 +428,7 @@ body.printing #pickListPrintRoot { display: block; }
           <th data-pricing-col="vanPriceNum">Van/SUV/Truck Price</th>
           <th data-pricing-col="coreNum">Core</th>
         </tr>
+        <tr><th>Section</th><th>Part</th><th>AS IS</th><th>Car Price</th><th>Van/SUV/Truck Price</th><th>Core</th><th>Add to Pick</th></tr>
       </thead>
       <tbody id="jalopyPricingBody"></tbody>
     </table>
@@ -485,6 +486,7 @@ body.printing #pickListPrintRoot { display: block; }
                     <th>Yard</th>
                     <th>Notes</th>
                     <th>Remove</th>
+                    <th>Year</th><th>Make</th><th>Model</th><th>Row</th><th>Yard</th><th>Notes</th><th>Remove</th>
                   </tr>
                 </thead>
                 <tbody id="pickListBody"></tbody>
@@ -741,6 +743,30 @@ body.printing #pickListPrintRoot { display: block; }
             <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button class="btn btn-danger" id="clearNote">Clear Note</button>
             <button class="btn btn-primary" id="saveNote">Save Note</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Part to Pick List Modal -->
+    <div class="modal fade" id="addPartToPickModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Part to Pick List</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Select a vehicle from your pick list to add this part to:</p>
+            <p class="mb-2"><strong>Part:</strong> <span id="partToPickName" class="fw-bold"></span></p>
+            <div id="pickListForPart" class="list-group">
+              <!-- Pick list vehicles will be rendered here -->
+            </div>
+            <div id="pickListForPartEmpty" class="text-muted text-center p-3" style="display:none;">Your pick list is empty.</div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" id="confirmAddPartToPick">Add Part</button>
           </div>
         </div>
       </div>
@@ -1430,24 +1456,59 @@ body.printing #pickListPrintRoot { display: block; }
   /**************
    * Pick List  *
    **************/
+  function getPickList() {
+    try {
+      return JSON.parse(localStorage.getItem('myPickList') || '[]');
+    } catch {
+      return [];
+    }
+  }
+  function savePickList(list) {
+    localStorage.setItem('myPickList', JSON.stringify(list));
+  }
+
   function addToPickList(row, persist=true) {
     const tbody = document.getElementById('pickListBody');
-    const tr = document.createElement('tr');
-
     const key = ['Year','Make','Model','Row'].map(k => String(row[k]).trim()).join('|');
+    renderPickListRow(tbody, row);
+
+    if (persist) {
+      let pickList = getPickList();
+      if (!pickList.some(r => ['Year','Make','Model','Row'].map(k => r[k]).join('|') === key)) {
+        pickList.push(row);
+        savePickList(pickList);
+      }
+    }
+  }
+  function removeFromPickList(key) {
+    const tbody = document.getElementById('pickListBody');
+    const rowEl = tbody.querySelector(`tr[data-key="${key}"]`);
+    if (rowEl) tbody.removeChild(rowEl);
+    let pickList = getPickList();
+    pickList = pickList.filter(r => ['Year','Make','Model','Row'].map(k => r[k]).join('|') !== key);
+    savePickList(pickList);
+  }
+
+  function renderPickListRow(tbody, row) {
+    const key = ['Year','Make','Model','Row'].map(k => String(row[k]).trim()).join('|');
+    const originalKeyForNotes = [row.Year,row.Make,row.Model,row.Row].join('|');
+
+    const tr = document.createElement('tr');
     tr.dataset.key = key;
 
+    // Main vehicle info
     ['Year','Make','Model','Row','Yard'].forEach(k => {
       const td = document.createElement('td');
       td.textContent = row[k] || '';
       tr.appendChild(td);
     });
 
+    // Notes
     const noteTd = document.createElement('td');
-    const originalKeyForNotes = [row.Year,row.Make,row.Model,row.Row].join('|');
     noteTd.textContent = (JSON.parse(localStorage.getItem('jalopyNotes') || '{}')[originalKeyForNotes] || '');
     tr.appendChild(noteTd);
 
+    // Remove button
     const rmTd = document.createElement('td');
     const rmBtn = document.createElement('button');
     rmBtn.className = 'btn btn-sm btn-outline-danger';
@@ -1455,8 +1516,9 @@ body.printing #pickListPrintRoot { display: block; }
     rmBtn.addEventListener('click', e => {
       e.stopPropagation();
       tbody.removeChild(tr);
+      if (partsTr) tbody.removeChild(partsTr); // Also remove parts row
 
-      // reset pick buttons in visible tables
+      // Reset pick buttons in inventory tables
       [document.getElementById('tableBody'), document.getElementById('trustyTableBody')].forEach(tbodyEl => {
         if (!tbodyEl) return;
         const origRow = tbodyEl.querySelector(`tr[data-key="${originalKeyForNotes}"]`);
@@ -1470,36 +1532,34 @@ body.printing #pickListPrintRoot { display: block; }
         }
       });
 
-      let pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
+      let pickList = getPickList();
       pickList = pickList.filter(r => ['Year','Make','Model','Row'].map(k => r[k]).join('|') !== key);
-      localStorage.setItem('myPickList', JSON.stringify(pickList));
+      savePickList(pickList);
     });
     rmTd.appendChild(rmBtn);
     tr.appendChild(rmTd);
-
     tbody.appendChild(tr);
 
-    if (persist) {
-      let pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
-      if (!pickList.some(r => ['Year','Make','Model','Row'].map(k => r[k]).join('|') === key)) {
-        pickList.push(row);
-        localStorage.setItem('myPickList', JSON.stringify(pickList));
-      }
+    // Render parts row if parts exist
+    let partsTr = null;
+    if (row.parts && row.parts.length > 0) {
+      partsTr = document.createElement('tr');
+      partsTr.dataset.partsForKey = key;
+      const partsTd = document.createElement('td');
+      partsTd.colSpan = 7;
+      partsTd.className = 'p-2';
+      const partsHtml = row.parts.map(p => `<span class="badge bg-secondary me-1">${p.part} (${p.section})</span>`).join('');
+      partsTd.innerHTML = `<div class="ms-4"><strong>Parts:</strong> ${partsHtml}</div>`;
+      partsTr.appendChild(partsTd);
+      tbody.appendChild(partsTr);
     }
   }
-  function removeFromPickList(key) {
-    const tbody = document.getElementById('pickListBody');
-    const rowEl = tbody.querySelector(`tr[data-key="${key}"]`);
-    if (rowEl) tbody.removeChild(rowEl);
-    let pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
-    pickList = pickList.filter(r => ['Year','Make','Model','Row'].map(k => r[k]).join('|') !== key);
-    localStorage.setItem('myPickList', JSON.stringify(pickList));
-  }
+
   function loadPickListData() {
-    const pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
+    const pickList = getPickList();
     const tbody    = document.getElementById('pickListBody');
     tbody.innerHTML = '';
-    pickList.forEach(row => addToPickList(row, false));
+    pickList.forEach(row => renderPickListRow(tbody, row));
   }
 
   /****************
@@ -2760,8 +2820,6 @@ function renderTrendsHeatmap(rows){
   });
 })();
 
-
-  
   </script>
   
 <script>
@@ -3128,7 +3186,14 @@ function renderJalopyPricingTable(rows) {
       <td>${fmtMoney(r.carPriceRaw)}</td>
       <td>${fmtMoney(r.vanPriceRaw)}</td>
       <td>${fmtMoney(r.coreRaw)}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary add-part-to-pick-btn">
+          <i class="bi bi-plus-circle"></i> Add
+        </button>
+      </td>
     `;
+    const btn = tr.querySelector('.add-part-to-pick-btn');
+    btn.addEventListener('click', () => openAddPartToPickModal(r));
     tbody.appendChild(tr);
   });
 }
@@ -3181,9 +3246,223 @@ function updatePricingSortHeaderStyles() {
   });
 }
 
+let currentPartForPick = null;
+let addPartToPickModalInstance = null;
+
+function openAddPartToPickModal(partData) {
+  currentPartForPick = partData;
+  if (!addPartToPickModalInstance) {
+    addPartToPickModalInstance = new bootstrap.Modal(document.getElementById('addPartToPickModal'));
+  }
+
+  const nameEl = document.getElementById('partToPickName');
+  const listEl = document.getElementById('pickListForPart');
+  const emptyEl = document.getElementById('pickListForPartEmpty');
+  listEl.innerHTML = '';
+
+  if (nameEl) {
+    nameEl.textContent = `${partData.part} (${partData.section})`;
+  }
+
+  const pickList = getPickList();
+
+  if (pickList.length === 0) {
+    listEl.style.display = 'none';
+    emptyEl.style.display = 'block';
+  } else {
+    listEl.style.display = 'block';
+    emptyEl.style.display = 'none';
+    pickList.forEach((vehicle, index) => {
+      const key = ['Year','Make','Model','Row'].map(k => String(vehicle[k]).trim()).join('|');
+      const label = document.createElement('label');
+      label.className = 'list-group-item';
+      label.innerHTML = `
+        <input class="form-check-input me-2" type="radio" name="pickVehicle" value="${key}">
+        ${vehicle.Year} ${vehicle.Make} ${vehicle.Model} (Row ${vehicle.Row}, ${vehicle.Yard})
+      `;
+      listEl.appendChild(label);
+    });
+  }
+
+  addPartToPickModalInstance.show();
+}
+
+function confirmAddPartToPick() {
+  const selectedVehicleKey = document.querySelector('input[name="pickVehicle"]:checked')?.value;
+  if (!selectedVehicleKey || !currentPartForPick) {
+    alert('Please select a vehicle from your pick list.');
+    return;
+  }
+
+  let pickList = getPickList();
+  const vehicleIndex = pickList.findIndex(v => ['Year','Make','Model','Row'].map(k => v[k]).join('|') === selectedVehicleKey);
+
+  if (vehicleIndex > -1) {
+    if (!pickList[vehicleIndex].parts) {
+      pickList[vehicleIndex].parts = [];
+    }
+    pickList[vehicleIndex].parts.push(currentPartForPick);
+    savePickList(pickList);
+    loadPickListData(); // Re-render the main pick list tab to show the new part
+    addPartToPickModalInstance.hide();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', initJalopySubtabs);
+document.getElementById('confirmAddPartToPick')?.addEventListener('click', confirmAddPartToPick);
 </script>
 
+</body>
+</html>
+
+  return sorted;
+}
+
+function renderJalopyPricingTable(rows) {
+  const tbody = document.getElementById('jalopyPricingBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const fmtMoney = (v) => {
+    const n = parseFloat(v);
+    if (isNaN(n)) return v || '';
+    return '$' + n.toFixed(2);
+  };
+
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.section}</td>
+      <td>${r.part}</td>
+      <td>${r.asIsBool ? 'Yes' : 'No'}</td>
+      <td>${fmtMoney(r.carPriceRaw)}</td>
+      <td>${fmtMoney(r.vanPriceRaw)}</td>
+      <td>${fmtMoney(r.coreRaw)}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary add-part-to-pick-btn">
+          <i class="bi bi-plus-circle"></i> Add
+        </button>
+      </td>
+    `;
+    const btn = tr.querySelector('.add-part-to-pick-btn');
+    btn.addEventListener('click', () => openAddPartToPickModal(r));
+    tbody.appendChild(tr);
+  });
+}
+
+function setupPricingSorting() {
+  if (jalopyPricingSortingInitialized) return;
+  jalopyPricingSortingInitialized = true;
+
+  const headerRow = document.querySelector('#jalopyPricingTable thead tr');
+  if (!headerRow) return;
+
+  const ths = Array.from(headerRow.querySelectorAll('th[data-pricing-col]'));
+  ths.forEach(th => {
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', () => {
+      const col = th.getAttribute('data-pricing-col');
+      if (!col) return;
+
+      if (jalopyPricingSort.col === col) {
+        // toggle direction
+        jalopyPricingSort.dir = (jalopyPricingSort.dir === 'asc') ? 'desc' : 'asc';
+      } else {
+        jalopyPricingSort.col = col;
+        // default: numbers desc, text asc
+        jalopyPricingSort.dir = ['carPriceNum','vanPriceNum','coreNum'].includes(col) ? 'desc' : 'asc';
+      }
+
+      applyPricingFilters();
+      updatePricingSortHeaderStyles();
+    });
+  });
+
+  updatePricingSortHeaderStyles();
+}
+
+function updatePricingSortHeaderStyles() {
+  const headerRow = document.querySelector('#jalopyPricingTable thead tr');
+  if (!headerRow) return;
+
+  const ths = Array.from(headerRow.querySelectorAll('th[data-pricing-col]'));
+  ths.forEach(th => {
+    const col = th.getAttribute('data-pricing-col');
+    let label = th.textContent.replace(/[▲▼]/g,'').trim();
+    if (col === jalopyPricingSort.col) {
+      const caret = jalopyPricingSort.dir === 'asc' ? ' ▲' : ' ▼';
+      th.textContent = label + caret;
+    } else {
+      th.textContent = label;
+    }
+  });
+}
+
+let currentPartForPick = null;
+let addPartToPickModalInstance = null;
+
+function openAddPartToPickModal(partData) {
+  currentPartForPick = partData;
+  if (!addPartToPickModalInstance) {
+    addPartToPickModalInstance = new bootstrap.Modal(document.getElementById('addPartToPickModal'));
+  }
+
+  const nameEl = document.getElementById('partToPickName');
+  const listEl = document.getElementById('pickListForPart');
+  const emptyEl = document.getElementById('pickListForPartEmpty');
+  listEl.innerHTML = '';
+
+  if (nameEl) {
+    nameEl.textContent = `${partData.part} (${partData.section})`;
+  }
+
+  const pickList = getPickList();
+
+  if (pickList.length === 0) {
+    listEl.style.display = 'none';
+    emptyEl.style.display = 'block';
+  } else {
+    listEl.style.display = 'block';
+    emptyEl.style.display = 'none';
+    pickList.forEach((vehicle, index) => {
+      const key = ['Year','Make','Model','Row'].map(k => String(vehicle[k]).trim()).join('|');
+      const label = document.createElement('label');
+      label.className = 'list-group-item';
+      label.innerHTML = `
+        <input class="form-check-input me-2" type="radio" name="pickVehicle" value="${key}">
+        ${vehicle.Year} ${vehicle.Make} ${vehicle.Model} (Row ${vehicle.Row}, ${vehicle.Yard})
+      `;
+      listEl.appendChild(label);
+    });
+  }
+
+  addPartToPickModalInstance.show();
+}
+
+function confirmAddPartToPick() {
+  const selectedVehicleKey = document.querySelector('input[name="pickVehicle"]:checked')?.value;
+  if (!selectedVehicleKey || !currentPartForPick) {
+    alert('Please select a vehicle from your pick list.');
+    return;
+  }
+
+  let pickList = getPickList();
+  const vehicleIndex = pickList.findIndex(v => ['Year','Make','Model','Row'].map(k => v[k]).join('|') === selectedVehicleKey);
+
+  if (vehicleIndex > -1) {
+    if (!pickList[vehicleIndex].parts) {
+      pickList[vehicleIndex].parts = [];
+    }
+    pickList[vehicleIndex].parts.push(currentPartForPick);
+    savePickList(pickList);
+    loadPickListData(); // Re-render the main pick list tab to show the new part
+    addPartToPickModalInstance.hide();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initJalopySubtabs);
+document.getElementById('confirmAddPartToPick')?.addEventListener('click', confirmAddPartToPick);
+</script>
 
 </body>
 </html>
