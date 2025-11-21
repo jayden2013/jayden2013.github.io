@@ -771,6 +771,50 @@ body.printing #pickListPrintRoot { display: block; }
       </div>
     </div>
 
+    <!-- Add Parts to Vehicle from Pick List Modal -->
+    <div class="modal fade" id="addPartsFromPickListModal" tabindex="-1">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Parts to Vehicle</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Vehicle:</strong> <span id="vehicleForPartsName" class="fw-bold"></span></p>
+            <p class="text-muted small mb-3">Select parts from the pricing list below to add to this vehicle.</p>
+
+            <!-- Pricing table UI for the modal -->
+            <div class="row g-2 mb-3">
+              <div class="col-md-4">
+                <label class="form-label mb-1">Section</label>
+                <select id="modalPricingSectionFilter" class="form-select form-select-sm"></select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label mb-1">AS IS</label>
+                <select id="modalPricingAsIsFilter" class="form-select form-select-sm">
+                  <option value="">Any</option><option value="true">AS IS only</option><option value="false">Non-AS-IS</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label mb-1">Search</label>
+                <input id="modalPricingSearch" class="form-control form-control-sm" placeholder="Search section, part, price…">
+              </div>
+            </div>
+            <div class="table-responsive" style="max-height: 50vh;">
+              <table class="table table-striped table-bordered table-hover table-sm" id="modalJalopyPricingTable">
+                <thead class="table-dark"></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" id="confirmAddPartsFromPickList">Add Selected Parts</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Sold Data Modal -->
     <div class="modal fade" id="soldModal" tabindex="-1" aria-labelledby="soldModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
@@ -1495,6 +1539,10 @@ body.printing #pickListPrintRoot { display: block; }
     const tr = document.createElement('tr');
     tr.dataset.key = key;
 
+    // Make row clickable to add parts
+    tr.style.cursor = 'pointer';
+    tr.title = 'Click to add parts to this vehicle';
+
     // Main vehicle info
     ['Year','Make','Model','Row','Yard'].forEach(k => {
       const td = document.createElement('td');
@@ -1538,6 +1586,11 @@ body.printing #pickListPrintRoot { display: block; }
     rmTd.appendChild(rmBtn);
     tr.appendChild(rmTd);
     tbody.appendChild(tr);
+
+    // Add click listener to the row itself (but not its buttons)
+    tr.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') openAddPartsFromPickListModal(row);
+    });
 
     // Render parts row if parts exist
     let partsTr = null;
@@ -3276,6 +3329,10 @@ function updatePricingSortHeaderStyles() {
 let currentPartForPick = null;
 let addPartToPickModalInstance = null;
 
+let addPartsFromPickListModalInstance = null;
+let currentVehicleForParts = null;
+let modalPricingData = [];
+
 function openAddPartToPickModal(partData) {
   currentPartForPick = partData;
   if (!addPartToPickModalInstance) {
@@ -3346,8 +3403,135 @@ function confirmAddPartToPick() {
   addPartToPickModalInstance.hide();
 }
 
+function openAddPartsFromPickListModal(vehicleData) {
+  currentVehicleForParts = vehicleData;
+  if (!addPartsFromPickListModalInstance) {
+    addPartsFromPickListModalInstance = new bootstrap.Modal(document.getElementById('addPartsFromPickListModal'));
+  }
+
+  const nameEl = document.getElementById('vehicleForPartsName');
+  if (nameEl) {
+    nameEl.textContent = `${vehicleData.Year} ${vehicleData.Make} ${vehicleData.Model} (Row ${vehicleData.Row})`;
+  }
+
+  // If pricing data is loaded, render the modal table. Otherwise, it will be rendered when loaded.
+  if (jalopyPricingData.length > 0) {
+    modalPricingData = [...jalopyPricingData]; // Use a copy for modal state
+    populateModalPricingSectionFilter(modalPricingData);
+    renderModalPricingTable(modalPricingData);
+  }
+
+  addPartsFromPickListModalInstance.show();
+}
+
+function populateModalPricingSectionFilter(rows) {
+  const select = document.getElementById('modalPricingSectionFilter');
+  if (!select) return;
+
+  const sections = Array.from(new Set(rows.map(r => r.section).filter(Boolean).sort((a,b) => a.localeCompare(b))));
+  select.innerHTML = '<option value="">All sections</option>';
+  sections.forEach(sec => {
+    const opt = document.createElement('option');
+    opt.value = sec;
+    opt.textContent = sec;
+    select.appendChild(opt);
+  });
+}
+
+function applyModalPricingFilters() {
+  const sectionVal = document.getElementById('modalPricingSectionFilter')?.value || '';
+  const asIsVal = document.getElementById('modalPricingAsIsFilter')?.value || '';
+  const searchVal = (document.getElementById('modalPricingSearch')?.value || '').toLowerCase().trim();
+
+  let rows = modalPricingData.slice();
+
+  if (sectionVal) rows = rows.filter(r => r.section === sectionVal);
+  if (asIsVal === 'true') rows = rows.filter(r => r.asIsBool);
+  else if (asIsVal === 'false') rows = rows.filter(r => !r.asIsBool);
+
+  if (searchVal) {
+    rows = rows.filter(r => [r.section, r.part, r.carPriceRaw, r.vanPriceRaw, r.coreRaw].join(' ').toLowerCase().includes(searchVal));
+  }
+
+  renderModalPricingTable(rows);
+}
+
+function renderModalPricingTable(rows) {
+  const thead = document.querySelector('#modalJalopyPricingTable thead');
+  const tbody = document.querySelector('#modalJalopyPricingTable tbody');
+  if (!tbody || !thead) return;
+
+  thead.innerHTML = `<tr><th><input type="checkbox" title="Select All"></th><th>Section</th><th>Part</th><th>AS IS</th><th>Car Price</th><th>Van/SUV Price</th><th>Core</th></tr>`;
+  tbody.innerHTML = '';
+
+  const fmtMoney = (v) => isNaN(parseFloat(v)) ? (v || '') : '$' + parseFloat(v).toFixed(2);
+
+  rows.forEach((r, index) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" class="part-select-checkbox" data-index="${index}"></td>
+      <td>${r.section}</td>
+      <td>${r.part}</td>
+      <td>${r.asIsBool ? 'Yes' : 'No'}</td>
+      <td>${fmtMoney(r.carPriceRaw)}</td>
+      <td>${fmtMoney(r.vanPriceRaw)}</td>
+      <td>${fmtMoney(r.coreRaw)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // "Select All" checkbox logic
+  const selectAll = thead.querySelector('input[type="checkbox"]');
+  selectAll.addEventListener('change', (e) => {
+    tbody.querySelectorAll('.part-select-checkbox').forEach(cb => cb.checked = e.target.checked);
+  });
+}
+
+function confirmAddPartsFromPickList() {
+  if (!currentVehicleForParts) return;
+
+  const selectedCheckboxes = document.querySelectorAll('#modalJalopyPricingTable .part-select-checkbox:checked');
+  if (selectedCheckboxes.length === 0) {
+    alert('No parts selected.');
+    return;
+  }
+
+  const partsToAdd = Array.from(selectedCheckboxes).map(cb => {
+    const index = parseInt(cb.dataset.index, 10);
+    // This assumes the currently displayed (and filtered) rows in the modal are a subset of `modalPricingData`
+    // A safer approach is to filter `modalPricingData` again to get the displayed rows and find the part.
+    // For simplicity, we'll assume the indices match the `rows` passed to `renderModalPricingTable`.
+    // A more robust way would be to store the full part object or a unique ID on the checkbox.
+    // Let's find the part from the full `jalopyPricingData` list to be safe.
+    const partData = jalopyPricingData.find(p => p.section === tbody.rows[index].cells[1].textContent && p.part === tbody.rows[index].cells[2].textContent);
+    return partData;
+  }).filter(Boolean);
+
+  let pickList = getPickList();
+  const vehicleKey = ['Year','Make','Model','Row'].map(k => currentVehicleForParts[k]).join('|');
+  const vehicleIndex = pickList.findIndex(v => ['Year','Make','Model','Row'].map(k => v[k]).join('|') === vehicleKey);
+
+  if (vehicleIndex > -1) {
+    if (!pickList[vehicleIndex].parts) pickList[vehicleIndex].parts = [];
+    partsToAdd.forEach(part => {
+      if (!pickList[vehicleIndex].parts.some(p => p.section === part.section && p.part === part.part)) {
+        pickList[vehicleIndex].parts.push(part);
+      }
+    });
+    savePickList(pickList);
+    loadPickListData();
+    addPartsFromPickListModalInstance.hide();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', initJalopySubtabs);
 document.getElementById('confirmAddPartToPick')?.addEventListener('click', confirmAddPartToPick);
+
+// Wire up new modal's controls
+document.getElementById('modalPricingSectionFilter')?.addEventListener('change', applyModalPricingFilters);
+document.getElementById('modalPricingAsIsFilter')?.addEventListener('change', applyModalPricingFilters);
+document.getElementById('modalPricingSearch')?.addEventListener('input', applyModalPricingFilters);
+document.getElementById('confirmAddPartsFromPickList')?.addEventListener('click', confirmAddPartsFromPickList);
 </script>
 
 </body>
