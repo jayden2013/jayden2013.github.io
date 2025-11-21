@@ -1744,24 +1744,30 @@ body.printing #pickListPrintRoot { display: block; }
     const notesMap = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
     return pickList.map(r => {
       const key = [r.Year, r.Make, r.Model, r.Row].join('|');
+      const vehicleNotes = (notesMap[key] || '').replace(/\r?\n/g, ' ');
+      const partsList = (r.parts || [])
+        .map(p => `${p.part} (${p.section})`)
+        .join('; ');
+
       return {
         Year:  r.Year || '',
         Make:  r.Make || '',
         Model: r.Model || '',
         Row:   r.Row || '',
         Yard:  r.Yard || '',
-        Notes: (notesMap[key] || '').replace(/\r?\n/g,' ')
+        Notes: vehicleNotes,
+        Parts: partsList
       };
     });
   }
-  function downloadCSV(rows, filename, contextLabel='Pick List Export') {
-    const headers = ['Year','Make','Model','Row','Yard','Notes'];
+  function downloadCSV(rows, filename, contextLabel = 'Pick List Export') {
+    const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'Parts'];
     const lines = [
       ...brandingBannerLines(contextLabel),
       headers.map(csvEscape).join(',')
     ];
     rows.forEach(r => {
-      lines.push([r.Year, r.Make, r.Model, r.Row, r.Yard, r.Notes].map(csvEscape).join(','));
+      lines.push([r.Year, r.Make, r.Model, r.Row, r.Yard, r.Notes, r.Parts].map(csvEscape).join(','));
     });
     const csv = lines.join('\n');
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
@@ -1780,7 +1786,7 @@ body.printing #pickListPrintRoot { display: block; }
       (parseInt(a.Year)||0) - (parseInt(b.Year)||0) ||
       (String(a.Row||'')).localeCompare(String(b.Row||''))
     );
-    const headers = ['Year','Make','Model','Row','Yard','Notes'];
+    const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'Parts'];
     const lines = [
       ...brandingBannerLines('Pick List Export (Grouped by Yard)'),
       headers.map(csvEscape).join(',')
@@ -1790,9 +1796,9 @@ body.printing #pickListPrintRoot { display: block; }
       if (r.Yard !== currentYard) {
         currentYard = r.Yard;
         lines.push('');
-        lines.push([`YARD: ${currentYard}`,'','','','',''].map(csvEscape).join(','));
+        lines.push([`YARD: ${currentYard}`,'','','','','',''].map(csvEscape).join(','));
       }
-      lines.push([r.Year, r.Make, r.Model, r.Row, r.Yard, r.Notes].map(csvEscape).join(','));
+      lines.push([r.Year, r.Make, r.Model, r.Row, r.Yard, r.Notes, r.Parts].map(csvEscape).join(','));
     });
     const csv = lines.join('\n');
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
@@ -2855,6 +2861,7 @@ function buildCardHTML(r){
   const row   = r.Row || '';
   const yard  = r.Yard || '';
   const notes = (r.Notes || '').slice(0, 160);
+  const parts = (r.parts || []).map(p => `• ${p.part} (${p.section})`).join('<br>');
 
   return `
     <div class="pl-card">
@@ -2870,6 +2877,7 @@ function buildCardHTML(r){
       </div>
 
       ${notes ? `<div class="pl-notes"><span class="label">Notes:</span>${notes}</div>` : ``}
+      ${parts ? `<div class="pl-notes"><span class="label">Parts:</span><br>${parts}</div>` : ``}
 
       <div class="pl-checks">
         <span><span class="pl-box"></span>Pulled</span>
