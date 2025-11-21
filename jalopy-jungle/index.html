@@ -3285,7 +3285,7 @@ function openAddPartToPickModal(partData) {
       const label = document.createElement('label');
       label.className = 'list-group-item';
       label.innerHTML = `
-        <input class="form-check-input me-2" type="radio" name="pickVehicle" value="${key}">
+        <input class="form-check-input me-2" type="checkbox" name="pickVehicle" value="${key}">
         ${vehicle.Year} ${vehicle.Make} ${vehicle.Model} (Row ${vehicle.Row}, ${vehicle.Yard})
       `;
       listEl.appendChild(label);
@@ -3296,24 +3296,35 @@ function openAddPartToPickModal(partData) {
 }
 
 function confirmAddPartToPick() {
-  const selectedVehicleKey = document.querySelector('input[name="pickVehicle"]:checked')?.value;
-  if (!selectedVehicleKey || !currentPartForPick) {
-    alert('Please select a vehicle from your pick list.');
+  const selectedVehicleCheckboxes = document.querySelectorAll('input[name="pickVehicle"]:checked');
+  if (selectedVehicleCheckboxes.length === 0 || !currentPartForPick) {
+    alert('Please select at least one vehicle from your pick list.');
     return;
   }
 
   let pickList = getPickList();
-  const vehicleIndex = pickList.findIndex(v => ['Year','Make','Model','Row'].map(k => v[k]).join('|') === selectedVehicleKey);
+  let changesMade = false;
 
-  if (vehicleIndex > -1) {
-    if (!pickList[vehicleIndex].parts) {
-      pickList[vehicleIndex].parts = [];
+  selectedVehicleCheckboxes.forEach(checkbox => {
+    const selectedVehicleKey = checkbox.value;
+    const vehicleIndex = pickList.findIndex(v => ['Year','Make','Model','Row'].map(k => v[k]).join('|') === selectedVehicleKey);
+
+    if (vehicleIndex > -1) {
+      if (!pickList[vehicleIndex].parts) {
+        pickList[vehicleIndex].parts = [];
+      }
+      // Prevent adding duplicate parts
+      const partExists = pickList[vehicleIndex].parts.some(p => p.section === currentPartForPick.section && p.part === currentPartForPick.part);
+      if (!partExists) {
+        pickList[vehicleIndex].parts.push(currentPartForPick);
+        changesMade = true;
+      }
     }
-    pickList[vehicleIndex].parts.push(currentPartForPick);
-    savePickList(pickList);
-    loadPickListData(); // Re-render the main pick list tab to show the new part
-    addPartToPickModalInstance.hide();
-  }
+  });
+
+  savePickList(pickList);
+  if (changesMade) loadPickListData(); // Re-render the main pick list tab to show the new part(s)
+  addPartToPickModalInstance.hide();
 }
 
 document.addEventListener('DOMContentLoaded', initJalopySubtabs);
