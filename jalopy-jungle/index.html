@@ -3531,6 +3531,7 @@ function confirmAddPartsFromPickList() {
     return;
   }
 
+  const tbody = document.querySelector('#modalJalopyPricingTable tbody');
   const partsToAdd = Array.from(selectedCheckboxes).map(cb => {
     const index = parseInt(cb.dataset.index, 10);
     // This assumes the currently displayed (and filtered) rows in the modal are a subset of `modalPricingData`
