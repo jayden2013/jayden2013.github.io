@@ -1547,8 +1547,14 @@ body.printing #pickListPrintRoot { display: block; }
       const partsTd = document.createElement('td');
       partsTd.colSpan = 7;
       partsTd.className = 'p-2';
-      const partsHtml = row.parts.map(p => `<span class="badge bg-secondary me-1">${p.part} (${p.section})</span>`).join('');
-      partsTd.innerHTML = `<div class="ms-4"><strong>Parts:</strong> ${partsHtml}</div>`;
+      const partsHtml = row.parts.map((p, partIndex) => `
+        <span class="badge bg-secondary me-1 align-middle">
+          ${p.part} (${p.section})
+          <button type="button" class="btn-close btn-close-white ms-1" style="font-size: .6em; vertical-align: middle;"
+                  onclick="removePartFromVehicle('${key}', ${partIndex})"></button>
+        </span>
+      `).join('');
+      partsTd.innerHTML = `<div class="ms-4"><strong>Parts:</strong> ${partsHtml || 'None'}</div>`;
       partsTr.appendChild(partsTd);
       tbody.appendChild(partsTr);
     }
@@ -1559,6 +1565,19 @@ body.printing #pickListPrintRoot { display: block; }
     const tbody    = document.getElementById('pickListBody');
     tbody.innerHTML = '';
     pickList.forEach(row => renderPickListRow(tbody, row));
+  }
+
+  function removePartFromVehicle(vehicleKey, partIndex) {
+    let pickList = getPickList();
+    const vehicleIndex = pickList.findIndex(v => ['Year','Make','Model','Row'].map(k => v[k]).join('|') === vehicleKey);
+
+    if (vehicleIndex > -1) {
+      if (pickList[vehicleIndex].parts && pickList[vehicleIndex].parts[partIndex] !== undefined) {
+        pickList[vehicleIndex].parts.splice(partIndex, 1);
+        savePickList(pickList);
+        loadPickListData(); // Re-render the whole pick list to reflect the change
+      }
+    }
   }
 
   /****************
