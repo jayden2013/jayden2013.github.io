@@ -264,6 +264,56 @@ body.printing #pickListPrintRoot { display: block; }
   .pl-meta { font: 10px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #555; }
 }
 
+/* ===== Mobile-friendly tables ===== */
+@media (max-width: 767.98px) {
+  .table-responsive-stack {
+    display: block;
+    width: 100%;
+  }
+  .table-responsive-stack thead,
+  .table-responsive-stack tbody,
+  .table-responsive-stack tfoot,
+  .table-responsive-stack tr,
+  .table-responsive-stack th,
+  .table-responsive-stack td {
+    display: block;
+  }
+  .table-responsive-stack thead {
+    display: none; /* Hide table headers */
+  }
+  .table-responsive-stack tr {
+    margin-bottom: 1rem;
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: .5rem;
+  }
+  .dark-mode .table-responsive-stack tr {
+    border-color: rgba(255,255,255,.15);
+  }
+  .table-responsive-stack td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .5rem .75rem !important;
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,.05);
+  }
+  .table-responsive-stack td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    padding-right: 1rem;
+    text-align: left;
+  }
+  .table-responsive-stack td:last-child {
+    border-bottom: none;
+  }
+  .table-responsive-stack tr.group-row td {
+    justify-content: flex-start;
+  }
+  .table-responsive-stack tr.group-row td::before {
+    display: none;
+  }
+}
+
 
   </style>
 </head>
@@ -374,7 +424,7 @@ body.printing #pickListPrintRoot { display: block; }
         </button>
       </div>
       <div class="table-responsive">
-        <table class="table table-striped table-bordered table-hover" id="inventoryTable">
+        <table class="table table-striped table-bordered table-hover table-responsive-stack" id="inventoryTable">
           <thead class="table-dark"><tr id="tableHeader"></tr></thead>
           <tbody id="tableBody"></tbody>
         </table>
@@ -418,7 +468,7 @@ body.printing #pickListPrintRoot { display: block; }
   </div>
 
   <div class="table-responsive">
-    <table class="table table-striped table-bordered table-hover" id="jalopyPricingTable">
+    <table class="table table-striped table-bordered table-hover table-responsive-stack" id="jalopyPricingTable">
       <thead class="table-dark">
         <tr>
           <th data-pricing-col="section">Section</th>
@@ -453,7 +503,7 @@ body.printing #pickListPrintRoot { display: block; }
               <button class="btn btn-success" id="trustyExportBtn"><i class="bi bi-download"></i> Export Table to CSV</button>
             </div>
             <div class="table-responsive">
-              <table class="table table-striped table-bordered table-hover" id="trustyTable">
+              <table class="table table-striped table-bordered table-hover table-responsive-stack" id="trustyTable">
                 <thead class="table-dark"><tr id="trustyTableHeader"></tr></thead>
                 <tbody id="trustyTableBody"></tbody>
               </table>
@@ -476,7 +526,7 @@ body.printing #pickListPrintRoot { display: block; }
 </button>
 
             <div class="table-responsive">
-              <table class="table table-striped table-bordered table-hover" id="pickListTable">
+              <table class="table table-striped table-bordered table-hover table-responsive-stack" id="pickListTable">
                 <thead class="table-dark">
                   <tr>
                     <th>Year</th>
@@ -594,7 +644,7 @@ body.printing #pickListPrintRoot { display: block; }
 
     <div class="table-responsive" id="trendsScroll" style="max-height:60vh; overflow:auto;">
 <!-- inside #trendsTab -->
-<table class="table table-striped table-bordered table-hover" id="trendsTable">
+<table class="table table-striped table-bordered table-hover table-responsive-stack" id="trendsTable">
   <thead class="table-dark">
     <tr>
       <th>Year</th>
@@ -1066,6 +1116,7 @@ body.printing #pickListPrintRoot { display: block; }
 
       Object.values(row).forEach(v => {
         const td = document.createElement('td');
+        td.dataset.label = cols[i];
         td.textContent = v; tr.appendChild(td);
       });
 
@@ -1073,6 +1124,7 @@ body.printing #pickListPrintRoot { display: block; }
       const nt = document.createElement('td');
       nt.textContent = (notes[key] || '');
       nt.style.cursor = 'pointer';
+      nt.dataset.label = 'Note';
       nt.addEventListener('click', e => {
         e.stopPropagation();
         selectedRowKey = key;
@@ -1088,6 +1140,7 @@ body.printing #pickListPrintRoot { display: block; }
 
       // Pick
       const pickTd = document.createElement('td');
+      pickTd.dataset.label = 'Pick';
       const btn = document.createElement('button');
       btn.classList.add('pick-btn','btn','btn-sm');
 
@@ -1337,6 +1390,7 @@ body.printing #pickListPrintRoot { display: block; }
 
       Object.values(row).forEach(v => {
         const td = document.createElement('td');
+        td.dataset.label = cols[i];
         td.textContent = v; tr.appendChild(td);
       });
 
@@ -1344,6 +1398,7 @@ body.printing #pickListPrintRoot { display: block; }
       const nt = document.createElement('td');
       nt.textContent = (notes[key] || '');
       nt.style.cursor = 'pointer';
+      nt.dataset.label = 'Note';
       nt.addEventListener('click', e => {
         e.stopPropagation();
         selectedRowKey = key;
@@ -1359,6 +1414,7 @@ body.printing #pickListPrintRoot { display: block; }
 
       // Pick
       const pickTd = document.createElement('td');
+      pickTd.dataset.label = 'Pick';
       const btn = document.createElement('button');
       btn.classList.add('pick-btn','btn','btn-sm');
 
@@ -1498,6 +1554,7 @@ body.printing #pickListPrintRoot { display: block; }
     // Main vehicle info
     ['Year','Make','Model','Row','Yard'].forEach(k => {
       const td = document.createElement('td');
+      td.dataset.label = k;
       td.textContent = row[k] || '';
       tr.appendChild(td);
     });
@@ -1505,10 +1562,12 @@ body.printing #pickListPrintRoot { display: block; }
     // Notes
     const noteTd = document.createElement('td');
     noteTd.textContent = (JSON.parse(localStorage.getItem('jalopyNotes') || '{}')[originalKeyForNotes] || '');
+    noteTd.dataset.label = 'Notes';
     tr.appendChild(noteTd);
 
     // Remove button
     const rmTd = document.createElement('td');
+    rmTd.dataset.label = 'Remove';
     const rmBtn = document.createElement('button');
     rmBtn.className = 'btn btn-sm btn-outline-danger';
     rmBtn.textContent = '✕ Remove';
@@ -1546,6 +1605,7 @@ body.printing #pickListPrintRoot { display: block; }
       partsTr.dataset.partsForKey = key;
       const partsTd = document.createElement('td');
       partsTd.colSpan = 7;
+      partsTd.dataset.label = 'Parts';
       partsTd.className = 'p-2';
       const partsHtml = row.parts.map((p, partIndex) => `
         <span class="badge bg-secondary me-1 align-middle">
@@ -1554,7 +1614,7 @@ body.printing #pickListPrintRoot { display: block; }
                   onclick="removePartFromVehicle('${key}', ${partIndex})"></button>
         </span>
       `).join('');
-      partsTd.innerHTML = `<div class="ms-4"><strong>Parts:</strong> ${partsHtml || 'None'}</div>`;
+      partsTd.innerHTML = `<div class="ms-4">${partsHtml || 'None'}</div>`;
       partsTr.appendChild(partsTd);
       tbody.appendChild(partsTr);
     }
@@ -1636,12 +1696,12 @@ body.printing #pickListPrintRoot { display: block; }
     data.forEach(r => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${r['Search Term']||''}</td>
-        <td>${r['Listing Title']||''}</td>
-        <td>${r['Last Sold Price']||''}</td>
-        <td>${r['Date Sold']||''}</td>
-        <td>${r['Time to Sell']||''}</td>
-        <td>${r['Total Sold']||''}</td>`;
+        <td data-label="Search Term">${r['Search Term']||''}</td>
+        <td data-label="Listing Title">${r['Listing Title']||''}</td>
+        <td data-label="Last Sold Price">${r['Last Sold Price']||''}</td>
+        <td data-label="Date Sold">${r['Date Sold']||''}</td>
+        <td data-label="Time to Sell">${r['Time to Sell']||''}</td>
+        <td data-label="Total Sold">${r['Total Sold']||''}</td>`;
       tbody.appendChild(tr);
     });
   }
@@ -3207,13 +3267,13 @@ function renderJalopyPricingTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${r.section}</td>
-      <td>${r.part}</td>
-      <td>${r.asIsBool ? 'Yes' : 'No'}</td>
-      <td>${fmtMoney(r.carPriceRaw)}</td>
-      <td>${fmtMoney(r.vanPriceRaw)}</td>
-      <td>${fmtMoney(r.coreRaw)}</td>
-      <td>
+      <td data-label="Section">${r.section}</td>
+      <td data-label="Part">${r.part}</td>
+      <td data-label="AS IS">${r.asIsBool ? 'Yes' : 'No'}</td>
+      <td data-label="Car Price">${fmtMoney(r.carPriceRaw)}</td>
+      <td data-label="Van/SUV/Truck Price">${fmtMoney(r.vanPriceRaw)}</td>
+      <td data-label="Core">${fmtMoney(r.coreRaw)}</td>
+      <td data-label="Add to pick">
         <button class="btn btn-sm btn-outline-primary add-part-to-pick-btn">
           <i class="bi bi-plus-circle"></i> Add
         </button>
