@@ -1748,7 +1748,7 @@ body.printing #pickListPrintRoot { display: block; }
         .map(p => `${p.part} (${p.section})`)
         .join('; ');
 
-      return {
+      const data = {
         Year:  r.Year || '',
         Make:  r.Make || '',
         Model: r.Model || '',
@@ -1757,10 +1757,11 @@ body.printing #pickListPrintRoot { display: block; }
         Notes: vehicleNotes,
         Parts: partsList
       };
+      return data;
     });
   }
   function downloadCSV(rows, filename, contextLabel = 'Pick List Export') {
-    const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'Parts'];
+    const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'Parts']; // Ensure Parts is here
     const lines = [
       ...brandingBannerLines(contextLabel),
       headers.map(csvEscape).join(',')
@@ -1785,7 +1786,7 @@ body.printing #pickListPrintRoot { display: block; }
       (parseInt(a.Year)||0) - (parseInt(b.Year)||0) ||
       (String(a.Row||'')).localeCompare(String(b.Row||''))
     );
-    const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'Parts'];
+    const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'Parts']; // Ensure Parts is here
     const lines = [
       ...brandingBannerLines('Pick List Export (Grouped by Yard)'),
       headers.map(csvEscape).join(',')
@@ -2860,7 +2861,7 @@ function buildCardHTML(r){
   const row   = r.Row || '';
   const yard  = r.Yard || '';
   const notes = (r.Notes || '').slice(0, 160);
-  const parts = (r.parts || []).map(p => `• ${p.part} (${p.section})`).join('<br>');
+  const parts = (r.Parts || '').replace(/; /g, '<br>• '); // Use Parts string
 
   return `
     <div class="pl-card">
@@ -2876,7 +2877,7 @@ function buildCardHTML(r){
       </div>
 
       ${notes ? `<div class="pl-notes"><span class="label">Notes:</span>${notes}</div>` : ``}
-      ${parts ? `<div class="pl-notes"><span class="label">Parts:</span><br>${parts}</div>` : ``}
+      ${parts ? `<div class="pl-notes"><span class="label">Parts:</span><br>• ${parts}</div>` : ``}
 
       <div class="pl-checks">
         <span><span class="pl-box"></span>Pulled</span>
