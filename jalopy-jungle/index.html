@@ -1810,8 +1810,10 @@ body.printing #pickListPrintRoot { display: block; }
       partsTd.colSpan = 7; // Full width
       partsTd.className = 'p-2';
 
-      // Calculate total cost
-      const totalCost = (row.parts || []).reduce((sum, p) => sum + (p.carPriceNum || 0), 0);
+      // Calculate costs
+      const subtotal = (row.parts || []).reduce((sum, p) => sum + (p.carPriceNum || 0), 0);
+      const salesTax = subtotal * 0.06;
+      const totalWithTax = subtotal + salesTax;
 
       // Build parts HTML
       const partsHtml = row.parts.map((p, partIndex) => `
@@ -1823,7 +1825,9 @@ body.printing #pickListPrintRoot { display: block; }
       `).join('');
 
       partsTd.innerHTML = `<div class="ms-4"><strong>Parts:</strong> ${partsHtml || 'None'}</div>
-                         <div class="ms-4 mt-1"><strong>Total Cost:</strong> <span class="fw-bold text-success">$${totalCost.toFixed(2)}</span></div>`;
+                         <div class="ms-4 mt-1 small">
+                           <strong>Subtotal:</strong> $${subtotal.toFixed(2)} &nbsp;&nbsp; <strong>Sales Tax (6%):</strong> $${salesTax.toFixed(2)} &nbsp;&nbsp; <strong>Total:</strong> <span class="fw-bold text-success">$${totalWithTax.toFixed(2)}</span>
+                         </div>`;
       partsTr.appendChild(partsTd);
       tbody.appendChild(partsTr);
     }
@@ -1852,17 +1856,22 @@ body.printing #pickListPrintRoot { display: block; }
 
   function updatePickListGrandTotal() {
     const pickList = getPickList();
-    let grandTotal = 0;
+    let grandSubtotal = 0;
 
     pickList.forEach(vehicle => {
       if (vehicle.parts && vehicle.parts.length > 0) {
-        grandTotal += vehicle.parts.reduce((sum, part) => sum + (part.carPriceNum || 0), 0);
+        grandSubtotal += vehicle.parts.reduce((sum, part) => sum + (part.carPriceNum || 0), 0);
       }
     });
 
+    const grandSalesTax = grandSubtotal * 0.06;
+    const grandTotalWithTax = grandSubtotal + grandSalesTax;
+
     const totalEl = document.getElementById('pickListGrandTotal');
     if (totalEl) {
-      totalEl.innerHTML = `<span class="h5">Grand Total:</span> <span class="h4 fw-bold text-success">$${grandTotal.toFixed(2)}</span>`;
+      totalEl.innerHTML = `<div><span class="text-muted">Subtotal:</span> <span class="fw-bold">$${grandSubtotal.toFixed(2)}</span></div>
+                         <div><span class="text-muted">Sales Tax (6%):</span> <span class="fw-bold">$${grandSalesTax.toFixed(2)}</span></div>
+                         <div class="h5 mt-1"><span class="fw-normal">Grand Total:</span> <span class="fw-bold text-success">$${grandTotalWithTax.toFixed(2)}</span></div>`;
     }
   }
 
