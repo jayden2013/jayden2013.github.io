@@ -45,6 +45,28 @@ body.dark-mode .jalopy-subtab-btn {
   border-color: orange;
 }
 
+    /* ---------- Themes ---------- */
+    /* Midnight Theme */
+    body.theme-midnight { background-color: #0d1117; color: #c9d1d9; }
+    body.theme-midnight .table { color: #c9d1d9; }
+    body.theme-midnight .table-dark { background-color: #161b22; }
+    body.theme-midnight .tab-card { background: #161b22; border-color: #30363d; box-shadow: none; }
+    body.theme-midnight .modal-content { background-color: #161b22; color: #c9d1d9; }
+    body.theme-midnight .jalopy-subtab-btn { border-color: #30363d; color: #c9d1d9; }
+    body.theme-midnight .sticky-note { background: #1f242c; border-color: #444c56; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+    body.theme-midnight .sticky-note .sticky-header { background: rgba(255,255,255,.06); border-bottom-color: rgba(255,255,255,.08); }
+    body.theme-midnight .sticky-note .sticky-title { color: #e8e8e8; }
+
+    /* Slate Theme */
+    body.theme-slate { background-color: #27272a; color: #e4e4e7; }
+    body.theme-slate .table { color: #e4e4e7; }
+    body.theme-slate .table-dark { background-color: #3f3f46; }
+    body.theme-slate .tab-card { background: #3f3f46; border-color: #52525b; box-shadow: none; }
+    body.theme-slate .modal-content { background-color: #3f3f46; color: #e4e4e7; }
+    body.theme-slate .jalopy-subtab-btn { border-color: #52525b; color: #e4e4e7; }
+    body.theme-slate .sticky-note { background: #494950; border-color: #6a6a73; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+    body.theme-slate .sticky-note .sticky-header { background: rgba(255,255,255,.06); border-bottom-color: rgba(255,255,255,.08); }
+    body.theme-slate .sticky-note .sticky-title { color: #f0f0f0; }
     /* ---------- Theme / base ---------- */
     body.dark-mode { background-color:#121212; color:#f1f1f1; }
     body.dark-mode .table { color:#f1f1f1; }
@@ -727,8 +749,16 @@ body.printing #pickListPrintRoot { display: block; }
                 <option>Twin Falls</option>
               </select>
             </div>
-
-            <button class="btn btn-outline-secondary w-100 mb-2" id="modalToggleDark">Toggle Dark Mode</button>
+            
+            <div class="mb-3">
+              <label for="themeSelect" class="form-label">Theme</label>
+              <select id="themeSelect" class="form-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="midnight">Midnight</option>
+                <option value="slate">Slate</option>
+              </select>
+            </div>
 
             <!-- Favorites -->
             <hr>
@@ -1765,23 +1795,32 @@ body.printing #pickListPrintRoot { display: block; }
    * Settings     *
    ****************/
   const settingsBtn = document.getElementById('settingsBtn');
-  const modalToggleDark = document.getElementById('modalToggleDark');
 
   settingsBtn.onclick = () => {
     const sel = document.getElementById('homeYardSelect');
     sel.value = localStorage.getItem('homeYard') || '';
+    const themeSel = document.getElementById('themeSelect');
+    themeSel.value = localStorage.getItem('theme') || 'light';
     new bootstrap.Modal(document.getElementById('settingsModal')).show();
   };
   document.getElementById('saveSettings').onclick = () => {
     const yard = document.getElementById('homeYardSelect').value;
     localStorage.setItem('homeYard', yard.trim().toLowerCase().replace(/\s+/g,'_'));
+    const theme = document.getElementById('themeSelect').value;
+    localStorage.setItem('theme', theme);
+    applyTheme(theme);
     bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
     applyHomeYardDefault();
   };
-  modalToggleDark.onclick = () => {
-    const isDark = document.body.classList.toggle('dark-mode');
-    localStorage.setItem('darkMode', isDark);
-  };
+
+  function applyTheme(theme) {
+    document.body.classList.remove('dark-mode', 'theme-midnight', 'theme-slate');
+    if (theme === 'dark') {
+      document.body.classList.add('dark-mode');
+    } else if (theme === 'midnight' || theme === 'slate') {
+      document.body.classList.add(`theme-${theme}`);
+    }
+  }
 
   // Favorites UI
   document.getElementById('settingsModal').addEventListener('shown.bs.modal', renderFavoriteVehicles);
@@ -1821,18 +1860,19 @@ body.printing #pickListPrintRoot { display: block; }
     const pickList   = JSON.parse(localStorage.getItem('myPickList') || '[]');
     const favorites  = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
     const homeYard   = localStorage.getItem('homeYard') || '';
-    theDark = localStorage.getItem('darkMode') || 'false';
-    const combined = JSON.stringify({ pickList, favorites, homeYard, darkMode: theDark });
+    const theme = localStorage.getItem('theme') || 'light';
+    const combined = JSON.stringify({ pickList, favorites, homeYard, theme });
     return LZString.compressToBase64(combined);
   }
   function applyDataCode(code) {
     try {
       const json = LZString.decompressFromBase64(code);
       const obj  = JSON.parse(json);
+      const theme = obj.theme || 'light';
       localStorage.setItem('myPickList', JSON.stringify(obj.pickList || []));
       localStorage.setItem(FAV_KEY, JSON.stringify(obj.favorites || []));
       localStorage.setItem('homeYard', (obj.homeYard || '').trim().toLowerCase().replace(/\s+/g,'_'));
-      localStorage.setItem('darkMode', obj.darkMode || 'false');
+      localStorage.setItem('theme', theme);
       loadPickListData();
       renderFavoriteVehicles();
       if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode'); else document.body.classList.remove('dark-mode');
@@ -2051,7 +2091,7 @@ body.printing #pickListPrintRoot { display: block; }
    ****************/
   function initApp() {
     try { notes = JSON.parse(localStorage.getItem('jalopyNotes') || '{}'); } catch { notes = {}; }
-    if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+    applyTheme(localStorage.getItem('theme') || 'light');
 
     updateSignedInEmailUI();
     listCSVFiles();      // Jalopy
