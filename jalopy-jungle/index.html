@@ -3451,12 +3451,19 @@ function openAddPartsFromPickListModal(vehicleData) {
 
   // If pricing data is loaded, render the modal table. Otherwise, it will be rendered when loaded.
   if (jalopyPricingData.length > 0) {
-    modalPricingData = [...jalopyPricingData]; // Use a copy for modal state
-    populateModalPricingSectionFilter(modalPricingData);
-    renderModalPricingTable(modalPricingData);
+    setupModalForAddingParts();
+  } else {
+    // If pricing data isn't loaded, load it now for the modal.
+    loadJalopyPricing(() => setupModalForAddingParts());
   }
 
   addPartsFromPickListModalInstance.show();
+}
+
+function setupModalForAddingParts() {
+    modalPricingData = [...jalopyPricingData]; // Use a copy for modal state
+    populateModalPricingSectionFilter(modalPricingData);
+    applyModalPricingFilters(); // Use apply to render with default filters
 }
 
 function populateModalPricingSectionFilter(rows) {
