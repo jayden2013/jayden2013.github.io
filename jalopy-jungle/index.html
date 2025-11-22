@@ -515,12 +515,6 @@ body.printing #pickListPrintRoot { display: block; }
                 <span class="ms-2">Loading featured vehicles...</span>
               </div>
             </div>
-            <div id="homePageStatsContainer" class="mt-4 pt-4 border-top">
-              <div class="col-12 text-center text-muted p-5">
-                <div class="spinner-border spinner-border-sm" role="status"></div>
-                <span class="ms-2">Loading featured vehicles...</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1313,17 +1307,11 @@ body.printing #pickListPrintRoot { display: block; }
         checkNewFavoriteVehicles(currentData);
         renderTable(currentData);
         renderFeaturedVehicles(currentData);
-        renderHomePageStats(currentData);
         showStatistics(currentData);
       }
     });
   }
 
-  function renderHomePageStats(data) {
-    const container = document.getElementById('homePageStatsContainer');
-    if (!container) return;
-    showStatistics(data, container, document.getElementById('ageChart')); // Reuse existing stats function
-  }
   async function renderFeaturedVehicles(data, count = 4) {
     const container = document.getElementById('featuredVehiclesContainer');
     if (!container) return;
@@ -1335,21 +1323,20 @@ body.printing #pickListPrintRoot { display: block; }
       return;
     }
   
-    // De-duplicate the data to ensure featured vehicles are unique
-    const uniqueVehicles = [];
-    const seen = new Set();
-    for (const vehicle of data) {
-      // A vehicle is unique by its Year, Make, Model, and Row
-      const key = `${vehicle.Year}|${vehicle.Make}|${vehicle.Model}|${vehicle.Row}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniqueVehicles.push(vehicle);
+    // Shuffle data and pick unique vehicles by Make and Model
+    const shuffledData = [...data].sort(() => 0.5 - Math.random());
+    const selected = [];
+    const seenMakeModel = new Set();
+
+    for (const vehicle of shuffledData) {
+      if (selected.length >= count) break;
+      const makeModelKey = `${vehicle.Make}|${vehicle.Model}`;
+      if (!seenMakeModel.has(makeModelKey)) {
+        selected.push(vehicle);
+        seenMakeModel.add(makeModelKey);
       }
     }
   
-    // Get `count` random vehicles from the de-duplicated list
-    const shuffled = uniqueVehicles.sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, Math.min(count, uniqueVehicles.length));
     // Create card for each vehicle and fetch its info
     for (const vehicle of selected) {
       const col = document.createElement('div');
@@ -1585,10 +1572,10 @@ body.printing #pickListPrintRoot { display: block; }
   document.getElementById('exportBtn').onclick = () =>
     exportTableToCSVGeneric('#tableHeader', '#tableBody', 'inventory_with_notes.csv');
 
-  function showStatistics(data, statsContainer, chartCanvas) {
-    const s = statsContainer || document.getElementById('statistics');
-    const canvas = chartCanvas || document.getElementById('ageChart');
-    if (!s || !canvas) return;
+  function showStatistics(data) {
+    const s = document.getElementById('statistics');
+    const canvas = document.getElementById('ageChart');
+    if (!s) return;
     const valid = data.map(r => {
       const y = parseInt(r.Year), rn = parseInt(r.Row);
       return (!isNaN(y) && !isNaN(rn)) ? { row:rn, age:new Date().getFullYear()-y } : null;
@@ -1619,6 +1606,7 @@ body.printing #pickListPrintRoot { display: block; }
                    <strong>Newest Age:</strong> ${Math.min(...ages)}<br/>
                    <strong>Oldest Age:</strong> ${Math.max(...ages)}`;
 
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (ageChart) ageChart.destroy();
     ageChart = new Chart(ctx,{
