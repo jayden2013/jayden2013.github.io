@@ -137,6 +137,15 @@ body.dark-mode .jalopy-subtab-btn {
     body.theme-mint .tab-card { background: #e7f9ee; border-color: #b5e6c9; box-shadow: 0 4px 12px rgba(0,0,0,.04); }
     body.theme-mint .modal-content { background-color: #e7f9ee; color: #0f3d2f; }
     body.theme-mint .jalopy-subtab-btn { border-color: #a3d9b9; color: #0f3d2f; }
+
+    /* Silly Goose Theme */
+    body.theme-sillygoose { background-color: #f0f8ff; color: #4b0082; }
+    body.theme-sillygoose .table { color: #2e8b57; }
+    body.theme-sillygoose .table-dark { background-color: #ffdab9; color: #8b4513; }
+    body.theme-sillygoose .tab-card { background: #e6e6fa; border-color: #ff69b4; box-shadow: 0 6px 18px rgba(255,20,147,.2); }
+    body.theme-sillygoose .modal-content { background-color: #fafad2; color: #ff4500; }
+    body.theme-sillygoose .jalopy-subtab-btn { border-color: #00ced1; color: #00008b; }
+    body.theme-sillygoose .jalopy-subtab-btn.active { background: #ff1493; color: #fff; border-color: #ff1493; }
     body.dark-mode { background-color:#121212; color:#f1f1f1; }
     body.dark-mode .table { color:#f1f1f1; }
     body.dark-mode .table-dark { background-color:#2c2c2c; }
@@ -835,6 +844,7 @@ body.printing #pickListPrintRoot { display: block; }
                 <option value="gruvbox">Gruvbox</option>
                 <option value="latte">Latte</option>
                 <option value="mint">Mint</option>
+                <option value="sillygoose">Silly Goose</option>
               </select>
             </div>
 
@@ -1880,19 +1890,18 @@ body.printing #pickListPrintRoot { display: block; }
     const themeSel = document.getElementById('themeSelect');
     themeSel.value = localStorage.getItem('theme') || 'light';
 
-    // Add live preview listener
-    themeSel.addEventListener('change', () => applyTheme(themeSel.value));
-    // Revert on close if not saved
-    document.getElementById('settingsModal').addEventListener('hidden.bs.modal', () => applyTheme(localStorage.getItem('theme') || 'light'), { once: true });
+    // Add live preview and auto-save listener
+    themeSel.onchange = () => {
+      const newTheme = themeSel.value;
+      applyTheme(newTheme);
+      localStorage.setItem('theme', newTheme);
+    };
 
     new bootstrap.Modal(document.getElementById('settingsModal')).show();
   };
   document.getElementById('saveSettings').onclick = () => {
     const yard = document.getElementById('homeYardSelect').value;
     localStorage.setItem('homeYard', yard.trim().toLowerCase().replace(/\s+/g,'_'));
-    const theme = document.getElementById('themeSelect').value;
-    localStorage.setItem('theme', theme);
-    applyTheme(theme);
     bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
     applyHomeYardDefault();
   };
