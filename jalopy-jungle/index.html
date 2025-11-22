@@ -1802,17 +1802,23 @@ body.printing #pickListPrintRoot { display: block; }
       partsTr = document.createElement('tr');
       partsTr.dataset.partsForKey = key;
       const partsTd = document.createElement('td');
-      partsTd.colSpan = 7;
+      partsTd.colSpan = 7; // Full width
       partsTd.className = 'p-2';
+
+      // Calculate total cost
+      const totalCost = (row.parts || []).reduce((sum, p) => sum + (p.carPriceNum || 0), 0);
+
+      // Build parts HTML
       const partsHtml = row.parts.map((p, partIndex) => `
-        <span class="badge ${p.found ? 'bg-success' : 'bg-secondary'} me-1 align-middle">
-          <input type="checkbox" class="form-check-input me-1" onchange="togglePartFoundStatus('${key}', ${partIndex}, this.checked)" ${p.found ? 'checked' : ''}>
-          <span style="${p.found ? 'text-decoration: line-through;' : ''}">${p.part} (${p.section})</span>
+        <span class="badge bg-secondary me-1 align-middle">
+          ${p.part} (${p.section}) - $${p.carPriceNum || '0.00'}
           <button type="button" class="btn-close btn-close-white ms-1" style="font-size: .6em; vertical-align: middle;"
                   onclick="removePartFromVehicle('${key}', ${partIndex})"></button>
         </span>
       `).join('');
-      partsTd.innerHTML = `<div class="ms-4"><strong>Parts:</strong> ${partsHtml || 'None'}</div>`;
+
+      partsTd.innerHTML = `<div class="ms-4"><strong>Parts:</strong> ${partsHtml || 'None'}</div>
+                         <div class="ms-4 mt-1"><strong>Total Cost:</strong> <span class="fw-bold text-success">$${totalCost.toFixed(2)}</span></div>`;
       partsTr.appendChild(partsTd);
       tbody.appendChild(partsTr);
     }
@@ -1823,19 +1829,6 @@ body.printing #pickListPrintRoot { display: block; }
     const tbody    = document.getElementById('pickListBody');
     tbody.innerHTML = '';
     pickList.forEach(row => renderPickListRow(tbody, row));
-  }
-
-  function togglePartFoundStatus(vehicleKey, partIndex, isFound) {
-    let pickList = getPickList();
-    const vehicleIndex = pickList.findIndex(v => ['Year','Make','Model','Row'].map(k => v[k]).join('|') === vehicleKey);
-
-    if (vehicleIndex > -1 && pickList[vehicleIndex].parts && pickList[vehicleIndex].parts[partIndex] !== undefined) {
-      pickList[vehicleIndex].parts[partIndex].found = isFound;
-      savePickList(pickList);
-      // Visually update without full re-render for speed
-      const partSpan = document.querySelector(`tr[data-parts-for-key="${vehicleKey}"] span:nth-child(${partIndex + 1}) span`);
-      if (partSpan) partSpan.style.textDecoration = isFound ? 'line-through' : 'none';
-    }
   }
 
   function removePartFromVehicle(vehicleKey, partIndex) {
@@ -3631,7 +3624,7 @@ function confirmAddPartToPick() {
       // Prevent adding duplicate parts
       const partExists = pickList[vehicleIndex].parts.some(p => p.section === currentPartForPick.section && p.part === currentPartForPick.part);
       if (!partExists) {
-        pickList[vehicleIndex].parts.push({ ...currentPartForPick, found: false }); // Add with 'found' status
+        pickList[vehicleIndex].parts.push(currentPartForPick);
         changesMade = true;
       }
     }
@@ -3762,7 +3755,7 @@ function confirmAddPartsFromPickList() {
     if (!pickList[vehicleIndex].parts) pickList[vehicleIndex].parts = [];
     partsToAdd.forEach(part => {
       if (!pickList[vehicleIndex].parts.some(p => p.section === part.section && p.part === part.part)) {
-        pickList[vehicleIndex].parts.push({ ...part, found: false }); // Add with 'found' status
+        pickList[vehicleIndex].parts.push(part);
       }
     });
     savePickList(pickList);
