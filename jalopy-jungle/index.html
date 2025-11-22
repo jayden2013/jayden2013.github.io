@@ -1323,10 +1323,21 @@ body.printing #pickListPrintRoot { display: block; }
       return;
     }
   
-    // Get `count` random unique vehicles
-    const shuffled = data.sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, Math.min(count, data.length));
+    // De-duplicate the data to ensure featured vehicles are unique
+    const uniqueVehicles = [];
+    const seen = new Set();
+    for (const vehicle of data) {
+      // A vehicle is unique by its Year, Make, Model, and Row
+      const key = `${vehicle.Year}|${vehicle.Make}|${vehicle.Model}|${vehicle.Row}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueVehicles.push(vehicle);
+      }
+    }
   
+    // Get `count` random vehicles from the de-duplicated list
+    const shuffled = uniqueVehicles.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, Math.min(count, uniqueVehicles.length));
     // Create card for each vehicle and fetch its info
     for (const vehicle of selected) {
       const col = document.createElement('div');
