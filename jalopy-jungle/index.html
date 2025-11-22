@@ -97,6 +97,46 @@ body.dark-mode .jalopy-subtab-btn {
     body.theme-crimson .tab-card { background: #402a2a; border-color: #634343; box-shadow: none; }
     body.theme-crimson .modal-content { background-color: #402a2a; color: #d9c2c2; }
     body.theme-crimson .jalopy-subtab-btn { border-color: #634343; color: #d9c2c2; }
+
+    /* Nord Theme (Dark) */
+    body.theme-nord { background-color: #2e3440; color: #d8dee9; }
+    body.theme-nord .table { color: #d8dee9; }
+    body.theme-nord .table-dark { background-color: #3b4252; }
+    body.theme-nord .tab-card { background: #3b4252; border-color: #4c566a; box-shadow: none; }
+    body.theme-nord .modal-content { background-color: #3b4252; color: #d8dee9; }
+    body.theme-nord .jalopy-subtab-btn { border-color: #4c566a; color: #d8dee9; }
+
+    /* Dracula Theme (Dark) */
+    body.theme-dracula { background-color: #282a36; color: #f8f8f2; }
+    body.theme-dracula .table { color: #f8f8f2; }
+    body.theme-dracula .table-dark { background-color: #44475a; }
+    body.theme-dracula .tab-card { background: #44475a; border-color: #6272a4; box-shadow: none; }
+    body.theme-dracula .modal-content { background-color: #44475a; color: #f8f8f2; }
+    body.theme-dracula .jalopy-subtab-btn { border-color: #6272a4; color: #f8f8f2; }
+
+    /* Gruvbox Theme (Dark) */
+    body.theme-gruvbox { background-color: #282828; color: #ebdbb2; }
+    body.theme-gruvbox .table { color: #ebdbb2; }
+    body.theme-gruvbox .table-dark { background-color: #3c3836; }
+    body.theme-gruvbox .tab-card { background: #3c3836; border-color: #504945; box-shadow: none; }
+    body.theme-gruvbox .modal-content { background-color: #3c3836; color: #ebdbb2; }
+    body.theme-gruvbox .jalopy-subtab-btn { border-color: #504945; color: #ebdbb2; }
+
+    /* Latte Theme (Light) */
+    body.theme-latte { background-color: #eff1f5; color: #4c4f69; }
+    body.theme-latte .table { color: #4c4f69; }
+    body.theme-latte .table-dark { background-color: #e6e9ef; color: #4c4f69; }
+    body.theme-latte .tab-card { background: #e6e9ef; border-color: #ccd0da; box-shadow: 0 4px 12px rgba(0,0,0,.04); }
+    body.theme-latte .modal-content { background-color: #e6e9ef; color: #4c4f69; }
+    body.theme-latte .jalopy-subtab-btn { border-color: #bcc0cc; color: #4c4f69; }
+
+    /* Mint Theme (Light) */
+    body.theme-mint { background-color: #f0fbf4; color: #0f3d2f; }
+    body.theme-mint .table { color: #0f3d2f; }
+    body.theme-mint .table-dark { background-color: #dcfce7; color: #0f3d2f; }
+    body.theme-mint .tab-card { background: #e7f9ee; border-color: #b5e6c9; box-shadow: 0 4px 12px rgba(0,0,0,.04); }
+    body.theme-mint .modal-content { background-color: #e7f9ee; color: #0f3d2f; }
+    body.theme-mint .jalopy-subtab-btn { border-color: #a3d9b9; color: #0f3d2f; }
     body.dark-mode { background-color:#121212; color:#f1f1f1; }
     body.dark-mode .table { color:#f1f1f1; }
     body.dark-mode .table-dark { background-color:#2c2c2c; }
@@ -790,6 +830,11 @@ body.printing #pickListPrintRoot { display: block; }
                 <option value="ocean">Ocean</option>
                 <option value="forest">Forest</option>
                 <option value="crimson">Crimson</option>
+                <option value="nord">Nord</option>
+                <option value="dracula">Dracula</option>
+                <option value="gruvbox">Gruvbox</option>
+                <option value="latte">Latte</option>
+                <option value="mint">Mint</option>
               </select>
             </div>
 
@@ -1834,6 +1879,12 @@ body.printing #pickListPrintRoot { display: block; }
     sel.value = localStorage.getItem('homeYard') || '';
     const themeSel = document.getElementById('themeSelect');
     themeSel.value = localStorage.getItem('theme') || 'light';
+
+    // Add live preview listener
+    themeSel.addEventListener('change', () => applyTheme(themeSel.value));
+    // Revert on close if not saved
+    document.getElementById('settingsModal').addEventListener('hidden.bs.modal', () => applyTheme(localStorage.getItem('theme') || 'light'), { once: true });
+
     new bootstrap.Modal(document.getElementById('settingsModal')).show();
   };
   document.getElementById('saveSettings').onclick = () => {
