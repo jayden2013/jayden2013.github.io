@@ -617,9 +617,14 @@ body.printing #pickListPrintRoot { display: block; }
         <!-- Pick List -->
         <div class="tab-pane fade" id="pickListTab">
           <div class="tab-card">
-            <div class="mb-3">
-              <button class="btn btn-success" id="exportPickListBtn"><i class="bi bi-box-arrow-down"></i> Export Table to CSV</button>
-              <button class="btn btn-outline-secondary ms-2" id="printPickListBtn"><i class="bi bi-printer"></i> Print Pick List</button>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <button class="btn btn-success" id="exportPickListBtn"><i class="bi bi-box-arrow-down"></i> Export Table to CSV</button>
+                <button class="btn btn-outline-secondary ms-2" id="printPickListBtn"><i class="bi bi-printer"></i> Print Pick List</button>
+              </div>
+              <div id="pickListGrandTotal" class="text-end">
+                <!-- Grand total will be injected here -->
+              </div>
             </div>
 
             <div class="table-responsive">
@@ -1829,6 +1834,7 @@ body.printing #pickListPrintRoot { display: block; }
     const tbody    = document.getElementById('pickListBody');
     tbody.innerHTML = '';
     pickList.forEach(row => renderPickListRow(tbody, row));
+    updatePickListGrandTotal();
   }
 
   function removePartFromVehicle(vehicleKey, partIndex) {
@@ -1839,8 +1845,24 @@ body.printing #pickListPrintRoot { display: block; }
       if (pickList[vehicleIndex].parts && pickList[vehicleIndex].parts[partIndex] !== undefined) {
         pickList[vehicleIndex].parts.splice(partIndex, 1);
         savePickList(pickList);
-        loadPickListData(); // Re-render the whole pick list to reflect the change
+        loadPickListData();
       }
+    }
+  }
+
+  function updatePickListGrandTotal() {
+    const pickList = getPickList();
+    let grandTotal = 0;
+
+    pickList.forEach(vehicle => {
+      if (vehicle.parts && vehicle.parts.length > 0) {
+        grandTotal += vehicle.parts.reduce((sum, part) => sum + (part.carPriceNum || 0), 0);
+      }
+    });
+
+    const totalEl = document.getElementById('pickListGrandTotal');
+    if (totalEl) {
+      totalEl.innerHTML = `<span class="h5">Grand Total:</span> <span class="h4 fw-bold text-success">$${grandTotal.toFixed(2)}</span>`;
     }
   }
 
@@ -3631,7 +3653,10 @@ function confirmAddPartToPick() {
   });
 
   savePickList(pickList);
-  if (changesMade) loadPickListData(); // Re-render the main pick list tab to show the new part(s)
+  if (changesMade) {
+    loadPickListData();
+    updatePickListGrandTotal();
+  }
   addPartToPickModalInstance.hide();
 }
 
@@ -3759,7 +3784,8 @@ function confirmAddPartsFromPickList() {
       }
     });
     savePickList(pickList);
-    loadPickListData();
+    loadPickListData(); // Re-render the pick list to show the new parts
+    updatePickListGrandTotal(); // Update the grand total
     addPartsFromPickListModalInstance.hide();
   }
 }
