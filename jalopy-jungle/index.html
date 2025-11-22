@@ -68,6 +68,47 @@ body.dark-mode .jalopy-subtab-btn {
     body.theme-slate .sticky-note .sticky-header { background: rgba(255,255,255,.06); border-bottom-color: rgba(255,255,255,.08); }
     body.theme-slate .sticky-note .sticky-title { color: #f0f0f0; }
     /* ---------- Theme / base ---------- */
+    /* Sunrise Theme (Light) */
+    body.theme-sunrise { background-color: #fdf6e3; color: #586e75; }
+    body.theme-sunrise .table { color: #586e75; }
+    body.theme-sunrise .table-dark { background-color: #eee8d5; color: #586e75; }
+    body.theme-sunrise .tab-card { background: #f5efdc; border-color: #e9e2c9; box-shadow: 0 4px 12px rgba(0,0,0,.04); }
+    body.theme-sunrise .modal-content { background-color: #f5efdc; color: #586e75; }
+    body.theme-sunrise .jalopy-subtab-btn { border-color: #dcd5c0; color: #586e75; }
+    body.theme-sunrise .jalopy-subtab-btn.active { background: #b58900; color: #fff; border-color: #b58900; }
+
+    /* Paper Theme (Light) */
+    body.theme-paper { background-color: #f7f7f7; color: #111; }
+    body.theme-paper .table { color: #111; }
+    body.theme-paper .table-dark { background-color: #e8e8e8; color: #111; }
+    body.theme-paper .tab-card { background: #fff; border-color: #ddd; box-shadow: 0 6px 18px rgba(0,0,0,.05); }
+    body.theme-paper .modal-content { background-color: #fff; color: #111; }
+    body.theme-paper .jalopy-subtab-btn { border-color: #ccc; color: #111; }
+    body.theme-paper .jalopy-subtab-btn.active { background: #333; color: #fff; border-color: #333; }
+
+    /* Ocean Theme (Dark) */
+    body.theme-ocean { background-color: #1d2d3d; color: #b0c4de; }
+    body.theme-ocean .table { color: #b0c4de; }
+    body.theme-ocean .table-dark { background-color: #2a4058; }
+    body.theme-ocean .tab-card { background: #2a4058; border-color: #416183; box-shadow: none; }
+    body.theme-ocean .modal-content { background-color: #2a4058; color: #b0c4de; }
+    body.theme-ocean .jalopy-subtab-btn { border-color: #416183; color: #b0c4de; }
+
+    /* Forest Theme (Dark) */
+    body.theme-forest { background-color: #1a2a27; color: #a2b8b4; }
+    body.theme-forest .table { color: #a2b8b4; }
+    body.theme-forest .table-dark { background-color: #243b36; }
+    body.theme-forest .tab-card { background: #243b36; border-color: #3a5e56; box-shadow: none; }
+    body.theme-forest .modal-content { background-color: #243b36; color: #a2b8b4; }
+    body.theme-forest .jalopy-subtab-btn { border-color: #3a5e56; color: #a2b8b4; }
+
+    /* Crimson Theme (Dark) */
+    body.theme-crimson { background-color: #2a1a1a; color: #d9c2c2; }
+    body.theme-crimson .table { color: #d9c2c2; }
+    body.theme-crimson .table-dark { background-color: #402a2a; }
+    body.theme-crimson .tab-card { background: #402a2a; border-color: #634343; box-shadow: none; }
+    body.theme-crimson .modal-content { background-color: #402a2a; color: #d9c2c2; }
+    body.theme-crimson .jalopy-subtab-btn { border-color: #634343; color: #d9c2c2; }
     body.dark-mode { background-color:#121212; color:#f1f1f1; }
     body.dark-mode .table { color:#f1f1f1; }
     body.dark-mode .table-dark { background-color:#2c2c2c; }
@@ -757,6 +798,11 @@ body.printing #pickListPrintRoot { display: block; }
                 <option value="dark">Dark</option>
                 <option value="midnight">Midnight</option>
                 <option value="slate">Slate</option>
+                <option value="sunrise">Sunrise</option>
+                <option value="paper">Paper</option>
+                <option value="ocean">Ocean</option>
+                <option value="forest">Forest</option>
+                <option value="crimson">Crimson</option>
               </select>
             </div>
 
@@ -1814,10 +1860,10 @@ body.printing #pickListPrintRoot { display: block; }
   };
 
   function applyTheme(theme) {
-    document.body.classList.remove('dark-mode', 'theme-midnight', 'theme-slate');
+    document.body.className = document.body.className.replace(/\btheme-\w+\b/g, '').replace('dark-mode', '').trim();
     if (theme === 'dark') {
       document.body.classList.add('dark-mode');
-    } else if (theme === 'midnight' || theme === 'slate') {
+    } else if (theme && theme !== 'light') {
       document.body.classList.add(`theme-${theme}`);
     }
   }
