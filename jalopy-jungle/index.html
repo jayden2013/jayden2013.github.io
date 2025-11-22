@@ -1587,6 +1587,19 @@ body.printing #pickListPrintRoot { display: block; }
     // Notes
     const noteTd = document.createElement('td');
     noteTd.textContent = (JSON.parse(localStorage.getItem('jalopyNotes') || '{}')[originalKeyForNotes] || '');
+    noteTd.style.cursor = 'pointer';
+    noteTd.addEventListener('click', e => {
+      e.stopPropagation(); // Prevent opening the "Add Parts" modal
+      selectedRowKey = originalKeyForNotes;
+      const ni = document.getElementById('noteInput');
+      ni.value = (JSON.parse(localStorage.getItem('jalopyNotes') || '{}')[originalKeyForNotes] || '');
+      document.getElementById('noteLengthFeedback').style.display = 'none';
+      document.getElementById('noteLimitInfo').style.display = 'none';
+      // Ensure we have a modal instance to show
+      const noteModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('noteModal'));
+      noteModalInstance.show();
+    });
+
     tr.appendChild(noteTd);
 
     // Remove button
