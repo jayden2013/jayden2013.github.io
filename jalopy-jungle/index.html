@@ -1347,28 +1347,6 @@ body.printing #pickListPrintRoot { display: block; }
       infoBtn.onclick = (e) => {
         e.stopPropagation();
         fetchVehicleInfo(row.Year, row.Make, row.Model, document.getElementById('vehicleInfoModal'));
-      });
-
-      // Info cell
-      const infoTd = document.createElement('td');
-      const infoBtn = document.createElement('button');
-      infoBtn.className = 'btn btn-sm btn-outline-info';
-      infoBtn.innerHTML = '<i class="bi bi-info-circle"></i>';
-      infoBtn.title = 'Get vehicle info from Wikipedia';
-      infoBtn.onclick = (e) => {
-        e.stopPropagation();
-        fetchVehicleInfo(row.Year, row.Make, row.Model, document.getElementById('vehicleInfoModal'));
-      });
-
-      // Info cell
-      const infoTd = document.createElement('td');
-      const infoBtn = document.createElement('button');
-      infoBtn.className = 'btn btn-sm btn-outline-info';
-      infoBtn.innerHTML = '<i class="bi bi-info-circle"></i>';
-      infoBtn.title = 'Get vehicle info from Wikipedia';
-      infoBtn.onclick = (e) => {
-        e.stopPropagation();
-        fetchVehicleInfo(row.Year, row.Make, row.Model, document.getElementById('vehicleInfoModal'));
       };
       infoTd.appendChild(infoBtn);
       tr.appendChild(infoTd);
