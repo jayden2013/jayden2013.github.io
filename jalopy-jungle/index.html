@@ -1306,8 +1306,49 @@ body.printing #pickListPrintRoot { display: block; }
         currentData = r.data.filter(row => row.Year && row.Make && row.Model && row.Row);
         checkNewFavoriteVehicles(currentData);
         renderTable(currentData);
+        renderFeaturedVehicles(currentData);
         showStatistics(currentData);
       }
+    });
+  }
+
+  function renderFeaturedVehicles(data, count = 4) {
+    const container = document.getElementById('featuredVehiclesContainer');
+    if (!container) return;
+
+    container.innerHTML = ''; // Clear loading spinner
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div class="col-12 text-center text-muted p-5">No vehicles available to feature.</div>';
+      return;
+    }
+
+    // Get `count` random unique vehicles
+    const shuffled = data.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, Math.min(count, data.length));
+
+    selected.forEach(vehicle => {
+      const col = document.createElement('div');
+      col.className = 'col-md-6 col-lg-3';
+      col.innerHTML = `
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">${vehicle.Year} ${vehicle.Make}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">${vehicle.Model}</h6>
+            <p class="card-text small">
+              <strong>Row:</strong> ${vehicle.Row}<br>
+              <strong>Date Added:</strong> ${vehicle.Date}
+            </p>
+            <div class="mt-auto">
+              <button class="btn btn-sm btn-outline-info w-100 info-btn">
+                <i class="bi bi-info-circle"></i> More Info (Wikipedia)
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      col.querySelector('.info-btn').addEventListener('click', () => fetchVehicleInfo(vehicle.Year, vehicle.Make, vehicle.Model, document.getElementById('vehicleInfoModal')));
+      container.appendChild(col);
     });
   }
 
