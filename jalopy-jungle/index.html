@@ -1386,6 +1386,7 @@ body.printing #pickListPrintRoot { display: block; }
       localStorage.setItem('jalopyNotes', JSON.stringify(notes));
       renderTable(currentData);
       renderTrustyTable(trustyData);
+      loadPickListData(); // Refresh pick list to show new note
     }
     bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
   };
@@ -1395,6 +1396,7 @@ body.printing #pickListPrintRoot { display: block; }
       localStorage.setItem('jalopyNotes', JSON.stringify(notes));
       renderTable(currentData);
       renderTrustyTable(trustyData);
+      loadPickListData(); // Refresh pick list to show cleared note
       document.getElementById('noteInput').value = '';
       document.getElementById('noteLengthFeedback').style.display = 'none';
     }
