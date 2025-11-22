@@ -515,6 +515,12 @@ body.printing #pickListPrintRoot { display: block; }
                 <span class="ms-2">Loading featured vehicles...</span>
               </div>
             </div>
+            <div id="homePageStatsContainer" class="mt-4 pt-4 border-top">
+              <div class="col-12 text-center text-muted p-5">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+                <span class="ms-2">Loading featured vehicles...</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1307,11 +1313,17 @@ body.printing #pickListPrintRoot { display: block; }
         checkNewFavoriteVehicles(currentData);
         renderTable(currentData);
         renderFeaturedVehicles(currentData);
+        renderHomePageStats(currentData);
         showStatistics(currentData);
       }
     });
   }
 
+  function renderHomePageStats(data) {
+    const container = document.getElementById('homePageStatsContainer');
+    if (!container) return;
+    showStatistics(data, container, document.getElementById('ageChart')); // Reuse existing stats function
+  }
   async function renderFeaturedVehicles(data, count = 4) {
     const container = document.getElementById('featuredVehiclesContainer');
     if (!container) return;
@@ -1343,12 +1355,12 @@ body.printing #pickListPrintRoot { display: block; }
       const col = document.createElement('div');
       col.className = 'col-12 mb-4'; // Full width column
       col.innerHTML = `
-        <div class="card">
+        <div class="tab-card p-0">
           <div class="row g-0">
             <div class="col-md-4 card-img-left-container text-center bg-light" style="display: flex; align-items: center; justify-content: center; min-height: 200px;">
               <div class="spinner-border spinner-border-sm" role="status"></div>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-8 p-3">
               <div class="card-body d-flex flex-column h-100">
                 <h5 class="card-title">${vehicle.Year} ${vehicle.Make}</h5>
                 <h6 class="card-subtitle mb-2 text-muted">${vehicle.Model}</h6>
@@ -1573,13 +1585,15 @@ body.printing #pickListPrintRoot { display: block; }
   document.getElementById('exportBtn').onclick = () =>
     exportTableToCSVGeneric('#tableHeader', '#tableBody', 'inventory_with_notes.csv');
 
-  function showStatistics(data) {
-    const s = document.getElementById('statistics');
+  function showStatistics(data, statsContainer, chartCanvas) {
+    const s = statsContainer || document.getElementById('statistics');
+    const canvas = chartCanvas || document.getElementById('ageChart');
+    if (!s || !canvas) return;
     const valid = data.map(r => {
       const y = parseInt(r.Year), rn = parseInt(r.Row);
       return (!isNaN(y) && !isNaN(rn)) ? { row:rn, age:new Date().getFullYear()-y } : null;
     }).filter(Boolean);
-
+    
     if (!valid.length) {
       s.innerHTML = `<strong>Average Age:</strong> N/A<br/>
                      <strong># Models:</strong> 0<br/>
@@ -1605,7 +1619,7 @@ body.printing #pickListPrintRoot { display: block; }
                    <strong>Newest Age:</strong> ${Math.min(...ages)}<br/>
                    <strong>Oldest Age:</strong> ${Math.max(...ages)}`;
 
-    const ctx = document.getElementById('ageChart').getContext('2d');
+    const ctx = canvas.getContext('2d');
     if (ageChart) ageChart.destroy();
     ageChart = new Chart(ctx,{
       type:'bar',
