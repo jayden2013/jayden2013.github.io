@@ -3129,7 +3129,7 @@ function initJalopySubtabs() {
   });
 }
 
-function loadJalopyPricing() {
+function loadJalopyPricing(callback) {
   const tbody = document.getElementById('jalopyPricingBody');
   if (!tbody) return;
   tbody.innerHTML = '';
@@ -3181,6 +3181,11 @@ function loadJalopyPricing() {
       // initial render
       applyPricingFilters();
       setupPricingSorting();
+
+      // If a callback was provided (e.g., for the modal), run it now.
+      if (typeof callback === 'function') {
+        callback();
+      }
     },
     error: function(err) {
       console.error('Error loading Jalopy pricing CSV:', err);
