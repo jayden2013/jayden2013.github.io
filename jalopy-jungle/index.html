@@ -1950,9 +1950,9 @@ body.printing #pickListPrintRoot { display: block; }
 
       // Build parts HTML
       const partsHtml = row.parts.map((p, partIndex) => `
-        <span class="badge bg-secondary me-1 align-middle">
+        <span class="badge text-bg-secondary me-1 align-middle">
           ${p.part} (${p.section}) - $${p.carPriceNum || '0.00'}
-          <button type="button" class="btn-close btn-close-white ms-1" style="font-size: .6em; vertical-align: middle;"
+          <button type="button" class="btn-close ms-1" style="font-size: .6em; vertical-align: middle;"
                   onclick="removePartFromVehicle('${key}', ${partIndex})"></button>
         </span>
       `).join('');
