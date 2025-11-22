@@ -1174,6 +1174,7 @@ body.printing #pickListPrintRoot { display: block; }
   let trustyData = [];      // Trusty current
   let trustySortDirection = {};
   let trustyAgeChart = null;
+  let isGrandTotalTaxExcluded = false;
 
   /* Utility to parse inventory filenames with both time separators:
      inventory_boise_2025-06-08_07-17-49.csv
@@ -1811,9 +1812,10 @@ body.printing #pickListPrintRoot { display: block; }
       partsTd.className = 'p-2';
 
       // Calculate costs
+      const isTaxExcluded = row.taxExcluded || false;
       const subtotal = (row.parts || []).reduce((sum, p) => sum + (p.carPriceNum || 0), 0);
       const salesTax = subtotal * 0.06;
-      const totalWithTax = subtotal + salesTax;
+      const totalWithTax = isTaxExcluded ? subtotal : subtotal + salesTax;
 
       // Build parts HTML
       const partsHtml = row.parts.map((p, partIndex) => `
@@ -1823,10 +1825,16 @@ body.printing #pickListPrintRoot { display: block; }
                   onclick="removePartFromVehicle('${key}', ${partIndex})"></button>
         </span>
       `).join('');
+      
+      const taxHtml = `
+        <span style="cursor: pointer; ${isTaxExcluded ? 'text-decoration: line-through;' : 'text-decoration: underline dotted;'}" 
+              onclick="toggleVehicleTax('${key}')">
+          <strong>Sales Tax (6%):</strong> $${salesTax.toFixed(2)}
+        </span>`;
 
       partsTd.innerHTML = `<div class="ms-4"><strong>Parts:</strong> ${partsHtml || 'None'}</div>
                          <div class="ms-4 mt-1 small">
-                           <strong>Subtotal:</strong> $${subtotal.toFixed(2)} &nbsp;&nbsp; <strong>Sales Tax (6%):</strong> $${salesTax.toFixed(2)} &nbsp;&nbsp; <strong>Total:</strong> <span class="fw-bold text-success">$${totalWithTax.toFixed(2)}</span>
+                           <strong>Subtotal:</strong> $${subtotal.toFixed(2)} &nbsp;&nbsp; ${taxHtml} &nbsp;&nbsp; <strong>Total:</strong> <span class="fw-bold text-success">$${totalWithTax.toFixed(2)}</span>
                          </div>`;
       partsTr.appendChild(partsTd);
       tbody.appendChild(partsTr);
@@ -1854,24 +1862,43 @@ body.printing #pickListPrintRoot { display: block; }
     }
   }
 
+  function toggleVehicleTax(vehicleKey) {
+    let pickList = getPickList();
+    const vehicleIndex = pickList.findIndex(v => ['Year','Make','Model','Row'].map(k => v[k]).join('|') === vehicleKey);
+
+    if (vehicleIndex > -1) {
+        pickList[vehicleIndex].taxExcluded = !pickList[vehicleIndex].taxExcluded;
+        savePickList(pickList);
+        loadPickListData(); // Re-render to update this vehicle and the grand total
+    }
+  }
+
   function updatePickListGrandTotal() {
     const pickList = getPickList();
     let grandSubtotal = 0;
 
     pickList.forEach(vehicle => {
       if (vehicle.parts && vehicle.parts.length > 0) {
-        grandSubtotal += vehicle.parts.reduce((sum, part) => sum + (part.carPriceNum || 0), 0);
+        const vehicleSubtotal = vehicle.parts.reduce((sum, part) => sum + (part.carPriceNum || 0), 0);
+        if (!vehicle.taxExcluded) {
+          grandSubtotal += vehicleSubtotal;
+        } else {
+          grandSubtotal += vehicleSubtotal; // Subtotal is always added
+        }
       }
     });
 
-    const grandSalesTax = grandSubtotal * 0.06;
+    const totalTaxableAmount = pickList.filter(v => !v.taxExcluded).reduce((total, v) => total + (v.parts || []).reduce((sum, p) => sum + (p.carPriceNum || 0), 0), 0);
+    const grandSalesTax = totalTaxableAmount * 0.06;
     const grandTotalWithTax = grandSubtotal + grandSalesTax;
 
     const totalEl = document.getElementById('pickListGrandTotal');
     if (totalEl) {
       totalEl.innerHTML = `<div><span class="text-muted">Subtotal:</span> <span class="fw-bold">$${grandSubtotal.toFixed(2)}</span></div>
-                         <div><span class="text-muted">Sales Tax (6%):</span> <span class="fw-bold">$${grandSalesTax.toFixed(2)}</span></div>
-                         <div class="h5 mt-1"><span class="fw-normal">Grand Total:</span> <span class="fw-bold text-success">$${grandTotalWithTax.toFixed(2)}</span></div>`;
+                         <div style="cursor: pointer;" onclick="this.style.textDecoration = (this.style.textDecoration === 'line-through' ? '' : 'line-through'); updatePickListGrandTotal();">
+                           <span class="text-muted">Sales Tax (6%):</span> <span class="fw-bold">$${grandSalesTax.toFixed(2)}</span>
+                         </div>
+                         <div class="h5 mt-1"><span class="fw-normal">Grand Total:</span> <span class="fw-bold text-success">$${(totalEl.querySelector('div[onclick]').style.textDecoration === 'line-through' ? grandSubtotal : grandTotalWithTax).toFixed(2)}</span></div>`;
     }
   }
 
