@@ -138,12 +138,46 @@ body.dark-mode .jalopy-subtab-btn {
     body.theme-mint .modal-content { background-color: #e7f9ee; color: #0f3d2f; }
     body.theme-mint .jalopy-subtab-btn { border-color: #a3d9b9; color: #0f3d2f; }
 
+    /* Silly Goose Animations */
+    @keyframes silly-bg-shift {
+      0%   { background-color: #f0f8ff; } 20% { background-color: #fff0f5; }
+      40%  { background-color: #f5fff0; } 60% { background-color: #fff5f0; }
+      80%  { background-color: #f0fff5; } 100% { background-color: #f0f8ff; }
+    }
+    @keyframes silly-rainbow-text {
+      0%   { color: #ff4500; } 15% { color: #ff8c00; } 30% { color: #ffd700; }
+      45%  { color: #32cd32; } 60% { color: #00ced1; } 75% { color: #1e90ff; }
+      90%  { color: #9400d3; } 100% { color: #ff4500; }
+    }
+    @keyframes silly-wobble {
+      0%, 100% { transform: rotate(0); }
+      25% { transform: rotate(-1.5deg); }
+      75% { transform: rotate(1.5deg); }
+    }
+
     /* Silly Goose Theme */
     body.theme-sillygoose { background-color: #f0f8ff; color: #4b0082; }
     body.theme-sillygoose .table { color: #2e8b57; }
     body.theme-sillygoose .table-dark { background-color: #ffdab9; color: #8b4513; }
     body.theme-sillygoose .tab-card { background: #e6e6fa; border-color: #ff69b4; box-shadow: 0 6px 18px rgba(255,20,147,.2); }
     body.theme-sillygoose .modal-content { background-color: #fafad2; color: #ff4500; }
+    body.theme-sillygoose { color: #4b0082; animation: silly-bg-shift 25s linear infinite; }
+    body.theme-sillygoose .display-1 { animation: silly-rainbow-text 6s linear infinite; }
+    body.theme-sillygoose .tab-card {
+      background: #e6e6fa; border: 2px solid;
+      animation: silly-rainbow-text 8s linear infinite reverse;
+      box-shadow: 0 6px 18px rgba(255,20,147,.2);
+    }
+    body.theme-sillygoose .tab-card:hover { animation: silly-wobble 0.4s ease-in-out infinite; }
+    body.theme-sillygoose .table { color: #2e8b57; border-color: #ff69b4; }
+    body.theme-sillygoose .table-dark { background-color: #ffdab9; color: #8b4513; border-color: #ffb469; }
+    body.theme-sillygoose .table tbody tr:nth-child(6n+1) { background-color: rgba(255, 105, 180, 0.15); } /* Pink */
+    body.theme-sillygoose .table tbody tr:nth-child(6n+2) { background-color: rgba(255, 165, 0, 0.15); } /* Orange */
+    body.theme-sillygoose .table tbody tr:nth-child(6n+3) { background-color: rgba(255, 255, 0, 0.15); } /* Yellow */
+    body.theme-sillygoose .table tbody tr:nth-child(6n+4) { background-color: rgba(0, 255, 0, 0.15); }   /* Green */
+    body.theme-sillygoose .table tbody tr:nth-child(6n+5) { background-color: rgba(0, 191, 255, 0.15); } /* Blue */
+    body.theme-sillygoose .table tbody tr:nth-child(6n+6) { background-color: rgba(148, 0, 211, 0.15); } /* Violet */
+    body.theme-sillygoose .modal-content { background-color: #fafad2; color: #ff4500; border: 2px solid #ff4500; }
     body.theme-sillygoose .jalopy-subtab-btn { border-color: #00ced1; color: #00008b; }
     body.theme-sillygoose .jalopy-subtab-btn.active { background: #ff1493; color: #fff; border-color: #ff1493; }
     body.dark-mode { background-color:#121212; color:#f1f1f1; }
@@ -158,6 +192,8 @@ body.dark-mode .jalopy-subtab-btn {
     /* Hover highlight */
     #inventoryTable tbody tr:hover td,
     #trustyTable tbody tr:hover td { background-color:orange !important; color:#000; }
+    body:not(.theme-sillygoose) #inventoryTable tbody tr:hover td,
+    body:not(.theme-sillygoose) #trustyTable tbody tr:hover td { background-color:orange !important; color:#000; }
 
     /* Dark-mode styling for modals */
     .dark-mode .modal-content,
@@ -169,6 +205,8 @@ body.dark-mode .jalopy-subtab-btn {
 
     /* Nav active text orange */
     .nav-tabs .nav-link.active, .nav-pills .nav-link.active { color:orange !important; }
+    body:not(.theme-sillygoose) .nav-tabs .nav-link.active, body:not(.theme-sillygoose) .nav-pills .nav-link.active { color:orange !important; }
+    body.theme-sillygoose .nav-tabs .nav-link.active, body.theme-sillygoose .nav-pills .nav-link.active { color: #ff1493 !important; }
 
     /* ---------- App lock / blur ---------- */
     .serial-locked #appRoot { filter: blur(6px); pointer-events: none; user-select: none; }
