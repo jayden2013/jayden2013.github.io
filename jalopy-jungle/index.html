@@ -2077,14 +2077,15 @@ body.printing #pickListPrintRoot { display: block; }
    * Wikipedia Info Fetch
    ***********************/
   async function fetchVehicleInfo(year, make, model, modalElement) {
-    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    if (!modalElement) return;
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
     const contentEl = modalElement.querySelector('.modal-body');
     const titleEl = modalElement.querySelector('.modal-title');
 
     // Reset and show spinner
     titleEl.textContent = `${year} ${make} ${model}`;
     contentEl.innerHTML = `<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Fetching data from Wikipedia...</p></div>`;
-    modal.show();
+    modalInstance.show();
 
     const searchTerm = `${year} ${make} ${model}`;
 
