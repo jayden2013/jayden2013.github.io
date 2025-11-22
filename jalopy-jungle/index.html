@@ -2121,13 +2121,14 @@ body.printing #pickListPrintRoot { display: block; }
 
   async function fetchVehicleInfo(year, make, model, modalElement) {
     if (!modalElement) return;
-    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+    // Ensure we have a fresh modal instance to control
+    const modal = new bootstrap.Modal(modalElement);
     const contentEl = modalElement.querySelector('.modal-body');
     const titleEl = modalElement.querySelector('.modal-title');
 
     titleEl.textContent = `${year} ${make} ${model}`;
     contentEl.innerHTML = `<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Fetching data from Wikipedia...</p></div>`;
-    modalInstance.show();
+    modal.show();
 
     const { summary, imgSrc, link, error } = await getWikipediaInfo(year, make, model);
 
