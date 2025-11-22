@@ -1731,7 +1731,10 @@ body.printing #pickListPrintRoot { display: block; }
 
   function renderPickListRow(tbody, row) {
     const key = ['Year','Make','Model','Row'].map(k => String(row[k]).trim()).join('|');
-    const originalKeyForNotes = [row.Year,row.Make,row.Model,row.Row].join('|');
+    // Reconstruct the full original key to match how it's stored from the main tables.
+    // The main tables use Object.values(row).join('|'), which includes all columns.
+    // We must replicate that here to find the note.
+    const originalKeyForNotes = [row.Year, row.Make, row.Model, row.Row, row.Date, row.Yard].join('|');
 
     const tr = document.createElement('tr');
     tr.dataset.key = key;
