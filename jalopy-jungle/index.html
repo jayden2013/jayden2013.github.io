@@ -3844,6 +3844,11 @@ document.getElementById('confirmAddPartsFromPickList')?.addEventListener('click'
         document.getElementById('qrScanStatus').textContent = 'Scanner stopped.';
       }).catch(err => console.warn("QR scanner stop error:", err));
     }
+    // Also reset the QR code instance to ensure it's recreated on next view
+    if (qrCodeInstance) {
+      document.getElementById('qrCodeContainer').innerHTML = '';
+      qrCodeInstance = null;
+    }
   }
 </script>
 
