@@ -208,6 +208,9 @@ body.dark-mode .jalopy-subtab-btn {
     body:not(.theme-sillygoose) .nav-tabs .nav-link.active, body:not(.theme-sillygoose) .nav-pills .nav-link.active { color:orange !important; }
     body.theme-sillygoose .nav-tabs .nav-link.active, body.theme-sillygoose .nav-pills .nav-link.active { color: #ff1493 !important; }
 
+    /* QR code container needs a white background regardless of theme */
+    #qrCodeContainer { background: #fff !important; }
+
     /* ---------- App lock / blur ---------- */
     .serial-locked #appRoot { filter: blur(6px); pointer-events: none; user-select: none; }
     .serial-locked .modal { pointer-events: auto; }
@@ -776,8 +779,8 @@ body.printing #pickListPrintRoot { display: block; }
               <div class="col-md-6">
                 <h6>1. Generate QR Code from this device</h6>
                 <p class="small">Click the button to generate a QR code containing all your current data. Scan this code on your other device.</p>
-                <button class="btn btn-primary" id="generateQrBtn"><i class="bi bi-arrow-repeat"></i> Refresh QR Code</button>
-                <div id="qrCodeContainer" class="mt-3 text-center p-3 border rounded" style="min-height: 284px; background: #fff;"></div>
+                <button class="btn btn-primary" id="generateQrBtn"><i class="bi bi-arrow-repeat"></i> Refresh QR Code</button>                
+                <div id="qrCodeContainer" class="mt-3 text-center p-3 border rounded" style="min-height: 284px;"></div>
               </div>
 
               <!-- Scan QR -->
