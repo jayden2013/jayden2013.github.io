@@ -467,7 +467,10 @@ body.printing #pickListPrintRoot { display: block; }
       <!-- Tabs -->
       <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
         <li class="nav-item">
-          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#jalopyTab" type="button">Jalopy Jungle</button>
+          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#homeTab" type="button">Home</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#jalopyTab" type="button">Jalopy Jungle</button>
         </li>
         <li class="nav-item">
           <button class="nav-link" data-bs-toggle="tab" data-bs-target="#trustyTab" type="button">Trusty</button>
@@ -490,9 +493,34 @@ body.printing #pickListPrintRoot { display: block; }
 
       <!-- Tab Content -->
       <div class="tab-content pt-3">
+        <!-- Home Tab -->
+        <div class="tab-pane fade show active" id="homeTab">
+          <div class="tab-card">
+            <h5 class="mb-1">Featured Vehicles</h5>
+            <p class="text-muted mb-4">Randomly selected vehicles from the latest Jalopy Jungle inventory.</p>
+            <div id="featuredVehiclesContainer" class="row g-4">
+              <!-- Featured vehicle cards will be injected here by JS -->
+              <div class="col-12 text-center text-muted p-5">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+                <span class="ms-2">Loading featured vehicles...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Jalopy -->
-        <div class="tab-pane fade show active" id="jalopyTab">
+        <div class="tab-pane fade" id="jalopyTab">
   <div class="tab-card">
+
+    <!-- Vehicle Info Modal (from Wikipedia) -->
+    <div class="modal fade" id="vehicleInfoModal" tabindex="-1" aria-labelledby="vehicleInfoModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header"><h5 class="modal-title" id="vehicleInfoModalLabel">Vehicle Information</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+          <div class="modal-body" id="vehicleInfoContent"><div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Fetching data from Wikipedia...</p></div></div>
+        </div>
+      </div>
+    </div>
 
     <!-- Jalopy subtabs -->
     <div class="jalopy-subtab-bar">
@@ -1289,7 +1317,7 @@ body.printing #pickListPrintRoot { display: block; }
     hdr.innerHTML = ''; bd.innerHTML = '';
     if (!data.length) return;
 
-    const cols = Object.keys(data[0]).concat('Note','Pick');
+    const cols = Object.keys(data[0]).concat('Info','Note','Pick');
     cols.forEach(c => {
       const th = document.createElement('th');
       th.textContent = c;
@@ -1309,6 +1337,41 @@ body.printing #pickListPrintRoot { display: block; }
         const td = document.createElement('td');
         td.textContent = v; tr.appendChild(td);
       });
+
+      // Info cell
+      const infoTd = document.createElement('td');
+      const infoBtn = document.createElement('button');
+      infoBtn.className = 'btn btn-sm btn-outline-info';
+      infoBtn.innerHTML = '<i class="bi bi-info-circle"></i>';
+      infoBtn.title = 'Get vehicle info from Wikipedia';
+      infoBtn.onclick = (e) => {
+        e.stopPropagation();
+        fetchVehicleInfo(row.Year, row.Make, row.Model, document.getElementById('vehicleInfoModal'));
+      });
+
+      // Info cell
+      const infoTd = document.createElement('td');
+      const infoBtn = document.createElement('button');
+      infoBtn.className = 'btn btn-sm btn-outline-info';
+      infoBtn.innerHTML = '<i class="bi bi-info-circle"></i>';
+      infoBtn.title = 'Get vehicle info from Wikipedia';
+      infoBtn.onclick = (e) => {
+        e.stopPropagation();
+        fetchVehicleInfo(row.Year, row.Make, row.Model, document.getElementById('vehicleInfoModal'));
+      });
+
+      // Info cell
+      const infoTd = document.createElement('td');
+      const infoBtn = document.createElement('button');
+      infoBtn.className = 'btn btn-sm btn-outline-info';
+      infoBtn.innerHTML = '<i class="bi bi-info-circle"></i>';
+      infoBtn.title = 'Get vehicle info from Wikipedia';
+      infoBtn.onclick = (e) => {
+        e.stopPropagation();
+        fetchVehicleInfo(row.Year, row.Make, row.Model, document.getElementById('vehicleInfoModal'));
+      };
+      infoTd.appendChild(infoBtn);
+      tr.appendChild(infoTd);
 
       // Note cell
       const nt = document.createElement('td');
@@ -1562,7 +1625,7 @@ body.printing #pickListPrintRoot { display: block; }
     hdr.innerHTML = ''; bd.innerHTML = '';
     if (!data.length) return;
 
-    const cols = Object.keys(data[0]).concat('Note','Pick');
+    const cols = Object.keys(data[0]).concat('Info','Note','Pick');
     cols.forEach(c => {
       const th = document.createElement('th');
       th.textContent = c;
@@ -1582,6 +1645,19 @@ body.printing #pickListPrintRoot { display: block; }
         const td = document.createElement('td');
         td.textContent = v; tr.appendChild(td);
       });
+
+      // Info cell
+      const infoTd = document.createElement('td');
+      const infoBtn = document.createElement('button');
+      infoBtn.className = 'btn btn-sm btn-outline-info';
+      infoBtn.innerHTML = '<i class="bi bi-info-circle"></i>';
+      infoBtn.title = 'Get vehicle info from Wikipedia';
+      infoBtn.onclick = (e) => {
+        e.stopPropagation();
+        fetchVehicleInfo(row.Year, row.Make, row.Model, document.getElementById('vehicleInfoModal'));
+      };
+      infoTd.appendChild(infoBtn);
+      tr.appendChild(infoTd);
 
       // Note cell
       const nt = document.createElement('td');
@@ -1976,6 +2052,56 @@ body.printing #pickListPrintRoot { display: block; }
         <td>${r['Total Sold']||''}</td>`;
       tbody.appendChild(tr);
     });
+  }
+
+  /***********************
+   * Wikipedia Info Fetch
+   ***********************/
+  async function fetchVehicleInfo(year, make, model, modalElement) {
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    const contentEl = modalElement.querySelector('.modal-body');
+    const titleEl = modalElement.querySelector('.modal-title');
+
+    // Reset and show spinner
+    titleEl.textContent = `${year} ${make} ${model}`;
+    contentEl.innerHTML = `<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Fetching data from Wikipedia...</p></div>`;
+    modal.show();
+
+    const searchTerm = `${year} ${make} ${model}`;
+
+    try {
+      const WIKI_API = 'https://en.wikipedia.org/w/api.php?origin=*&format=json';
+      
+      // 1. Search for the page title
+      const searchUrl = `${WIKI_API}&action=query&list=search&srlimit=1&srsearch=${encodeURIComponent(searchTerm)}`;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+      const pageTitle = searchData.query?.search?.[0]?.title;
+
+      if (!pageTitle) {
+        throw new Error('No Wikipedia article found.');
+      }
+
+      // 2. Fetch extract and image for that page title
+      const pageUrl = `${WIKI_API}&action=query&prop=extracts|pageimages&exintro&explaintext&piprop=thumbnail&pithumbsize=400&titles=${encodeURIComponent(pageTitle)}`;
+      const pageRes = await fetch(pageUrl);
+      const pageData = await pageRes.json();
+      const page = Object.values(pageData.query.pages)[0];
+
+      const summary = page.extract || 'No summary available.';
+      const imgSrc = page.thumbnail?.source || '';
+      const link = `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle)}`;
+
+      // Populate content
+      contentEl.innerHTML = `
+        ${imgSrc ? `<img src="${imgSrc}" class="img-fluid rounded mb-3" style="max-height: 300px; margin: 0 auto; display: block;">` : ''}
+        <p>${summary}</p>
+        <a href="${link}" target="_blank" class="btn btn-sm btn-outline-secondary">Read more on Wikipedia</a>
+      `;
+
+    } catch (error) {
+      contentEl.innerHTML = `<p class="text-danger">Could not fetch information for "${searchTerm}". ${error.message}</p>`;
+    }
   }
 
   /****************
