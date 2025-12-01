@@ -1369,8 +1369,6 @@ body.printing #pickListPrintRoot { display: block; }
       if (toSelect) { selector.value = toSelect.value; loadCSV(toSelect.value); }
     } catch (err) {
       console.error('Error listing inventory CSVs (Jalopy):', err);
-    } finally {
-      initNewVehiclesReport(); // Attempt to initialize after Jalopy list is populated
     }
   }
 
@@ -1769,8 +1767,6 @@ body.printing #pickListPrintRoot { display: block; }
       }
     } catch (err) {
       console.error('Error listing inventory CSVs (Trusty):', err);
-    } finally {
-      initNewVehiclesReport(); // Also attempt to initialize after Trusty list is populated
     }
   }
 
@@ -2588,6 +2584,29 @@ body.printing #pickListPrintRoot { display: block; }
     listTrustyFiles();   // Trusty
     loadPickListData();  // Pick list
     initQrSyncTab();     // QR Sync
+
+    // --- Wire up "What's New" tab and its controls ---
+    const tabBtn = document.querySelector('button[data-bs-target="#whatsNewTab"]');
+    if (tabBtn) {
+      // Generate the report the first time the tab is shown.
+      tabBtn.addEventListener('show.bs.tab', generateNewVehiclesReport, { once: true });
+    }
+
+    const rerunBtn = document.getElementById('rerunNewVehicleAnalysisBtn');
+    if (rerunBtn) {
+      rerunBtn.addEventListener('click', async () => {
+        if (!confirm("This will clear the 'viewed' status and re-load the latest inventory for ALL yards to run the comparison again. This is for testing purposes. Continue?")) {
+          return;
+        }
+        localStorage.removeItem(PREV_YARD_INV_KEY);
+        newVehiclesByYard = {};
+        const tasks = [];
+        for (const option of document.getElementById('csvSelector').options) { tasks.push(loadAndProcessYard(option.value, option.dataset.loc, 'jalopy')); }
+        for (const option of document.getElementById('trustySelector').options) { tasks.push(loadAndProcessYard(option.value, 'trusty', 'trusty')); }
+        await Promise.all(tasks);
+        generateNewVehiclesReport();
+      });
+    }
     
     // Initial check for any new vehicles on load
     updateNewVehicleCountBadge();
@@ -2776,7 +2795,7 @@ body.printing #pickListPrintRoot { display: block; }
     reportContainer.innerHTML = finalHtml;
   }
 
-  // The initNewVehiclesReport function is no longer needed as its logic is now handled by static HTML and direct event listeners.
+  // The initNewVehiclesReport function is no longer needed as its logic has been moved into initApp().
   </script>
   
 <script>
