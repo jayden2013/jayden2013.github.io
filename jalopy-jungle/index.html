@@ -2577,6 +2577,24 @@ body.printing #pickListPrintRoot { display: block; }
     a.click();
     a.remove();
   }
+  function downloadPartCentricCSV(rows, filename) {
+    const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'PartSection', 'Part', 'PartPrice', 'Core'];
+    const lines = [
+      ...brandingBannerLines('Pick List Export (by Part)'),
+      headers.map(csvEscape).join(',')
+    ];
+    rows.forEach(r => {
+      lines.push(headers.map(h => r[h] ?? '').map(csvEscape).join(','));
+    });
+    const csv = lines.join('\n');
+    const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
   function downloadCSVGroupedByYard(rows, filename) {
     const sorted = [...rows].sort((a,b) =>
       (a.Yard||'').localeCompare(b.Yard||'') ||
@@ -2620,24 +2638,31 @@ body.printing #pickListPrintRoot { display: block; }
       opt.value = y; opt.textContent = y;
       select.appendChild(opt);
     });
-    document.getElementById('exportAsIs').checked = true; // Revert to old default temporarily
-    // The line below was causing the error because 'exportByPart' didn't exist in the HTML yet.
-    // document.getElementById('exportByPart').checked = true;
+    document.getElementById('exportByPart').checked = true;
     select.disabled = true;
-    ['exportAsIs','exportGrouped','exportSingleYard'].forEach(id => {
+    ['exportByPart', 'exportAsIs','exportGrouped','exportSingleYard'].forEach(id => {
       document.getElementById(id).onchange = () => {
         select.disabled = !document.getElementById('exportSingleYard').checked;
         const btn = document.getElementById('confirmExportPick');
-        btn.textContent = id==='exportAsIs' ? 'Export Full List'
+        btn.textContent = id==='exportByPart' ? 'Export by Part'
+          : id==='exportAsIs' ? 'Export Full List'
           : id==='exportGrouped' ? 'Export Grouped by Yard'
           : 'Export Selected Yard';
       };
     });
+    // Manually trigger the text change for the default selection
+    document.getElementById('confirmExportPick').textContent = 'Export by Part';
     bootstrap.Modal.getOrCreateInstance(document.getElementById('exportPickListModal')).show();
   }
   function performPickListExportFromModal() {
     const mode = document.querySelector('input[name="pickExportMode"]:checked')?.value || 'asis';
     const ts = fileStamp();
+    if (mode === 'bypart') {
+      const rows = gatherPickListRowsForPartCentricExport();
+      if (!rows.length) return alert('Your pick list is empty.');
+      downloadPartCentricCSV(rows, `pick_list_by_part_${ts}.csv`);
+      return;
+    }
     if (mode === 'bypart') {
       const rows = gatherPickListRowsForPartCentricExport();
       if (!rows.length) return alert('Your pick list is empty.');
