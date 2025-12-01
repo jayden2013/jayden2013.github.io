@@ -1190,6 +1190,18 @@ body.printing #pickListPrintRoot { display: block; }
   }
 
   /***********************
+   * Utility Functions
+   ***********************/
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => { clearTimeout(timeout); func(...args); };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  /***********************
    * App state & helpers
    ***********************/
   const PREV_INV_KEY = 'prevInventorySnapshot';
@@ -1521,11 +1533,11 @@ body.printing #pickListPrintRoot { display: block; }
       });
     }
 
-    document.getElementById('searchInput').oninput = function() {
+    document.getElementById('searchInput').addEventListener('input', debounce(function() {
       const filtered = enhancedSearch(this.value, currentData);
       renderTable(filtered);
       showStatistics(filtered);
-    };
+    }, 250)); // 250ms delay
   }
 
   function sortTableByColumn(col) {
@@ -1849,11 +1861,11 @@ body.printing #pickListPrintRoot { display: block; }
       });
     }
 
-    document.getElementById('trustySearchInput').oninput = function() {
+    document.getElementById('trustySearchInput').addEventListener('input', debounce(function() {
       const filtered = trustyEnhancedSearch(this.value, trustyData);
       renderTrustyTable(filtered);
       showTrustyStatistics(filtered);
-    };
+    }, 250)); // 250ms delay
   }
 
   function sortTrustyByColumn(col) {
@@ -3111,17 +3123,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 	
 	const trendsSearch = document.getElementById('trendsSearch');
-if (trendsSearch){
-const runFilter = debounce(() => {
-  const q = trendsSearch.value || '';
-  const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
-  renderTrendsLatestPagedReset(filtered);
-  renderTrendsHeatmap(filtered);
-}, 180);
-
-  trendsSearch.addEventListener('input', runFilter);
-}
-buildTrendsSortableHeaders();
+    if (trendsSearch){
+      const runFilter = debounce(() => {
+        const q = trendsSearch.value || '';
+        const filtered = TRENDS_LATEST_ALL_ROWS.filter(r => matchesQuery(r, q));
+        renderTrendsLatestPagedReset(filtered);
+        renderTrendsHeatmap(filtered);
+      }, 250); // Use consistent debounce
+      trendsSearch.addEventListener('input', runFilter);
+    }
+    buildTrendsSortableHeaders();
 });
 </script>
 
@@ -3748,6 +3759,10 @@ function wirePricingFilters() {
   if (searchInput) {
     searchInput.addEventListener('input', applyPricingFilters);
   }
+  // Debounce search for better performance
+  if (searchInput) {
+    searchInput.addEventListener('input', debounce(applyPricingFilters, 250));
+  }
 }
 
 function applyPricingFilters() {
@@ -4113,7 +4128,7 @@ document.getElementById('confirmAddPartToPick')?.addEventListener('click', confi
 // Wire up new modal's controls
 document.getElementById('modalPricingSectionFilter')?.addEventListener('change', applyModalPricingFilters);
 document.getElementById('modalPricingAsIsFilter')?.addEventListener('change', applyModalPricingFilters);
-document.getElementById('modalPricingSearch')?.addEventListener('input', applyModalPricingFilters);
+document.getElementById('modalPricingSearch')?.addEventListener('input', debounce(applyModalPricingFilters, 250));
 document.getElementById('confirmAddPartsFromPickList')?.addEventListener('click', confirmAddPartsFromPickList);
 </script>
 <script>
