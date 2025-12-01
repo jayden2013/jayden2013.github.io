@@ -1533,11 +1533,6 @@ body.printing #pickListPrintRoot { display: block; }
       });
     }
 
-    document.getElementById('searchInput').addEventListener('input', debounce(function() {
-      const filtered = enhancedSearch(this.value, currentData);
-      renderTable(filtered);
-      showStatistics(filtered);
-    }, 250)); // 250ms delay
   }
 
   function sortTableByColumn(col) {
@@ -1861,11 +1856,6 @@ body.printing #pickListPrintRoot { display: block; }
       });
     }
 
-    document.getElementById('trustySearchInput').addEventListener('input', debounce(function() {
-      const filtered = trustyEnhancedSearch(this.value, trustyData);
-      renderTrustyTable(filtered);
-      showTrustyStatistics(filtered);
-    }, 250)); // 250ms delay
   }
 
   function sortTrustyByColumn(col) {
@@ -2573,6 +2563,27 @@ body.printing #pickListPrintRoot { display: block; }
     listTrustyFiles();   // Trusty
     loadPickListData();  // Pick list
     initQrSyncTab();     // QR Sync
+
+    // --- Attach debounced search listeners ONCE ---
+    document.getElementById('searchInput').addEventListener('input', debounce(function() {
+      const filtered = enhancedSearch(this.value, currentData);
+      renderTable(filtered);
+      showStatistics(filtered);
+    }, 250));
+
+    document.getElementById('trustySearchInput').addEventListener('input', debounce(function() {
+      const filtered = trustyEnhancedSearch(this.value, trustyData);
+      renderTrustyTable(filtered);
+      showTrustyStatistics(filtered);
+    }, 250));
+
+    const pricingSearchInput = document.getElementById('pricingSearch');
+    if (pricingSearchInput) {
+        // Remove the old, non-debounced listener from wirePricingFilters
+        // and add the debounced one here.
+        pricingSearchInput.removeEventListener('input', applyPricingFilters);
+        pricingSearchInput.addEventListener('input', debounce(applyPricingFilters, 250));
+    }
   }
 
   // Start the serial gate flow
@@ -3759,10 +3770,6 @@ function wirePricingFilters() {
   if (searchInput) {
     searchInput.addEventListener('input', applyPricingFilters);
   }
-  // Debounce search for better performance
-  if (searchInput) {
-    searchInput.addEventListener('input', debounce(applyPricingFilters, 250));
-  }
 }
 
 function applyPricingFilters() {
@@ -4128,7 +4135,7 @@ document.getElementById('confirmAddPartToPick')?.addEventListener('click', confi
 // Wire up new modal's controls
 document.getElementById('modalPricingSectionFilter')?.addEventListener('change', applyModalPricingFilters);
 document.getElementById('modalPricingAsIsFilter')?.addEventListener('change', applyModalPricingFilters);
-document.getElementById('modalPricingSearch')?.addEventListener('input', debounce(applyModalPricingFilters, 250));
+document.getElementById('modalPricingSearch')?.addEventListener('input', debounce(applyModalPricingFilters, 250)); // This one is OK as it's in a one-time setup
 document.getElementById('confirmAddPartsFromPickList')?.addEventListener('click', confirmAddPartsFromPickList);
 </script>
 <script>
