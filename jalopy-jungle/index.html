@@ -471,6 +471,16 @@ body.printing #pickListPrintRoot { display: block; }
         </div>
       </div>
 
+      <!-- "What's New" Report Button -->
+      <div class="d-flex justify-content-end mb-3">
+        <div>
+          <button class="btn btn-info" id="showNewVehiclesBtn">
+            <i class="bi bi-stars"></i> What's New Today
+            <span id="newVehicleCountBadge" class="badge bg-danger" style="display:none;"></span>
+          </button>
+        </div>
+      </div>
+
       <!-- Tabs -->
       <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
         <li class="nav-item">
@@ -504,6 +514,22 @@ body.printing #pickListPrintRoot { display: block; }
           <div class="modal-content">
             <div class="modal-header"><h5 class="modal-title" id="vehicleInfoModalLabel">Vehicle Information</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body" id="vehicleInfoContent"><div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Fetching data from Wikipedia...</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- "What's New" Modal -->
+      <div class="modal fade" id="newVehiclesModal" tabindex="-1" aria-labelledby="newVehiclesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="newVehiclesModalLabel">What's New Today</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p class="text-muted small">This report shows vehicles added since the last time you viewed each inventory list. Vehicles matching items in your Pick List are highlighted in yellow.</p>
+              <div id="newVehiclesReport"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1253,6 +1279,7 @@ body.printing #pickListPrintRoot { display: block; }
   /***********************
    * App state & helpers
    ***********************/
+  const PREV_YARD_INV_KEY = 'previousYardInventories';
   const PREV_INV_KEY = 'prevInventorySnapshot';
   const FAV_KEY = 'favoriteVehicles';
   const PREV_KEY = 'prevFavoriteSnapshot';
@@ -1367,11 +1394,14 @@ body.printing #pickListPrintRoot { display: block; }
 
   function loadCSV(path) {
     document.getElementById('searchInput').value = '';
+    const locKey = document.getElementById('csvSelector')?.selectedOptions?.[0]?.dataset?.loc;
+
     Papa.parse(path, {
       download:true, header:true,
       complete(r) {
         currentData = r.data.filter(row => row.Year && row.Make && row.Model && row.Row);
         checkNewFavoriteVehicles(currentData);
+        if (locKey) processInventoryChanges(locKey, currentData, 'jalopy');
         renderTable(currentData);
         renderFeaturedVehicles(currentData);
         showStatistics(currentData);
@@ -1762,10 +1792,12 @@ body.printing #pickListPrintRoot { display: block; }
 
   function loadTrustyCSV(path) {
     document.getElementById('trustySearchInput').value = '';
+    const locKey = 'trusty'; // Trusty has a single source
     Papa.parse(path, {
       download:true, header:true,
       complete(r) {
         trustyData = r.data.filter(row => row.Year && row.Make && row.Model && row.Row);
+        processInventoryChanges(locKey, trustyData, 'trusty');
         renderTrustyTable(trustyData);
         showTrustyStatistics(trustyData);
       }
@@ -2332,6 +2364,7 @@ body.printing #pickListPrintRoot { display: block; }
     const favorites  = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
     const homeYard   = localStorage.getItem('homeYard') || '';
     const theme = localStorage.getItem('theme') || 'light';
+    const prevYardInventories = JSON.parse(localStorage.getItem(PREV_YARD_INV_KEY) || '{}');
     const combined = JSON.stringify({ pickList, favorites, homeYard, theme });
     return LZString.compressToBase64(combined);
   }
@@ -2340,10 +2373,12 @@ body.printing #pickListPrintRoot { display: block; }
       const json = LZString.decompressFromBase64(code);
       const obj  = JSON.parse(json);
       const theme = obj.theme || 'light';
+      const prevYardInventories = obj.prevYardInventories || {};
       localStorage.setItem('myPickList', JSON.stringify(obj.pickList || []));
       localStorage.setItem(FAV_KEY, JSON.stringify(obj.favorites || []));
       localStorage.setItem('homeYard', (obj.homeYard || '').trim().toLowerCase().replace(/\s+/g,'_'));
       localStorage.setItem('theme', theme);
+      localStorage.setItem(PREV_YARD_INV_KEY, JSON.stringify(prevYardInventories));
       loadPickListData();
       renderFavoriteVehicles();
       if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode'); else document.body.classList.remove('dark-mode');
@@ -2569,6 +2604,10 @@ body.printing #pickListPrintRoot { display: block; }
     listTrustyFiles();   // Trusty
     loadPickListData();  // Pick list
     initQrSyncTab();     // QR Sync
+    initNewVehiclesReport(); // "What's New" feature
+
+    // Initial check for any new vehicles on load
+    updateNewVehicleCountBadge();
 
     // --- Attach debounced search listeners ONCE ---
     document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
@@ -2595,6 +2634,107 @@ body.printing #pickListPrintRoot { display: block; }
   // Start the serial gate flow
   validateStoredKey();
 
+  </script>
+  <script>
+  // ==================================================
+  // "WHAT'S NEW TODAY" FEATURE
+  // ==================================================
+
+  // Stores a map of { yardKey: [vehicleId1, vehicleId2, ...] }
+  let newVehiclesByYard = {};
+
+  function getVehicleId(vehicle) {
+    // Creates a stable, unique ID for a vehicle in a specific row.
+    return `${vehicle.Year}|${vehicle.Make}|${vehicle.Model}|${vehicle.Row}`;
+  }
+
+  function processInventoryChanges(yardKey, currentYardInventory, source) {
+    const allPreviousInventories = JSON.parse(localStorage.getItem(PREV_YARD_INV_KEY) || '{}');
+    const previousYardIds = new Set(allPreviousInventories[yardKey] || []);
+    const currentYardIds = new Set(currentYardInventory.map(getVehicleId));
+
+    const newVehicleIds = new Set();
+    for (const id of currentYardIds) {
+      if (!previousYardIds.has(id)) {
+        newVehicleIds.add(id);
+      }
+    }
+
+    // Find the full vehicle objects for the new IDs
+    newVehiclesByYard[yardKey] = currentYardInventory.filter(v => newVehicleIds.has(getVehicleId(v)));
+
+    // Update storage for next time
+    allPreviousInventories[yardKey] = Array.from(currentYardIds);
+    localStorage.setItem(PREV_YARD_INV_KEY, JSON.stringify(allPreviousInventories));
+
+    updateNewVehicleCountBadge();
+  }
+
+  function updateNewVehicleCountBadge() {
+    const badge = document.getElementById('newVehicleCountBadge');
+    const totalNew = Object.values(newVehiclesByYard).reduce((sum, arr) => sum + arr.length, 0);
+
+    if (totalNew > 0) {
+      badge.textContent = totalNew;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function generateNewVehiclesReport() {
+    const reportContainer = document.getElementById('newVehiclesReport');
+    reportContainer.innerHTML = '';
+
+    const pickList = getPickList();
+    const pickListMakeModels = new Set(pickList.map(v => `${v.Make}|${v.Model}`));
+
+    const allNewVehicles = Object.entries(newVehiclesByYard);
+
+    if (allNewVehicles.every(([, vehicles]) => vehicles.length === 0)) {
+      reportContainer.innerHTML = '<p class="text-center">No new vehicles detected since your last visit.</p>';
+      return;
+    }
+
+    allNewVehicles.forEach(([yardKey, vehicles]) => {
+      if (vehicles.length === 0) return;
+
+      const yardName = LOCATION_NAMES[yardKey] || 'Trusty';
+      let tableHtml = `
+        <h6 class="mt-3">${yardName} (${vehicles.length} new)</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-bordered">
+            <thead class="table-dark"><tr><th>Year</th><th>Make</th><th>Model</th><th>Row</th><th>Date</th></tr></thead>
+            <tbody>
+      `;
+
+      vehicles.forEach(v => {
+        const isInteresting = pickListMakeModels.has(`${v.Make}|${v.Model}`);
+        const highlightClass = isInteresting ? 'table-warning' : '';
+        tableHtml += `
+          <tr class="${highlightClass}">
+            <td>${v.Year}</td>
+            <td>${v.Make}</td>
+            <td>${v.Model}</td>
+            <td>${v.Row}</td>
+            <td>${v.Date}</td>
+          </tr>
+        `;
+      });
+
+      tableHtml += '</tbody></table></div>';
+      reportContainer.innerHTML += tableHtml;
+    });
+  }
+
+  function initNewVehiclesReport() {
+    const btn = document.getElementById('showNewVehiclesBtn');
+    const modal = new bootstrap.Modal(document.getElementById('newVehiclesModal'));
+    btn.addEventListener('click', () => {
+      generateNewVehiclesReport();
+      modal.show();
+    });
+  }
   </script>
   
 <script>
