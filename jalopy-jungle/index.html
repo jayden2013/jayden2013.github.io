@@ -2571,14 +2571,14 @@ body.printing #pickListPrintRoot { display: block; }
     initQrSyncTab();     // QR Sync
 
     // --- Attach debounced search listeners ONCE ---
-    document.getElementById('searchInput').addEventListener('input', debounce(function() {
-      const filtered = enhancedSearch(this.value, currentData);
+    document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
+      const filtered = enhancedSearch(e.target.value, currentData);
       renderTable(filtered);
       showStatistics(filtered);
     }, 250));
 
-    document.getElementById('trustySearchInput').addEventListener('input', debounce(function() {
-      const filtered = trustyEnhancedSearch(this.value, trustyData);
+    document.getElementById('trustySearchInput').addEventListener('input', debounce(function(e) {
+      const filtered = trustyEnhancedSearch(e.target.value, trustyData);
       renderTrustyTable(filtered);
       showTrustyStatistics(filtered);
     }, 250));
