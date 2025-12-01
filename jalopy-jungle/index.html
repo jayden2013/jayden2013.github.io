@@ -2372,7 +2372,7 @@ body.printing #pickListPrintRoot { display: block; }
     if (!themeDisplay) return;
     const currentTheme = theme || localStorage.getItem('theme') || 'light';
     const themeName = currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1); // Capitalize
-    themeDisplay.textContent = `Theme: ${themeName}`;
+    themeDisplay.textContent = `${themeName}`;
   }
 
   function applyTheme(theme) {
