@@ -1837,8 +1837,13 @@ body.printing #pickListPrintRoot { display: block; }
   function addVehicleToFavorites(year, make, model) {
     const list = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
     // Prevent duplicates
-    const exists = list.some(v => v.year === year && v.make === make && v.model === model);
-    if (!exists) {
+    const exists = list.some(v => v.year === year && v.make === make && v.model === model); // This check is simple and might not catch year ranges.
+    if (exists) {
+      alert(`${year} ${make} ${model} is already in your favorites.`);
+      return;
+    }
+
+    if (confirm(`Add ${year} ${make} ${model} to your favorites?`)) {
       list.push({ year, make, model });
       localStorage.setItem(FAV_KEY, JSON.stringify(list));
       // Optional: show a confirmation toast/alert
