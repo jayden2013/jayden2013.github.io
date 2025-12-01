@@ -463,11 +463,14 @@ body.printing #pickListPrintRoot { display: block; }
           <div class="small">Cars and Collectibles LLC • <a href="https://carsandcollectibles.com" target="_blank">carsandcollectibles.com</a></div>
           <div class="small text-muted" id="signedInEmail" style="display:none;">Signed in as: <span id="signedInEmailValue"></span></div>
         </div>
-        <div class="d-flex gap-2">
-          <button class="btn btn-outline-secondary" id="settingsBtn"><i class="bi bi-gear"></i> Settings</button>
-          <button class="btn btn-outline-primary" id="addStickyBtn" title="Add Sticky (Shift+N)">
-            <i class="bi bi-sticky"></i> Add Sticky
-          </button>
+        <div class="text-end">
+          <div id="currentThemeDisplay" class="small text-muted mb-1"></div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" id="settingsBtn"><i class="bi bi-gear"></i> Settings</button>
+            <button class="btn btn-outline-primary" id="addStickyBtn" title="Add Sticky (Shift+N)">
+              <i class="bi bi-sticky"></i> Add Sticky
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2371,6 +2374,14 @@ body.printing #pickListPrintRoot { display: block; }
     } else if (theme && theme !== 'light') {
       document.body.classList.add(`theme-${theme}`);
     }
+  }
+
+  function updateThemeDisplay() {
+    const themeDisplay = document.getElementById('currentThemeDisplay');
+    if (!themeDisplay) return;
+    const theme = localStorage.getItem('theme') || 'light';
+    const themeName = theme.charAt(0).toUpperCase() + theme.slice(1); // Capitalize
+    themeDisplay.textContent = `Theme: ${themeName}`;
   }
 
   // Favorites UI
