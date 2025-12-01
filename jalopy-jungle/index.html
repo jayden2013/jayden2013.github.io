@@ -2376,14 +2376,13 @@ body.printing #pickListPrintRoot { display: block; }
     }
   }
 
-  function updateThemeDisplay() {
+  function updateThemeDisplay(theme) {
     const themeDisplay = document.getElementById('currentThemeDisplay');
     if (!themeDisplay) return;
-    const theme = localStorage.getItem('theme') || 'light';
-    const themeName = theme.charAt(0).toUpperCase() + theme.slice(1); // Capitalize
+    const currentTheme = theme || localStorage.getItem('theme') || 'light';
+    const themeName = currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1); // Capitalize
     themeDisplay.textContent = `Theme: ${themeName}`;
   }
-
   // Favorites UI
   document.querySelector('button[data-bs-target="#favoritesTab"]')?.addEventListener('shown.bs.tab', renderFavoriteVehicles);
   document.getElementById('addFavVehicleBtn').onclick = () => {
