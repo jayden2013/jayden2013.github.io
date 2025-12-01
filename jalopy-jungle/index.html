@@ -2367,6 +2367,14 @@ body.printing #pickListPrintRoot { display: block; }
     applyHomeYardDefault();
   };
 
+  function updateThemeDisplay(theme) {
+    const themeDisplay = document.getElementById('currentThemeDisplay');
+    if (!themeDisplay) return;
+    const currentTheme = theme || localStorage.getItem('theme') || 'light';
+    const themeName = currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1); // Capitalize
+    themeDisplay.textContent = `Theme: ${themeName}`;
+  }
+
   function applyTheme(theme) {
     document.body.className = document.body.className.replace(/\btheme-\w+\b/g, '').replace('dark-mode', '').trim();
     if (theme === 'dark') {
@@ -2374,14 +2382,7 @@ body.printing #pickListPrintRoot { display: block; }
     } else if (theme && theme !== 'light') {
       document.body.classList.add(`theme-${theme}`);
     }
-  }
-
-  function updateThemeDisplay(theme) {
-    const themeDisplay = document.getElementById('currentThemeDisplay');
-    if (!themeDisplay) return;
-    const currentTheme = theme || localStorage.getItem('theme') || 'light';
-    const themeName = currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1); // Capitalize
-    themeDisplay.textContent = `Theme: ${themeName}`;
+    updateThemeDisplay(theme);
   }
   // Favorites UI
   document.querySelector('button[data-bs-target="#favoritesTab"]')?.addEventListener('shown.bs.tab', renderFavoriteVehicles);
