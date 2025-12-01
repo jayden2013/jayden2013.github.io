@@ -2577,24 +2577,6 @@ body.printing #pickListPrintRoot { display: block; }
     a.click();
     a.remove();
   }
-  function downloadPartCentricCSV(rows, filename) {
-    const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'PartSection', 'Part', 'PartPrice', 'Core'];
-    const lines = [
-      ...brandingBannerLines('Pick List Export (by Part)'),
-      headers.map(csvEscape).join(',')
-    ];
-    rows.forEach(r => {
-      lines.push(headers.map(h => r[h] ?? '').map(csvEscape).join(','));
-    });
-    const csv = lines.join('\n');
-    const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
   function downloadCSVGroupedByYard(rows, filename) {
     const sorted = [...rows].sort((a,b) =>
       (a.Yard||'').localeCompare(b.Yard||'') ||
@@ -2657,12 +2639,6 @@ body.printing #pickListPrintRoot { display: block; }
   function performPickListExportFromModal() {
     const mode = document.querySelector('input[name="pickExportMode"]:checked')?.value || 'asis';
     const ts = fileStamp();
-    if (mode === 'bypart') {
-      const rows = gatherPickListRowsForPartCentricExport();
-      if (!rows.length) return alert('Your pick list is empty.');
-      downloadPartCentricCSV(rows, `pick_list_by_part_${ts}.csv`);
-      return;
-    }
     if (mode === 'bypart') {
       const rows = gatherPickListRowsForPartCentricExport();
       if (!rows.length) return alert('Your pick list is empty.');
