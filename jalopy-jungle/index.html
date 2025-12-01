@@ -486,6 +486,9 @@ body.printing #pickListPrintRoot { display: block; }
           <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pickListTab" type="button">Pick List</button>
         </li>
         <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#favoritesTab" type="button">Favorites</button>
+        </li>
+        <li class="nav-item">
           <button class="nav-link" data-bs-toggle="tab" data-bs-target="#alertsTab" type="button">Alerts</button>
         </li>
 		<li class="nav-item">
@@ -683,6 +686,26 @@ body.printing #pickListPrintRoot { display: block; }
                 <tbody id="pickListBody"></tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- Favorites Tab -->
+        <div class="tab-pane fade" id="favoritesTab">
+          <div class="tab-card">
+            <h5 class="mb-1">Favorite Vehicles</h5>
+            <p class="text-muted mb-3">Add vehicles you are always looking for. New arrivals that match these will be highlighted in the "What's New" tab.</p>
+            
+            <div class="row g-2 align-items-end mb-3">
+              <div class="col"><label class="form-label">Year</label><input id="favYearInput" type="number" class="form-control" placeholder="e.g., 1997"/></div>
+              <div class="col"><label class="form-label">Make</label><input id="favMakeInput" type="text" class="form-control" placeholder="e.g., Ford"/></div>
+              <div class="col"><label class="form-label">Model</label><input id="favModelInput" type="text" class="form-control" placeholder="e.g., Thunderbird"/></div>
+              <div class="col-auto"><button class="btn btn-primary" id="addFavVehicleBtn">Add Favorite</button></div>
+            </div>
+
+            <h6>Your Favorites List</h6>
+            <ul id="favVehiclesList" class="list-group list-group-flush mt-2">
+              <!-- Favorite vehicles will be rendered here by JS -->
+            </ul>
           </div>
         </div>
 
@@ -948,19 +971,6 @@ body.printing #pickListPrintRoot { display: block; }
                 <option value="mint">Mint</option>
                 <option value="sillygoose">Silly Goose</option>
               </select>
-            </div>
-
-            <!-- Favorites -->
-            <hr>
-            <div class="mb-3">
-              <h6>🎯 Favorite Vehicles</h6>
-              <div class="d-flex gap-2">
-                <input id="favYearInput" type="number" class="form-control" placeholder="Year"/>
-                <input id="favMakeInput" type="text" class="form-control" placeholder="Make"/>
-                <input id="favModelInput" type="text" class="form-control" placeholder="Model"/>
-                <button class="btn btn-sm btn-primary" id="addFavVehicleBtn">Add</button>
-              </div>
-              <ul id="favVehiclesList" class="list-group list-group-flush mt-2"></ul>
             </div>
 
             <!-- Data code sync -->
@@ -2325,7 +2335,7 @@ body.printing #pickListPrintRoot { display: block; }
   }
 
   // Favorites UI
-  document.getElementById('settingsModal').addEventListener('shown.bs.modal', renderFavoriteVehicles);
+  document.querySelector('button[data-bs-target="#favoritesTab"]')?.addEventListener('shown.bs.tab', renderFavoriteVehicles);
   document.getElementById('addFavVehicleBtn').onclick = () => {
     const year  = document.getElementById('favYearInput').value.trim();
     const make  = document.getElementById('favMakeInput').value.trim();
@@ -2346,7 +2356,7 @@ body.printing #pickListPrintRoot { display: block; }
     list.forEach((v, idx) => {
       const li = document.createElement('li');
       li.className = 'list-group-item d-flex justify-content-between align-items-center p-2';
-      li.innerHTML = `<span>${v.year} / ${v.make} / ${v.model}</span>
+      li.innerHTML = `<span><strong>${v.year}</strong> ${v.make} / ${v.model}</span>
                       <button class="btn btn-sm btn-outline-danger">✕</button>`;
       li.querySelector('button').onclick = () => {
         list.splice(idx, 1);
@@ -2726,7 +2736,9 @@ body.printing #pickListPrintRoot { display: block; }
     reportContainer.innerHTML = '';
   
     const pickList = getPickList();
+    const favorites = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
     const pickListMakeModels = new Set(pickList.map(v => `${v.Make}|${v.Model}`));
+    const favoriteMakeModels = new Set(favorites.map(v => `${v.year}|${v.make}|${v.model}`.toLowerCase()));
   
     const allNewVehicles = Object.entries(newVehiclesByYard);
   
@@ -2735,24 +2747,57 @@ body.printing #pickListPrintRoot { display: block; }
       return;
     }
   
-    // Separate vehicles into "interesting" and "other"
+    // Separate vehicles into "favorites", "interesting", and "other"
+    const favoriteMatches = [];
     const interestingVehicles = [];
     const otherNewVehiclesByYard = {};
   
     allNewVehicles.forEach(([yardKey, vehicles]) => {
       otherNewVehiclesByYard[yardKey] = [];
       vehicles.forEach(v => {
-        const isInteresting = pickListMakeModels.has(`${v.Make}|${v.Model}`);
         const yardName = LOCATION_NAMES[yardKey] || 'Trusty';
-        if (isInteresting) {
+        const vehicleWithYard = { ...v, yardName };
+
+        // Check for favorite match first (more specific)
+        const isFavorite = favoriteMakeModels.has(`${v.Year}|${v.Make}|${v.Model}`.toLowerCase());
+        if (isFavorite) {
+          favoriteMatches.push(vehicleWithYard);
+          return; // Don't also list it as a potential interest
+        }
+
+        // Then check for potential interest
+        const isPotentialInterest = pickListMakeModels.has(`${v.Make}|${v.Model}`);
+        if (isPotentialInterest) {
           interestingVehicles.push({ ...v, yardName });
         } else {
           otherNewVehiclesByYard[yardKey].push(v);
         }
       });
     });
-  
+
     let finalHtml = '<div class="accordion" id="newVehiclesAccordion">';
+
+    // 0. Build "Favorite Vehicles" table (highest priority)
+    if (favoriteMatches.length > 0) {
+      const collapseId = 'collapse-favorites';
+      finalHtml += `
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading-favorites">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+              <i class="bi bi-heart-fill text-danger me-2"></i> Favorite Vehicle Arrivals
+              <span class="badge bg-danger ms-2">${favoriteMatches.length} new</span>
+            </button>
+          </h2>
+          <div id="${collapseId}" class="accordion-collapse collapse show" data-bs-parent="#newVehiclesAccordion">
+            <div class="accordion-body p-2">
+              <div class="table-responsive"><table class="table table-sm table-striped table-bordered table-danger">
+                <thead class="table-dark"><tr><th>Year</th><th>Make</th><th>Model</th><th>Row</th><th>Yard</th><th>Date</th></tr></thead>
+                <tbody>${favoriteMatches.map(v => `<tr><td>${v.Year}</td><td>${v.Make}</td><td>${v.Model}</td><td>${v.Row}</td><td>${v.yardName}</td><td>${v.Date}</td></tr>`).join('')}</tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>`;
+    }
   
     // 1. Build "Potential Interests" table
     if (interestingVehicles.length > 0) {
@@ -2787,8 +2832,8 @@ body.printing #pickListPrintRoot { display: block; }
   
       const yardName = LOCATION_NAMES[yardKey] || 'Trusty';
       const collapseId = `collapse-${yardKey}`;
-      // It's the first only if there are no interesting vehicles
-      const isFirst = index === 0 && interestingVehicles.length === 0;
+      // It's the first only if there are no favorites or interests
+      const isFirst = index === 0 && favoriteMatches.length === 0 && interestingVehicles.length === 0;
   
       finalHtml += `
         <div class="accordion-item">
