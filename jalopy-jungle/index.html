@@ -696,7 +696,7 @@ body.printing #pickListPrintRoot { display: block; }
             <p class="text-muted mb-3">Add vehicles you are always looking for. New arrivals that match these will be highlighted in the "What's New" tab.</p>
             
             <div class="row g-2 align-items-end mb-3">
-              <div class="col"><label class="form-label">Year</label><input id="favYearInput" type="number" class="form-control" placeholder="e.g., 1997"/></div>
+              <div class="col"><label class="form-label">Year / Range</label><input id="favYearInput" type="text" class="form-control" placeholder="e.g., 1997 or 99-04"/></div>
               <div class="col"><label class="form-label">Make</label><input id="favMakeInput" type="text" class="form-control" placeholder="e.g., Ford"/></div>
               <div class="col"><label class="form-label">Model</label><input id="favModelInput" type="text" class="form-control" placeholder="e.g., Thunderbird"/></div>
               <div class="col-auto"><button class="btn btn-primary" id="addFavVehicleBtn">Add Favorite</button></div>
@@ -2340,7 +2340,13 @@ body.printing #pickListPrintRoot { display: block; }
     const year  = document.getElementById('favYearInput').value.trim();
     const make  = document.getElementById('favMakeInput').value.trim();
     const model = document.getElementById('favModelInput').value.trim();
-    if (!year || !make || !model) return alert('Please fill in all three fields.');
+    const yearRegex = /^\d{2,4}(-\d{2,4})?$/;
+    if (!year || !make || !model) {
+      return alert('Please fill in all three fields.');
+    }
+    if (!yearRegex.test(year)) {
+      return alert('Invalid Year format. Please use a single year (e.g., 1997 or 97) or a range (e.g., 2005-2009 or 05-09).');
+    }
     const list = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
     list.push({ year, make, model });
     localStorage.setItem(FAV_KEY, JSON.stringify(list));
@@ -2735,7 +2741,6 @@ body.printing #pickListPrintRoot { display: block; }
     const reportContainer = document.getElementById('newVehiclesReport');
     reportContainer.innerHTML = '';
   
-    const pickList = getPickList();
     const favorites = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
     const pickListMakeModels = new Set(pickList.map(v => `${v.Make}|${v.Model}`));
     const favoriteMakeModels = new Set(favorites.map(v => `${v.year}|${v.make}|${v.model}`.toLowerCase()));
@@ -2747,6 +2752,31 @@ body.printing #pickListPrintRoot { display: block; }
       return;
     }
   
+    // Helper to check if a vehicle year falls within a favorite's year/range
+    const isFavoriteMatch = (vehicle, fav) => {
+      const vMake = vehicle.Make.toLowerCase();
+      const vModel = vehicle.Model.toLowerCase();
+      if (vMake !== fav.make.toLowerCase() || vModel !== fav.model.toLowerCase()) {
+        return false;
+      }
+
+      const vYear = parseInt(vehicle.Year, 10);
+      const favYear = fav.year;
+
+      if (favYear.includes('-')) {
+        let [start, end] = favYear.split('-').map(y => parseInt(y, 10));
+        // Handle 2-digit years
+        start += (start < 50 ? 2000 : 1900);
+        end += (end < 50 ? 2000 : 1900);
+        return vYear >= start && vYear <= end;
+      } else {
+        let singleYear = parseInt(favYear, 10);
+        // Handle 2-digit year
+        singleYear += (favYear.length === 2 && singleYear < 50 ? 2000 : (favYear.length === 2 ? 1900 : 0));
+        return vYear === singleYear;
+      }
+    };
+
     // Separate vehicles into "favorites", "interesting", and "other"
     const favoriteMatches = [];
     const interestingVehicles = [];
@@ -2758,11 +2788,9 @@ body.printing #pickListPrintRoot { display: block; }
         const yardName = LOCATION_NAMES[yardKey] || 'Trusty';
         const vehicleWithYard = { ...v, yardName };
 
-        // Check for favorite match first (more specific)
-        const isFavorite = favoriteMakeModels.has(`${v.Year}|${v.Make}|${v.Model}`.toLowerCase());
-        if (isFavorite) {
+        if (favorites.some(fav => isFavoriteMatch(v, fav))) {
           favoriteMatches.push(vehicleWithYard);
-          return; // Don't also list it as a potential interest
+          return; // Don't also list it as a potential interest or other
         }
 
         // Then check for potential interest
