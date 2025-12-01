@@ -2752,41 +2752,43 @@ body.printing #pickListPrintRoot { display: block; }
       });
     });
   
-    let finalHtml = '';
+    let finalHtml = '<div class="accordion" id="newVehiclesAccordion">';
   
     // 1. Build "Potential Interests" table
     if (interestingVehicles.length > 0) {
+      const collapseId = 'collapse-interests';
       finalHtml += `
-        <h5 class="mb-2"><i class="bi bi-star-fill text-warning"></i> Potential Interests</h5>
-        <p class="text-muted small mt-0 mb-2">These new vehicles match the Make and Model of items in your Pick List.</p>
-        <div class="table-responsive mb-4">
-          <table class="table table-sm table-striped table-bordered table-warning">
-            <thead class="table-dark"><tr><th>Year</th><th>Make</th><th>Model</th><th>Row</th><th>Yard</th><th>Date</th></tr></thead>
-            <tbody>
-              ${interestingVehicles.map(v => `
-                <tr>
-                  <td>${v.Year}</td>
-                  <td>${v.Make}</td>
-                  <td>${v.Model}</td>
-                  <td>${v.Row}</td>
-                  <td>${v.yardName}</td>
-                  <td>${v.Date}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        <hr>`;
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading-interests">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+              <i class="bi bi-star-fill text-warning me-2"></i> Potential Interests
+              <span class="badge bg-warning text-dark ms-2">${interestingVehicles.length} new</span>
+            </button>
+          </h2>
+          <div id="${collapseId}" class="accordion-collapse collapse show" data-bs-parent="#newVehiclesAccordion">
+            <div class="accordion-body p-2">
+              <p class="text-muted small mt-0 mb-2">These new vehicles match the Make and Model of items in your Pick List.</p>
+              <div class="table-responsive">
+                <table class="table table-sm table-striped table-bordered table-warning">
+                  <thead class="table-dark"><tr><th>Year</th><th>Make</th><th>Model</th><th>Row</th><th>Yard</th><th>Date</th></tr></thead>
+                  <tbody>
+                    ${interestingVehicles.map(v => `<tr><td>${v.Year}</td><td>${v.Make}</td><td>${v.Model}</td><td>${v.Row}</td><td>${v.yardName}</td><td>${v.Date}</td></tr>`).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>`;
     }
   
     // 2. Build collapsible tables for each yard
-    finalHtml += '<div class="accordion" id="newVehiclesAccordion">';
     Object.entries(otherNewVehiclesByYard).forEach(([yardKey, vehicles], index) => {
       if (vehicles.length === 0) return;
   
       const yardName = LOCATION_NAMES[yardKey] || 'Trusty';
       const collapseId = `collapse-${yardKey}`;
-      const isFirst = index === 0;
+      // It's the first only if there are no interesting vehicles
+      const isFirst = index === 0 && interestingVehicles.length === 0;
   
       finalHtml += `
         <div class="accordion-item">
