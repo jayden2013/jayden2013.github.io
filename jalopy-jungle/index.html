@@ -2741,8 +2741,8 @@ body.printing #pickListPrintRoot { display: block; }
     const reportContainer = document.getElementById('newVehiclesReport');
     reportContainer.innerHTML = '';
   
+    const pickList = getPickList();
     const favorites = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
-    const pickListMakeModels = new Set(pickList.map(v => `${v.Make}|${v.Model}`));
     const favoriteMakeModels = new Set(favorites.map(v => `${v.year}|${v.make}|${v.model}`.toLowerCase()));
   
     const allNewVehicles = Object.entries(newVehiclesByYard);
@@ -2794,7 +2794,7 @@ body.printing #pickListPrintRoot { display: block; }
         }
 
         // Then check for potential interest
-        const isPotentialInterest = pickListMakeModels.has(`${v.Make}|${v.Model}`);
+        const isPotentialInterest = pickList.some(p => p.Make === v.Make && p.Model === v.Model);
         if (isPotentialInterest) {
           interestingVehicles.push({ ...v, yardName });
         } else {
