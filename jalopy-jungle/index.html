@@ -2620,14 +2620,15 @@ body.printing #pickListPrintRoot { display: block; }
       opt.value = y; opt.textContent = y;
       select.appendChild(opt);
     });
-    document.getElementById('exportByPart').checked = true;
+    document.getElementById('exportAsIs').checked = true; // Revert to old default temporarily
+    // The line below was causing the error because 'exportByPart' didn't exist in the HTML yet.
+    // document.getElementById('exportByPart').checked = true;
     select.disabled = true;
-    ['exportByPart', 'exportAsIs','exportGrouped','exportSingleYard'].forEach(id => {
+    ['exportAsIs','exportGrouped','exportSingleYard'].forEach(id => {
       document.getElementById(id).onchange = () => {
         select.disabled = !document.getElementById('exportSingleYard').checked;
         const btn = document.getElementById('confirmExportPick');
-        btn.textContent = id==='exportByPart' ? 'Export by Part'
-          : id==='exportAsIs' ? 'Export Full List'
+        btn.textContent = id==='exportAsIs' ? 'Export Full List'
           : id==='exportGrouped' ? 'Export Grouped by Yard'
           : 'Export Selected Yard';
       };
