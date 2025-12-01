@@ -2648,6 +2648,24 @@ body.printing #pickListPrintRoot { display: block; }
   // Stores a map of { yardKey: [vehicleId1, vehicleId2, ...] }
   let newVehiclesByYard = {};
 
+  // Helper to load a single yard's data for analysis without affecting the main UI
+  async function loadAndProcessYard(path, locKey, source) {
+    return new Promise((resolve, reject) => {
+      Papa.parse(path, {
+        download: true,
+        header: true,
+        complete(r) {
+          const inventoryData = r.data.filter(row => row.Year && row.Make && row.Model && row.Row);
+          processInventoryChanges(locKey, inventoryData, source);
+          resolve();
+        },
+        error(err) {
+          console.error(`Failed to load ${path}:`, err);
+          reject(err);
+        }
+      });
+    });
+  }
   function getVehicleId(vehicle) {
     // Creates a stable, unique ID for a vehicle in a specific row.
     return `${vehicle.Year}|${vehicle.Make}|${vehicle.Model}|${vehicle.Row}`;
@@ -2790,27 +2808,34 @@ body.printing #pickListPrintRoot { display: block; }
 
     // Wire up the "Re-run" button for troubleshooting
     const rerunBtn = document.getElementById('rerunNewVehicleAnalysisBtn');
-    rerunBtn?.addEventListener('click', async () => {
+    rerunBtn.addEventListener('click', async () => {
       if (!confirm("This will clear the 'viewed' status and re-load the latest inventory for ALL yards to run the comparison again. This is for testing purposes. Continue?")) {
         return;
       }
       
       // 1. Clear the stored "previous" inventories
       localStorage.removeItem(PREV_YARD_INV_KEY);
-      newVehiclesByYard = {}; // Clear in-memory cache
+      newVehiclesByYard = {}; // Clear in-memory cache before re-processing
 
-      // 2. Re-trigger the load for ALL available yards
+      // 2. Create a list of all processing tasks
+      const tasks = [];
       const jalopySelector = document.getElementById('csvSelector');
       for (const option of jalopySelector.options) {
         const locKey = option.dataset.loc;
         const path = option.value;
-        await loadAndProcessYard(path, locKey, 'jalopy');
+        tasks.push(loadAndProcessYard(path, locKey, 'jalopy'));
       }
 
       const trustySelector = document.getElementById('trustySelector');
       for (const option of trustySelector.options) {
-        await loadAndProcessYard(option.value, 'trusty', 'trusty');
+        tasks.push(loadAndProcessYard(option.value, 'trusty', 'trusty'));
       }
+
+      // 3. Wait for all yards to be processed
+      await Promise.all(tasks);
+
+      // 4. Re-generate the report in the modal with the fresh data
+      generateNewVehiclesReport();
     });
   }
   </script>
