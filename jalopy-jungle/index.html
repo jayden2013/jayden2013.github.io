@@ -530,6 +530,11 @@ body.printing #pickListPrintRoot { display: block; }
               <p class="text-muted small">This report shows vehicles added since the last time you viewed each inventory list. Vehicles matching items in your Pick List are highlighted in yellow.</p>
               <div id="newVehiclesReport"></div>
             </div>
+            <div class="modal-footer justify-content-start">
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="rerunNewVehicleAnalysisBtn" title="Clears the 'viewed' status and re-runs the comparison for testing.">
+                <i class="bi bi-arrow-clockwise"></i> Re-run Analysis
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -2782,6 +2787,21 @@ body.printing #pickListPrintRoot { display: block; }
       generateNewVehiclesReport();
       modal.show();
     });
+
+    // Wire up the "Re-run" button for troubleshooting
+    const rerunBtn = document.getElementById('rerunNewVehicleAnalysisBtn');
+    if (rerunBtn) {
+      rerunBtn.addEventListener('click', () => {
+        if (!confirm("This will clear the 'viewed' status for all yards and re-load the current inventories to run the comparison again. This is for testing purposes. Continue?")) {
+          return;
+        }
+        // 1. Clear the stored "previous" inventories
+        localStorage.removeItem(PREV_YARD_INV_KEY);
+        // 2. Re-trigger the load for the currently selected yards
+        loadCSV(document.getElementById('csvSelector').value);
+        loadTrustyCSV(document.getElementById('trustySelector').value);
+      });
+    }
   }
   </script>
   
