@@ -1422,6 +1422,10 @@ body.printing #pickListPrintRoot { display: block; }
     const container = document.getElementById('featuredVehiclesContainer');
     if (!container) return;
   
+    const selector = document.getElementById('csvSelector');
+    const locKey = selector?.selectedOptions?.[0]?.dataset?.loc;
+    const yardName = LOCATION_NAMES[locKey] || (locKey ? locKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown Yard');
+
     container.innerHTML = ''; // Clear loading spinner
   
     if (!data || data.length === 0) {
@@ -1456,11 +1460,14 @@ body.printing #pickListPrintRoot { display: block; }
             <div class="col-md-8 p-3">
               <div class="card-body d-flex flex-column h-100">
                 <h5 class="card-title">${vehicle.Year} ${vehicle.Make}</h5>
-                <h6 class="card-subtitle mb-2 text-muted">${vehicle.Model}</h6>
+                <h6 class="card-subtitle mb-2 text-muted">${vehicle.Model} <span class="badge bg-secondary fw-normal">${yardName}</span></h6>
                 <p class="card-text small text-muted flex-grow-1">Loading summary...</p>
-                <div class="mt-auto pt-2">
-                  <button class="btn btn-sm btn-outline-info w-100 info-btn">
+                <div class="mt-auto pt-2 d-flex gap-2">
+                  <button class="btn btn-sm btn-outline-info w-50 info-btn">
                     <i class="bi bi-info-circle"></i> More Info (Wikipedia)
+                  </button>
+                  <button class="btn btn-sm btn-outline-warning w-50 fav-btn">
+                    <i class="bi bi-star"></i> Create Favorite
                   </button>
                 </div>
               </div>
@@ -1483,6 +1490,7 @@ body.printing #pickListPrintRoot { display: block; }
       summaryP.textContent = wikiInfo.summary.substring(0, 400) + (wikiInfo.summary.length > 400 ? '...' : '');
   
       col.querySelector('.info-btn').addEventListener('click', () => fetchVehicleInfo(vehicle.Year, vehicle.Make, vehicle.Model, document.getElementById('vehicleInfoModal')));
+      col.querySelector('.fav-btn').addEventListener('click', () => addVehicleToFavorites(vehicle.Year, vehicle.Make, vehicle.Model));
     }
   }
 
@@ -1643,6 +1651,19 @@ body.printing #pickListPrintRoot { display: block; }
     bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
   };
   document.getElementById('clearNote').onclick = () => {
+    const noteInput = document.getElementById('noteInput');
+    const noteModalInstance = bootstrap.Modal.getInstance(document.getElementById('noteModal'));
+
+    if (selectedRowKey) {
+        delete notes[selectedRowKey];
+        localStorage.setItem('jalopyNotes', JSON.stringify(notes));
+        renderTable(currentData);
+        renderTrustyTable(trustyData);
+        loadPickListData(); // Refresh pick list to show cleared note
+        noteInput.value = '';
+        document.getElementById('noteLengthFeedback').style.display = 'none';
+    }
+    if (noteModalInstance) noteModalInstance.hide();
     if (selectedRowKey) {
       delete notes[selectedRowKey];
       localStorage.setItem('jalopyNotes', JSON.stringify(notes));
@@ -1813,6 +1834,19 @@ body.printing #pickListPrintRoot { display: block; }
     });
   }
 
+  function addVehicleToFavorites(year, make, model) {
+    const list = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+    // Prevent duplicates
+    const exists = list.some(v => v.year === year && v.make === make && v.model === model);
+    if (!exists) {
+      list.push({ year, make, model });
+      localStorage.setItem(FAV_KEY, JSON.stringify(list));
+      // Optional: show a confirmation toast/alert
+      showFavToast(`Added ${year} ${make} ${model} to favorites!`);
+      // If the favorites tab is active, re-render it
+      if (document.querySelector('#favoritesTab.active')) renderFavoriteVehicles();
+    }
+  }
   function renderTrustyTable(data) {
     const hdr = document.getElementById('trustyTableHeader');
     const bd  = document.getElementById('trustyTableBody');
@@ -1829,7 +1863,7 @@ body.printing #pickListPrintRoot { display: block; }
 
     const storedPick = JSON.parse(localStorage.getItem('myPickList') || '[]');
     const pickKeys = new Set(storedPick.map(r => ['Year','Make','Model','Row'].map(k => r[k]).join('|')));
-
+    
     data.forEach(row => {
       const tr  = document.createElement('tr');
       const key = Object.values(row).join('|');
