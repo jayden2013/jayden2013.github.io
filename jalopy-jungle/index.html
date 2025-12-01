@@ -2584,6 +2584,31 @@ body.printing #pickListPrintRoot { display: block; }
     listTrustyFiles();   // Trusty
     loadPickListData();  // Pick list
     initQrSyncTab();     // QR Sync
+
+    // --- Wire up "What's New" tab and its controls ---
+    const tabBtn = document.querySelector('button[data-bs-target="#whatsNewTab"]');
+    tabBtn?.addEventListener('shown.bs.tab', () => {
+      generateNewVehiclesReport();
+    });
+
+    const rerunBtn = document.getElementById('rerunNewVehicleAnalysisBtn');
+    rerunBtn?.addEventListener('click', async () => {
+      if (!confirm("This will clear the 'viewed' status and re-load the latest inventory for ALL yards to run the comparison again. This is for testing purposes. Continue?")) {
+        return;
+      }
+      localStorage.removeItem(PREV_YARD_INV_KEY);
+      newVehiclesByYard = {};
+      const tasks = [];
+      for (const option of document.getElementById('csvSelector').options) {
+        tasks.push(loadAndProcessYard(option.value, option.dataset.loc, 'jalopy'));
+      }
+      for (const option of document.getElementById('trustySelector').options) {
+        tasks.push(loadAndProcessYard(option.value, 'trusty', 'trusty'));
+      }
+      await Promise.all(tasks);
+      generateNewVehiclesReport();
+    });
+
     initNewVehiclesReport(); // "What's New" feature
 
     // Initial check for any new vehicles on load
@@ -2774,42 +2799,9 @@ body.printing #pickListPrintRoot { display: block; }
   }
 
   function initNewVehiclesReport() {
-    const tabBtn = document.querySelector('button[data-bs-target="#whatsNewTab"]');
-    tabBtn?.addEventListener('shown.bs.tab', () => {
-      generateNewVehiclesReport();
-    });
-
-    // Wire up the "Re-run" button (now inside the tab)
-    const rerunBtn = document.getElementById('rerunNewVehicleAnalysisBtn');
-    rerunBtn.addEventListener('click', async () => {
-      if (!confirm("This will clear the 'viewed' status and re-load the latest inventory for ALL yards to run the comparison again. This is for testing purposes. Continue?")) {
-        return;
-      }
-      
-      // 1. Clear the stored "previous" inventories
-      localStorage.removeItem(PREV_YARD_INV_KEY);
-      newVehiclesByYard = {}; // Clear in-memory cache before re-processing
-
-      // 2. Create a list of all processing tasks
-      const tasks = [];
-      const jalopySelector = document.getElementById('csvSelector');
-      for (const option of jalopySelector.options) {
-        const locKey = option.dataset.loc;
-        const path = option.value;
-        tasks.push(loadAndProcessYard(path, locKey, 'jalopy'));
-      }
-
-      const trustySelector = document.getElementById('trustySelector');
-      for (const option of trustySelector.options) {
-        tasks.push(loadAndProcessYard(option.value, 'trusty', 'trusty'));
-      }
-
-      // 3. Wait for all yards to be processed
-      await Promise.all(tasks);
-
-      // 4. Re-generate the report in the modal with the fresh data
-      generateNewVehiclesReport();
-    });
+    // This function is now just a placeholder, as its logic has been moved
+    // to initApp() to ensure correct execution order.
+    // We can keep it for future "What's New" specific initializations.
   }
   </script>
   
