@@ -1369,8 +1369,6 @@ body.printing #pickListPrintRoot { display: block; }
       if (toSelect) { selector.value = toSelect.value; loadCSV(toSelect.value); }
     } catch (err) {
       console.error('Error listing inventory CSVs (Jalopy):', err);
-    } finally {
-      initNewVehiclesReport(); // Attempt to initialize after Jalopy list is populated
     }
   }
 
@@ -1769,8 +1767,6 @@ body.printing #pickListPrintRoot { display: block; }
       }
     } catch (err) {
       console.error('Error listing inventory CSVs (Trusty):', err);
-    } finally {
-      initNewVehiclesReport(); // Also attempt to initialize after Trusty list is populated
     }
   }
 
@@ -2588,6 +2584,7 @@ body.printing #pickListPrintRoot { display: block; }
     listTrustyFiles();   // Trusty
     loadPickListData();  // Pick list
     initQrSyncTab();     // QR Sync
+    initNewVehiclesReport(); // "What's New" feature
     
     // Initial check for any new vehicles on load
     updateNewVehicleCountBadge();
@@ -2776,36 +2773,29 @@ body.printing #pickListPrintRoot { display: block; }
     reportContainer.innerHTML = finalHtml;
   }
 
-  let newVehiclesReportInitialized = false;
   function initNewVehiclesReport() {
-    if (newVehiclesReportInitialized) return; // Prevent running more than once
-
-    // Check if both inventory dropdowns have been populated
-    const jalopyReady = document.getElementById('csvSelector')?.options?.length > 0;
-    const trustyReady = document.getElementById('trustySelector')?.options?.length > 0;
-
-    if (!jalopyReady || !trustyReady) {
-      return; // Not ready yet, wait for the other list function to call this again
+    const tabBtn = document.querySelector('button[data-bs-target="#whatsNewTab"]');
+    if (tabBtn) {
+      // Generate the report the first time the tab is shown.
+      tabBtn.addEventListener('show.bs.tab', generateNewVehiclesReport, { once: true });
     }
 
-    newVehiclesReportInitialized = true; // Mark as initialized
-
-    const tabBtn = document.querySelector('button[data-bs-target="#whatsNewTab"]');
-    tabBtn?.addEventListener('shown.bs.tab', generateNewVehiclesReport);
-
     const rerunBtn = document.getElementById('rerunNewVehicleAnalysisBtn');
-    rerunBtn?.addEventListener('click', async () => {
-      if (!confirm("This will clear the 'viewed' status and re-load the latest inventory for ALL yards to run the comparison again. This is for testing purposes. Continue?")) {
-        return;
-      }
-      localStorage.removeItem(PREV_YARD_INV_KEY);
-      newVehiclesByYard = {};
-      const tasks = [];
-      for (const option of document.getElementById('csvSelector').options) { tasks.push(loadAndProcessYard(option.value, option.dataset.loc, 'jalopy')); }
-      for (const option of document.getElementById('trustySelector').options) { tasks.push(loadAndProcessYard(option.value, 'trusty', 'trusty')); }
-      await Promise.all(tasks);
-      generateNewVehiclesReport();
-    });
+    if (rerunBtn) {
+      rerunBtn.addEventListener('click', async () => {
+        if (!confirm("This will clear the 'viewed' status and re-load the latest inventory for ALL yards to run the comparison again. This is for testing purposes. Continue?")) {
+          return;
+        }
+        localStorage.removeItem(PREV_YARD_INV_KEY);
+        newVehiclesByYard = {};
+        const tasks = [];
+        // The selectors will be ready by the time a user can click this button.
+        for (const option of document.getElementById('csvSelector').options) { tasks.push(loadAndProcessYard(option.value, option.dataset.loc, 'jalopy')); }
+        for (const option of document.getElementById('trustySelector').options) { tasks.push(loadAndProcessYard(option.value, 'trusty', 'trusty')); }
+        await Promise.all(tasks);
+        generateNewVehiclesReport();
+      });
+    }
   }
   </script>
   
