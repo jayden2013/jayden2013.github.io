@@ -896,20 +896,27 @@ body.printing #pickListPrintRoot { display: block; }
 
           <div class="modal-body">
             <div class="form-check mb-2">
-              <input class="form-check-input" type="radio" name="pickExportMode" id="exportAsIs" value="asis" checked>
+              <input class="form-check-input" type="radio" name="pickExportMode" id="exportByPart" value="bypart" checked>
+              <label class="form-check-label" for="exportByPart">
+                Export by Part (one part per row, best for spreadsheets)
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="pickExportMode" id="exportAsIs" value="asis">
               <label class="form-check-label" for="exportAsIs">
                 Export the table as it is (current order)
               </label>
             </div>
 
-            <div class="form-check mb-3">
+            <div class="form-check mb-2">
               <input class="form-check-input" type="radio" name="pickExportMode" id="exportGrouped" value="grouped">
               <label class="form-check-label" for="exportGrouped">
                 Export with vehicles grouped by Yard
               </label>
             </div>
 
-            <div class="form-check">
+            <div class="form-check mb-3">
               <input class="form-check-input" type="radio" name="pickExportMode" id="exportSingleYard" value="single">
               <label class="form-check-label" for="exportSingleYard">
                 Export only a single Yard
@@ -2541,6 +2548,42 @@ body.printing #pickListPrintRoot { display: block; }
     });
     return allPartRows;
   }
+  function gatherPickListRowsForPartCentricExport() {
+    const pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
+    const notesMap = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
+    const allPartRows = [];
+
+    pickList.forEach(vehicle => {
+      // Use the more specific key to find notes
+      const originalKeyForNotes = [vehicle.Year, vehicle.Make, vehicle.Model, vehicle.Row, vehicle.Date, vehicle.Yard].join('|');
+      const vehicleNotes = (notesMap[originalKeyForNotes] || '').replace(/\r?\n/g, ' ');
+
+      if (vehicle.parts && vehicle.parts.length > 0) {
+        vehicle.parts.forEach(part => {
+          allPartRows.push({
+            Year: vehicle.Year || '',
+            Make: vehicle.Make || '',
+            Model: vehicle.Model || '',
+            Row: vehicle.Row || '',
+            Yard: vehicle.Yard || '',
+            Notes: vehicleNotes,
+            PartSection: part.section || '',
+            Part: part.part || '',
+            PartPrice: part.carPriceNum || 0,
+            Core: part.coreNum || 0,
+          });
+        });
+      } else {
+        // Include vehicles that are on the list but have no parts selected yet
+        allPartRows.push({
+          Year: vehicle.Year || '', Make: vehicle.Make || '', Model: vehicle.Model || '',
+          Row: vehicle.Row || '', Yard: vehicle.Yard || '', Notes: vehicleNotes,
+          PartSection: '', Part: '', PartPrice: '', Core: '',
+        });
+      }
+    });
+    return allPartRows;
+  }
   function downloadCSV(rows, filename, contextLabel = 'Pick List Export') {
     const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'Parts']; // Ensure Parts is here
     const lines = [
@@ -2549,24 +2592,6 @@ body.printing #pickListPrintRoot { display: block; }
     ];
     rows.forEach(r => {
       lines.push([r.Year, r.Make, r.Model, r.Row, r.Yard, r.Notes, r.Parts].map(csvEscape).join(','));
-    });
-    const csv = lines.join('\n');
-    const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
-  function downloadPartCentricCSV(rows, filename) {
-    const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'PartSection', 'Part', 'PartPrice', 'Core'];
-    const lines = [
-      ...brandingBannerLines('Pick List Export (by Part)'),
-      headers.map(csvEscape).join(',')
-    ];
-    rows.forEach(r => {
-      lines.push(headers.map(h => r[h] ?? '').map(csvEscape).join(','));
     });
     const csv = lines.join('\n');
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
@@ -2620,31 +2645,24 @@ body.printing #pickListPrintRoot { display: block; }
       opt.value = y; opt.textContent = y;
       select.appendChild(opt);
     });
-    document.getElementById('exportByPart').checked = true;
+    document.getElementById('exportAsIs').checked = true;
     select.disabled = true;
-    ['exportByPart', 'exportAsIs','exportGrouped','exportSingleYard'].forEach(id => {
+    ['exportAsIs','exportGrouped','exportSingleYard'].forEach(id => {
       document.getElementById(id).onchange = () => {
         select.disabled = !document.getElementById('exportSingleYard').checked;
         const btn = document.getElementById('confirmExportPick');
-        btn.textContent = id==='exportByPart' ? 'Export by Part'
-          : id==='exportAsIs' ? 'Export Full List'
+        btn.textContent = id==='exportAsIs' ? 'Export Full List'
           : id==='exportGrouped' ? 'Export Grouped by Yard'
           : 'Export Selected Yard';
       };
     });
     // Manually trigger the text change for the default selection
-    document.getElementById('confirmExportPick').textContent = 'Export by Part';
+    document.getElementById('confirmExportPick').textContent = 'Export Full List';
     bootstrap.Modal.getOrCreateInstance(document.getElementById('exportPickListModal')).show();
   }
   function performPickListExportFromModal() {
     const mode = document.querySelector('input[name="pickExportMode"]:checked')?.value || 'asis';
     const ts = fileStamp();
-    if (mode === 'bypart') {
-      const rows = gatherPickListRowsForPartCentricExport();
-      if (!rows.length) return alert('Your pick list is empty.');
-      downloadPartCentricCSV(rows, `pick_list_by_part_${ts}.csv`);
-      return;
-    }
     if (mode === 'asis') {
       const rows = gatherPickListRowsFromDOM();
       if (!rows.length) return alert('Your pick list is empty.');
