@@ -1479,9 +1479,50 @@ body.printing #pickListPrintRoot { display: block; }
       bd.appendChild(tr);
     });
 
+    // New enhanced search logic
+    function enhancedSearch(query, data) {
+      const q = query.toLowerCase().trim();
+      const yearRangeRegex = /\b(\d{2,4})-(\d{2,4})\b/;
+      const singleYearRegex = /\b(\d{4})\b/;
+      const singleTwoDigitYearRegex = /\b(\d{2})\b/;
+
+      let yearRange = q.match(yearRangeRegex);
+      let singleYear = !yearRange ? q.match(singleYearRegex) : null;
+      let singleTwoDigitYear = !yearRange && !singleYear ? q.match(singleTwoDigitYearRegex) : null;
+
+      let startYear, endYear;
+      let remainingQuery = q;
+
+      const parseYear = (yrStr) => {
+        let year = parseInt(yrStr, 10);
+        if (yrStr.length === 2) {
+          year += (year > 50 ? 1900 : 2000); // YY to YYYY conversion
+        }
+        return year;
+      };
+
+      if (yearRange) {
+        startYear = parseYear(yearRange[1]);
+        endYear = parseYear(yearRange[2]);
+        remainingQuery = q.replace(yearRange[0], '').trim();
+      } else if (singleYear) {
+        startYear = endYear = parseYear(singleYear[0]);
+        remainingQuery = q.replace(singleYear[0], '').trim();
+      } else if (singleTwoDigitYear) {
+        startYear = endYear = parseYear(singleTwoDigitYear[0]);
+        remainingQuery = q.replace(singleTwoDigitYear[0], '').trim();
+      }
+
+      return data.filter(r => {
+        const vehicleYear = parseInt(r.Year, 10);
+        const yearMatch = !startYear || (vehicleYear >= startYear && vehicleYear <= endYear);
+        const textMatch = !remainingQuery || Object.values(r).some(v => String(v).toLowerCase().includes(remainingQuery));
+        return yearMatch && textMatch;
+      });
+    }
+
     document.getElementById('searchInput').oninput = function() {
-      const q = this.value.toLowerCase();
-      const filtered = currentData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
+      const filtered = enhancedSearch(this.value, currentData);
       renderTable(filtered);
       showStatistics(filtered);
     };
@@ -1766,9 +1807,50 @@ body.printing #pickListPrintRoot { display: block; }
       bd.appendChild(tr);
     });
 
+    // New enhanced search logic (re-defined for Trusty scope, can be refactored to be global)
+    function trustyEnhancedSearch(query, data) {
+      const q = query.toLowerCase().trim();
+      const yearRangeRegex = /\b(\d{2,4})-(\d{2,4})\b/;
+      const singleYearRegex = /\b(\d{4})\b/;
+      const singleTwoDigitYearRegex = /\b(\d{2})\b/;
+
+      let yearRange = q.match(yearRangeRegex);
+      let singleYear = !yearRange ? q.match(singleYearRegex) : null;
+      let singleTwoDigitYear = !yearRange && !singleYear ? q.match(singleTwoDigitYearRegex) : null;
+
+      let startYear, endYear;
+      let remainingQuery = q;
+
+      const parseYear = (yrStr) => {
+        let year = parseInt(yrStr, 10);
+        if (yrStr.length === 2) {
+          year += (year > 50 ? 1900 : 2000); // YY to YYYY conversion
+        }
+        return year;
+      };
+
+      if (yearRange) {
+        startYear = parseYear(yearRange[1]);
+        endYear = parseYear(yearRange[2]);
+        remainingQuery = q.replace(yearRange[0], '').trim();
+      } else if (singleYear) {
+        startYear = endYear = parseYear(singleYear[0]);
+        remainingQuery = q.replace(singleYear[0], '').trim();
+      } else if (singleTwoDigitYear) {
+        startYear = endYear = parseYear(singleTwoDigitYear[0]);
+        remainingQuery = q.replace(singleTwoDigitYear[0], '').trim();
+      }
+
+      return data.filter(r => {
+        const vehicleYear = parseInt(r.Year, 10);
+        const yearMatch = !startYear || (vehicleYear >= startYear && vehicleYear <= endYear);
+        const textMatch = !remainingQuery || Object.values(r).some(v => String(v).toLowerCase().includes(remainingQuery));
+        return yearMatch && textMatch;
+      });
+    }
+
     document.getElementById('trustySearchInput').oninput = function() {
-      const q = this.value.toLowerCase();
-      const filtered = trustyData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
+      const filtered = trustyEnhancedSearch(this.value, trustyData);
       renderTrustyTable(filtered);
       showTrustyStatistics(filtered);
     };
