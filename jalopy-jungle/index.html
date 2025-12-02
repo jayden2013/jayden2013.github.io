@@ -2645,24 +2645,31 @@ body.printing #pickListPrintRoot { display: block; }
       opt.value = y; opt.textContent = y;
       select.appendChild(opt);
     });
-    document.getElementById('exportAsIs').checked = true;
+    document.getElementById('exportByPart').checked = true;
     select.disabled = true;
-    ['exportAsIs','exportGrouped','exportSingleYard'].forEach(id => {
+    ['exportByPart', 'exportAsIs','exportGrouped','exportSingleYard'].forEach(id => {
       document.getElementById(id).onchange = () => {
         select.disabled = !document.getElementById('exportSingleYard').checked;
         const btn = document.getElementById('confirmExportPick');
-        btn.textContent = id==='exportAsIs' ? 'Export Full List'
+        btn.textContent = id==='exportByPart' ? 'Export by Part'
+          : id==='exportAsIs' ? 'Export Full List'
           : id==='exportGrouped' ? 'Export Grouped by Yard'
           : 'Export Selected Yard';
       };
     });
     // Manually trigger the text change for the default selection
-    document.getElementById('confirmExportPick').textContent = 'Export Full List';
+    document.getElementById('confirmExportPick').textContent = 'Export by Part';
     bootstrap.Modal.getOrCreateInstance(document.getElementById('exportPickListModal')).show();
   }
   function performPickListExportFromModal() {
     const mode = document.querySelector('input[name="pickExportMode"]:checked')?.value || 'asis';
     const ts = fileStamp();
+    if (mode === 'bypart') {
+      const rows = gatherPickListRowsForPartCentricExport();
+      if (!rows.length) return alert('Your pick list is empty.');
+      downloadPartCentricCSV(rows, `pick_list_by_part_${ts}.csv`);
+      return;
+    }
     if (mode === 'asis') {
       const rows = gatherPickListRowsFromDOM();
       if (!rows.length) return alert('Your pick list is empty.');
