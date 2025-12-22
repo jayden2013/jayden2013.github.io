@@ -4,6 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Plate Lookup &amp; Availability Tracking Eligibility System</title>
+  <meta name="description" content="Dashboard to track vanity license plate availability across states.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -25,8 +26,8 @@
       </div>
 
       <div class="controls">
-        <input id="q" type="search" placeholder="Search…"/>
-        <select id="status">
+        <input id="q" type="search" placeholder="Search…" aria-label="Search plates"/>
+        <select id="status" aria-label="Filter by status">
           <option value="">All</option>
           <option value="Available">Available</option>
           <option value="Unavailable">Unavailable</option>
@@ -35,14 +36,14 @@
         </select>
 
         <!-- NEW: State filter -->
-        <select id="stateFilter" title="State">
+        <select id="stateFilter" title="State" aria-label="Filter by state">
           <option value="">All States</option>
           <option value="ID">Idaho (ID)</option>
           <option value="CA">California (CA)</option>
         </select>
 
         <button id="refresh" class="btn">Refresh</button>
-        <span id="runStatus" class="pill" style="display:none"></span>
+        <span id="runStatus" class="pill" style="display:none" role="status"></span>
 
         <button id="addPlateBtn" class="btn secondary">Add Plate</button>
         <button id="exportBtn" class="btn ghost">Export</button>
@@ -56,23 +57,23 @@
         <label class="pill">Zoom
           <input id="zoom" type="range" min="40" max="180" value="100" style="vertical-align:middle;margin-left:6px">
         </label>
-        <span id="updated" class="pill">—</span>
+        <span id="updated" class="pill" role="status">—</span>
       </div>
     </div>
   </header>
 
-  <div class="board-wrap">
+  <main class="board-wrap">
     <div id="board" class="board"></div>
-  </div>
+  </main>
 </div>
 
 <!-- Add Plate Modal -->
-<div id="modal">
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="box">
-    <h3 style="margin:0 0 10px">Add a Plate</h3>
+    <h3 id="modalTitle" style="margin:0 0 10px">Add a Plate</h3>
     <div class="controls" style="margin:0 0 12px">
-      <input id="m_plateText" placeholder="Plate text (e.g., B00ST)"/>
-      <select id="m_state" title="State">
+      <input id="m_plateText" placeholder="Plate text (e.g., B00ST)" aria-label="Plate text" autocapitalize="characters" autocomplete="off"/>
+      <select id="m_state" title="State" aria-label="Select state">
         <option value="ID" selected>Idaho</option>
         <option value="CA">California</option>
       </select>
@@ -89,9 +90,9 @@
 </div>
 
 <!-- Refresh confirmation modal -->
-<div id="confirmModal">
+<div id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
   <div class="box">
-    <h3 style="margin:0 0 8px">Refresh checks?</h3>
+    <h3 id="confirmTitle" style="margin:0 0 8px">Refresh checks?</h3>
     <p class="small" style="margin-top:0">To protect the DMV endpoint, choose carefully. “Check due only” is safe and recommended.</p>
     <div class="controls" style="justify-content:flex-end">
       <button id="cfm_cancel" class="pill">Cancel</button>
@@ -102,9 +103,9 @@
 </div>
 
 <!-- Delete confirmation modal -->
-<div id="deleteModal">
+<div id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
   <div class="box">
-    <h3 style="margin:0 0 8px">Delete plate?</h3>
+    <h3 id="deleteTitle" style="margin:0 0 8px">Delete plate?</h3>
     <p class="small" style="margin-top:0">
       You are about to remove <strong id="delLabel"></strong> from this dashboard. You can re-add it later.
     </p>
