@@ -4,16 +4,21 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cars & Collectibles — Invoice/Quote</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #f3f4f6; --panel: #ffffff; --input-bg: #f9fafb; --muted: #6b7280;
       --line: #e5e7eb; --text: #111827; --accent: #2563eb; --warn: #d97706; --danger: #dc2626;
-      --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      --shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+      --ring: rgba(37, 99, 235, 0.2);
     }
     [data-theme="dark"] {
       --bg: #0b0c10; --panel: #11131a; --input-bg: #0f121a; --muted: #a3a7b7;
       --line: #232634; --text: #e9ecf1; --accent: #3b82f6; --warn: #f59e0b; --danger: #ef4444;
-      --shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+      --shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      --ring: rgba(59, 130, 246, 0.2);
     }
     [data-theme="midnight"] {
       --bg: #0f172a; --panel: #1e293b; --input-bg: #0f172a; --muted: #94a3b8;
@@ -30,7 +35,7 @@
     html,body{height:100%}
     body{
       margin:0;background:var(--bg);color:var(--text);
-      font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font:14px/1.5 'Inter', system-ui, -apple-system, sans-serif;
       transition: background 0.3s ease, color 0.3s ease;
     }
     a{color:var(--accent)}
@@ -41,7 +46,8 @@
       color:var(--text);padding:8px 12px;border-radius:8px;cursor:pointer;
       font-weight:500;transition: all 0.2s;
     }
-    .btn:hover{background:#1f2332}
+    .btn:hover{background:#1f2332;transform:translateY(-1px);box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)}
+    .btn:active{transform:translateY(0)}
     [data-theme="light"] .btn:hover {background:#f3f4f6}
 
     .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -57,7 +63,7 @@
       width:100%;background:var(--input-bg);color:var(--text);
       border:1px solid var(--line);border-radius:8px;padding:8px;transition:border-color 0.2s;
     }
-    input:focus, textarea:focus, select:focus{outline:none;border-color:var(--accent)}
+    input:focus, textarea:focus, select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--ring)}
     textarea{min-height:70px}
     table{width:100%;border-collapse:collapse}
     th,td{border-bottom:1px solid var(--line);padding:8px}
@@ -72,7 +78,7 @@
     .totals .total{font-weight:800;font-size:18px}
 
     .login-container{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh}
-    .login{width:100%;max-width:400px;padding:40px;border-radius:16px;background:var(--panel);box-shadow:var(--shadow)}
+    .login{width:100%;max-width:400px;padding:48px;border-radius:24px;background:var(--panel);box-shadow:var(--shadow);animation:fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)}
     .login .title{font-weight:800;font-size:24px;margin-bottom:24px;text-align:center;color:var(--accent)}
     .login input[type="text"], .login input[type="password"]{padding:12px;font-size:15px}
     .login .btn{width:100%;padding:12px;font-size:16px;margin-top:8px}
@@ -116,6 +122,11 @@
       td input[type="text"], td input[type="number"]{width:55%;min-width:140px;text-align:right;background:var(--input-bg)}
 
       .menu .menu-panel{right:0;left:auto;min-width:180px}
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     @media (max-width: 600px){
