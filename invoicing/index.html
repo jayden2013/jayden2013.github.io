@@ -132,6 +132,19 @@
     @media (max-width: 600px){
       .help{display:none}
     }
+
+    .overlay-feedback {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.2); backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center; z-index: 9999;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    .overlay-feedback.active { opacity: 1; }
+    .overlay-content {
+      background: var(--panel); padding: 24px 40px; border-radius: 16px;
+      box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; gap: 12px;
+      transform: scale(0.95); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .overlay-feedback.active .overlay-content { transform: scale(1); }
   </style>
 
   <!-- Export libs -->
@@ -140,6 +153,14 @@
 </head>
 <body>
   <div class="container">
+    <!-- SAVE OVERLAY -->
+    <div id="saveOverlay" class="overlay-feedback">
+      <div class="overlay-content">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <div style="font-weight:600;font-size:16px">Draft Saved</div>
+      </div>
+    </div>
+
     <!-- LOGIN -->
     <div id="login" class="login-container">
       <div class="login">
@@ -388,6 +409,12 @@
     attachMenu('#fileMenuBtn', '#fileMenu');
     attachMenu('#themeMenuBtn', '#themeMenu');
     attachMenu('#discountBtn', '#discountMenu');
+
+    // Shortcuts
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveDraft(); }
+      if (e.altKey && e.key === 'n') { e.preventDefault(); addBlankRow(); }
+    });
 
     // File menu
     $('#aboutBtn').addEventListener('click', () => alert('Cars & Collectibles — Web Invoice/Quote'));
@@ -781,6 +808,7 @@
     a.href = URL.createObjectURL(blob);
     a.download = 'invoice_draft.json';
     a.click(); URL.revokeObjectURL(a.href);
+    showSaveFeedback();
   }
   function loadDraft() {
     const inp = document.createElement('input');
@@ -791,6 +819,12 @@
       try { const obj = JSON.parse(text); fromJson(obj); recalc(); } catch(e) { alert('Failed: '+e.message); }
     };
     inp.click();
+  }
+
+  function showSaveFeedback() {
+    const el = $('#saveOverlay');
+    el.classList.add('active');
+    setTimeout(() => el.classList.remove('active'), 1000);
   }
 
   function toJson() {
