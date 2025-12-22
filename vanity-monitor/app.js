@@ -282,9 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /*** Start ***/
   requestAnimationFrame(fitAll);
   (function init(){
-    if(loadPlates().length===0){
-      savePlates([{ plateText:"SWAG", state:"ID", selectedVehicleType:"PassengerVehicle", selectedKindOfPlate:"Personalized", selectedPlateProgram:"Select", selectedPlateProgramID:"", selectedPlateProgramSubCategory:"Select", lastStatus:"Unknown", lastCheckedUtc:null, history:[] }]);
-    }
     render();
     refreshDue({force:false});
   })();
