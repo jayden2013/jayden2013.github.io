@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- [1] UPDATE TITLE HERE -->
+  <title>Gallery Template — Cars & Collectibles</title>
+
+  <!-- PROD-ONLY base (keeps local viewing normal) -->
+  <script>
+  (function () {
+    const PROD = location.hostname === 'carsandcollectibles.com'
+      || location.hostname === 'www.carsandcollectibles.com'
+      || /\.github\.io$/i.test(location.hostname);
+    if (PROD && !document.querySelector('base')) {
+      const base = document.createElement('base'); base.href = '/'; document.head.prepend(base);
+    }
+  })();
+  </script>
+
+  <!-- Tailwind -->
+  <link rel="stylesheet" href="../dist/tailwind.css">
+
+  <style>
+    /* Match photography.html ambiance */
+    body { background-color:#0b0b0b; }
+    .bg-fallback { background: linear-gradient(135deg,#0f0f0f,#1a1a1a); }
+    @keyframes heroPan{0%{transform:scale(1.04) translateY(0)}50%{transform:scale(1.08) translateY(-8px)}100%{transform:scale(1.04) translateY(0)}}
+    .animate-hero-pan{ animation: heroPan 22s ease-in-out infinite; }
+
+    /* Elegant touches */
+    .card { backdrop-filter: blur(10px); }
+    .soft-shadow { box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .ring-emerald-soft { box-shadow: 0 0 0 1px rgba(16,185,129,.25); }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      border-radius:9999px; padding:.6rem 1.25rem; font-weight:600; transition:all .2s ease;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.20);
+    }
+    .btn:hover { background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.45); transform: translateY(-1px); }
+    .pill {
+      display:inline-flex; align-items:center; border-radius:9999px; padding:.25rem 1rem;
+      font-size:.875rem; font-weight:700; border:1px solid rgba(16,185,129,.45); color:#A7F3D0; background:rgba(16,185,129,.06);
+    }
+
+    /* Lightbox */
+    .lb{ position:fixed; inset:0; background:rgba(0,0,0,.88); display:none; align-items:center; justify-content:center; z-index:60; }
+    .lb.show{ display:flex }
+    .lb img{ max-width:92vw; max-height:88vh; border-radius:1rem; box-shadow:0 20px 50px rgba(0,0,0,.6) }
+    .lb-btn{ position:absolute; top:50%; transform:translateY(-50%); background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); padding:.6rem .9rem; border-radius:9999px; }
+    .lb-btn:hover{ background:rgba(16,185,129,.18); border-color:rgba(16,185,129,.45) }
+    .lb-prev{ left:1rem } .lb-next{ right:1rem }
+    .lb-close{ top:1rem; right:1rem; transform:none }
+
+    /* Uniform thumbnail tiles */
+    .thumb-tile { position: relative; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 0.75rem; }
+    .thumb { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; transition: transform .5s ease; }
+    .thumb:hover { transform: scale(1.04); }
+
+    /* Force 3 columns (inside existing centered container) */
+    #galleryGrid { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+    @media (min-width: 640px){ #galleryGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+    /* Centered select overlay pill */
+    .select-pill {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      z-index: 40; display: inline-flex; align-items: center; justify-content: center;
+      padding: .75rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 9999px;
+      border: 2px solid rgba(16,185,129,.55); color: #A7F3D0; background: rgba(16,185,129,.10);
+      backdrop-filter: blur(2px); cursor: pointer; user-select: none;
+      transition: transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .select-pill:hover { transform: translate(-50%,-50%) scale(1.05); }
+    .select-pill:active { transform: translate(-50%,-50%) scale(0.96); }
+    .select-pill.on { background: rgba(16,185,129,.95); border-color: rgba(167,243,208,.75); color: #fff;
+      box-shadow: 0 0 0 2px rgba(16,185,129,.4), 0 10px 20px rgba(16,185,129,.3); }
+
+    /* hide the native checkbox but keep it for a11y */
+    .sr-only-input {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    /* Badge shouldn't intercept clicks */
+    .badge-nope { pointer-events: none; }
+
+    /* Mobile-only: force text to black (keep the gradient title) */
+    @media (max-width: 640px) {
+      html { color-scheme: light; }
+      body, body *:not(.title-gradient) { color: #000 !important; }
+      a, a:visited { color: #000 !important; }
+      input, textarea, select { color: #000 !important; }
+      input::placeholder, textarea::placeholder { color: #000 !important; opacity: .7; }
+    }
+  </style>
+</head>
+
+<body class="text-white font-sans min-h-screen flex flex-col relative overflow-x-hidden bg-fallback">
+  <!-- [2] UPDATE HERO BACKGROUND HERE -->
+  <!-- Use data-db-bg for a Dropbox share link, or data-bg for a local file path (e.g. ../images/hero.jpg) -->
+  <div id="hero-bg"
+       data-db-bg="https://www.dropbox.com/scl/fi/4pergmzlrrccsxu73puw9/hero-car.jpg?rlkey=houxno6c4dg230r4hxajiyk8j&st=p2xpzgb5&dl=0"
+       data-bg="../images/hero-car.jpg"
+       class="pointer-events-none fixed inset-0 bg-cover bg-center opacity-60 blur-sm -z-10 animate-hero-pan"></div>
+
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-b from-white/24 via-white/16 to-white/10"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.04)_65%,rgba(0,0,0,0.12)_100%)]"></div>
+	<div class="absolute inset-0 mix-blend-overlay" style="opacity:.01; background-image:url('data:image/svg+xml;utf8,<svg ...>'); background-size:200px 200px;"></div>
+  </div>
+
+  <main class="flex-1 w-full max-w-6xl mx-auto px-6 pt-12">
+    <a href="../gallery.html" class="inline-block mb-6 text-emerald-300 hover:text-emerald-400 text-lg underline transition-colors">
+      ← Back to Portfolio
+    </a>
+
+    <!-- Header card -->
+    <section class="card bg-white/10 border border-white/20 rounded-2xl soft-shadow p-6 md:p-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+        <div>
+          <div class="text-xs uppercase tracking-widest text-emerald-300 mb-1">Delivery Gallery</div>
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight" id="galleryTitle">Client Gallery</h1>
+          <p class="text-gray-300 mt-1">
+            <span id="clientName" class="font-semibold"></span>
+            • Shot <span id="shootDate"></span>
+            • <span id="galleryId" class="text-gray-400"></span>
+          </p>
+        </div>
+        <div class="text-left md:text-right">
+          <div class="text-emerald-300 font-semibold">Your full-resolution ZIP has been emailed.</div>
+          <div class="text-gray-300 text-sm">Order professional prints or add a USB / CD below.</div>
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-3">
+        <a href="#order" class="btn">Order Prints</a>
+        <button id="selectAllBtn" class="btn">Select All</button>
+        <button id="clearSelBtn" class="btn">Clear Selection</button>
+        <span id="selCount" class="text-sm text-gray-300 self-center">0 selected</span>
+      </div>
+    </section>
+
+    <!-- Gallery grid -->
+    <section class="mt-5">
+      <div id="galleryGrid" class="gap-6"></div>
+    </section>
+
+    <!-- Order card -->
+    <section id="order" class="mt-6 card bg-white/10 border border-white/20 rounded-2xl soft-shadow p-6 md:p-8">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 class="text-2xl font-extrabold">Build Your Order</h2>
+          <p class="text-gray-300">Choose a size, select photos, and add them to your cart.</p>
+        </div>
+        <div class="text-sm text-gray-300">
+          Prints Subtotal: <span id="printsSub" class="font-semibold text-white">$0</span> •
+          Add-ons: <span id="addonsSub" class="font-semibold text-white">$0</span> •
+          <span class="font-bold text-emerald-300">Total: <span id="grandTotal">$0</span></span>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4 items-end mt-4">
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Print size</label>
+          <div id="sizePills" class="flex flex-wrap gap-2"></div>
+          <p class="text-xs text-gray-400 mt-1">Applies to currently selected photos.</p>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Quantity per photo</label>
+          <input id="printQty" type="number" min="1" value="1" class="w-full rounded-xl bg-white/5 border border-white/20 px-3 py-2">
+        </div>
+        <div>
+          <button id="addPrintsBtn" class="w-full btn" type="button">Add Prints for Selected</button>
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <h3 class="font-bold mb-2">Add-ons</h3>
+        <div class="flex flex-wrap gap-3">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="addonUsb" class="rounded bg-white/5 border-white/30">
+            <span class="pill">USB Drive — $20</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="addonCd" class="rounded bg-white/5 border-white/30">
+            <span class="pill">CD / DVD — $10</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="text-gray-300">
+            <tr class="border-b border-white/10">
+              <th class="py-2 pr-2">Photo</th>
+              <th class="py-2 pr-2">Size</th>
+              <th class="py-2 pr-2">Qty</th>
+              <th class="py-2 pr-2">Unit</th>
+              <th class="py-2 pr-2">Line</th>
+              <th class="py-2"></th>
+            </tr>
+          </thead>
+          <tbody id="orderBody"></tbody>
+        </table>
+        <p id="emptyOrder" class="text-gray-400 text-sm mt-3">No items yet. Select photos above, choose a size, and click “Add Prints for Selected”.</p>
+      </div>
+
+      <!-- ORDER FORM -->
+      <form id="order-form" class="mt-6 grid md:grid-cols-3 gap-3" data-endpoint="https://photography-orders.profit-alerts.workers.dev/" novalidate>
+        <!-- Honeypot -->
+        <div class="hidden">
+          <label>Do not fill<input type="text" name="website" autocomplete="off" tabindex="-1"/></label>
+        </div>
+
+        <input id="custName" name="name" required placeholder="Your name"
+               class="rounded-xl bg-white/5 border border-white/20 px-3 py-2">
+        <input id="custEmail" name="email" required type="email" placeholder="Your email"
+               class="rounded-xl bg-white/5 border border-white/20 px-3 py-2">
+        <button id="submitOrder" type="submit" class="btn">Submit Order</button>
+        <p id="orderStatus" class="text-sm text-gray-300 md:col-span-3" hidden>Sending…</p>
+      </form>
+
+      <p class="text-xs text-gray-400 mt-2">We’ll review your order and send an invoice. Local pickup or shipping available.</p>
+    </section>
+  </main>
+
+  <footer class="mt-12 py-6 text-sm text-gray-300 text-center">© 2025 Cars & Collectibles LLC</footer>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lb">
+    <button class="lb-btn lb-prev" aria-label="Previous" id="lbPrev">‹</button>
+    <img id="lbImg" alt="">
+    <button class="lb-btn lb-next" aria-label="Next" id="lbNext">›</button>
+    <button class="lb-btn lb-close" aria-label="Close" id="lbClose">✕</button>
+  </div>
+
+  <script>
+    // === Dropbox share -> raw URL helper ===========================
+    function dropboxToRaw(u) {
+      if (!u) return u;
+      try {
+        const url = new URL(u);
+        if (!/\.dropbox\.com$/i.test(url.hostname)) return u;
+        url.hostname = "dl.dropboxusercontent.com";
+        const rlkey = url.searchParams.get("rlkey");
+        url.search = "";
+        if (rlkey) url.searchParams.set("rlkey", rlkey);
+        url.searchParams.set("raw", "1");
+        return url.toString();
+      } catch {
+        return u
+          .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+          .replace(/[\?&]dl=0\b/, "")
+          .replace(/[\?&]dl=1\b/, "")
+          .replace(/[\?&]raw=1\b/, "") + (u.includes("?") ? "&raw=1" : "?raw=1");
+      }
+    }
+    // ===============================================================
+
+    // ===== Set hero background from Dropbox (fallback to local) ====
+    (function () {
+      const hero = document.getElementById('hero-bg');
+      if (!hero) return;
+      const db = hero.getAttribute('data-db-bg');
+      const local = hero.getAttribute('data-bg');
+      const bgUrl = db ? dropboxToRaw(db) : local;
+      if (bgUrl) hero.style.backgroundImage = `url('${bgUrl}')`;
+    })();
+    // ===============================================================
+
+    // ===== [3] UPDATE GALLERY DATA HERE ============================
+    const GALLERY = {
+      // The name displayed at the top
+      clientName: "TEMPLATE CLIENT NAME",
+      
+      // The date displayed
+      shootDate: "Month Year",
+      
+      // Internal ID (optional, for your records)
+      galleryId: "CAC-0000",
+      
+      // List your photos here.
+      // Use Dropbox 'Copy Link' for both thumb and full.
+      // The script automatically converts them to direct links.
+      files: [
+        { 
+          name: "photo1.webp",
+          thumb: "https://www.dropbox.com/scl/fi/EXAMPLE/photo1.webp?rlkey=EXAMPLE&dl=0",
+          full:  "https://www.dropbox.com/scl/fi/EXAMPLE/photo1.webp?rlkey=EXAMPLE&dl=0" 
+        },
+        { 
+          name: "photo2.webp",
+          thumb: "https://www.dropbox.com/scl/fi/EXAMPLE/photo2.webp?rlkey=EXAMPLE&dl=0",
+          full:  "https://www.dropbox.com/scl/fi/EXAMPLE/photo2.webp?rlkey=EXAMPLE&dl=0" 
+        },
+        // Add more objects here...
+      ],
+      
+      // Pricing configuration
+      PRINT_PRICES: { "8x12": 15, "12x18": 28, "16x24": 55, "24x36": 95 },
+      ADDON_PRICES: { usb: 20, cd: 10 },
+      ORDER_ENDPOINT: "https://photography-contact.profit-alerts.workers.dev"
+    };
+    // ===============================================================
+
+    // Header values
+    document.getElementById("clientName").textContent = GALLERY.clientName;
+    document.getElementById("shootDate").textContent  = GALLERY.shootDate;
+    document.getElementById("galleryId").textContent  = GALLERY.galleryId;
+
+    // Build gallery grid
+    const grid = document.getElementById("galleryGrid");
+    const selected = new Set();
+    let lightboxIndex = -1;
+
+    function photoCard(fileObj, idx) {
+      const el = document.createElement("div");
+      el.className = "relative bg-white/5 border border-white/10 rounded-xl overflow-hidden soft-shadow ring-emerald-soft group";
+      const thumbSrc = dropboxToRaw(fileObj.thumb);
+
+      el.innerHTML = `
+        <div class="thumb-tile bg-white/5 animate-pulse">
+          <img src="${thumbSrc}" alt="${fileObj.name}" class="thumb cursor-zoom-in opacity-0 transition-opacity duration-700"
+               decoding="async" loading="lazy"
+               sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw">
+        </div>
+
+        <!-- Hover Overlay -->
+        <div class="absolute inset-0 pointer-events-none bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
+           <svg class="w-10 h-10 text-white/90 drop-shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+        </div>
+
+        <div class="absolute top-2 right-2 z-20 bg-black/60 backdrop-blur-sm rounded px-2 py-1 text-xs badge-nope text-white/90">
+          ${fileObj.name}
+        </div>
+
+        <input type="checkbox" class="select-photo sr-only-input" aria-label="Select ${fileObj.name}">
+        <button type="button" class="select-pill" aria-pressed="false"
+                aria-label="Toggle select ${fileObj.name}">
+          Select
+        </button>
+      `;
+
+      const img = el.querySelector('img');
+      const wrapper = el.querySelector('.thumb-tile');
+      
+      img.onload = () => {
+        img.classList.remove('opacity-0');
+        wrapper.classList.remove('animate-pulse', 'bg-white/5');
+      };
+      if (img.complete) img.onload();
+
+      const cb   = el.querySelector(".select-photo");
+      const pill = el.querySelector(".select-pill");
+
+      function applyState(on){
+        cb.checked = on;
+        pill.textContent = on ? "Selected" : "Select";
+        pill.classList.toggle("on", on);
+        pill.setAttribute("aria-pressed", on ? "true" : "false");
+        if (on) { selected.add(fileObj.name); } else { selected.delete(fileObj.name); }
+        updateSelCount();
+      }
+
+      cb.addEventListener("change", () => applyState(cb.checked));
+
+      // Toggle select when the pill is clicked (but don't open lightbox)
+      pill.addEventListener("click", (e) => { e.stopPropagation(); applyState(!cb.checked); });
+      pill.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); applyState(!cb.checked); }
+      });
+
+      // Open lightbox when clicking anywhere else on the card
+      el.addEventListener("click", (e) => {
+        const t = e.target;
+        if (t === pill || t === cb) return; // ignore pill & checkbox
+        openLightbox(idx);
+      });
+
+      return el;
+    }
+
+    // Populate grid
+    GALLERY.files.forEach((f, i) => grid.appendChild(photoCard(f, i)));
+
+    // Selection helpers
+    const selCount = document.getElementById("selCount");
+    function updateSelCount(){ selCount.textContent = `${selected.size} selected`; }
+
+    document.getElementById("selectAllBtn").addEventListener("click", () => {
+      selected.clear();
+      grid.querySelectorAll(".select-photo").forEach((cb) => {
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change'));
+      });
+    });
+
+    document.getElementById("clearSelBtn").addEventListener("click", () => {
+      selected.clear();
+      grid.querySelectorAll(".select-photo").forEach(cb => {
+        cb.checked = false;
+        cb.dispatchEvent(new Event('change'));
+      });
+    });
+
+    // Size pills
+    const sizePills = document.getElementById("sizePills");
+    let activeSize = Object.keys(GALLERY.PRINT_PRICES)[0];
+    Object.entries(GALLERY.PRINT_PRICES).forEach(([size, price], idx) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "pill";
+      b.dataset.size = size;
+      b.textContent = `${size} — $${price}`;
+      if (idx === 0) b.classList.add("ring-2","ring-emerald-400");
+      b.addEventListener("click", () => {
+        activeSize = size;
+        sizePills.querySelectorAll("button").forEach(x => x.classList.remove("ring-2","ring-emerald-400"));
+        b.classList.add("ring-2","ring-emerald-400");
+      });
+      sizePills.appendChild(b);
+    });
+
+    // Order table
+    const ORDER = [];
+    const orderBody = document.getElementById("orderBody");
+    const emptyOrder = document.getElementById("emptyOrder");
+    const qtyInput = document.getElementById("printQty");
+
+    function money(n){ return `$${Number(n).toFixed(0)}`; }
+
+    function recalcTotals(){
+      const printsSub = ORDER.reduce((s,i)=> s + (i.unit * i.qty), 0);
+      const addonsSub = (document.getElementById("addonUsb").checked ? GALLERY.ADDON_PRICES.usb : 0)
+                      + (document.getElementById("addonCd").checked  ? GALLERY.ADDON_PRICES.cd  : 0);
+      document.getElementById("printsSub").textContent = money(printsSub);
+      document.getElementById("addonsSub").textContent = money(addonsSub);
+      document.getElementById("grandTotal").textContent = money(printsSub + addonsSub);
+    }
+
+    function renderOrder(){
+      orderBody.innerHTML = "";
+      if (!ORDER.length){ emptyOrder.hidden = false; recalcTotals(); return; }
+      emptyOrder.hidden = true;
+      ORDER.forEach((item, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b border-white/10";
+        tr.innerHTML = `
+          <td class="py-2 pr-2">${item.file}</td>
+          <td class="py-2 pr-2">${item.size}</td>
+          <td class="py-2 pr-2">${item.qty}</td>
+          <td class="py-2 pr-2">${money(item.unit)}</td>
+          <td class="py-2 pr-2">${money(item.unit * item.qty)}</td>
+          <td class="py-2"><button data-rm="${idx}" class="text-red-300 hover:text-red-400">Remove</button></td>
+        `;
+        tr.querySelector("button[data-rm]").addEventListener("click", () => {
+          ORDER.splice(idx,1); renderOrder();
+        });
+        orderBody.appendChild(tr);
+      });
+      recalcTotals();
+    }
+
+    document.getElementById("addPrintsBtn").addEventListener("click", () => {
+      const size = activeSize;
+      const unit = GALLERY.PRINT_PRICES[size] || 0;
+      const qty = Math.max(1, parseInt(qtyInput.value || "1", 10));
+      if (!selected.size) { alert("Select one or more photos above first."); return; }
+      selected.forEach(fileName => ORDER.push({ file: fileName, size, qty, unit }));
+      renderOrder();
+    });
+
+    // Add-ons recalc
+    document.getElementById("addonUsb").addEventListener("change", recalcTotals);
+    document.getElementById("addonCd").addEventListener("change", recalcTotals);
+
+    // ===== ORDER FORM submit =======================================
+    (function () {
+      const form       = document.getElementById('order-form');
+      if (!form) return;
+
+      const statusEl   = document.getElementById('orderStatus');
+      const submitBtn  = document.getElementById('submitOrder');
+      const endpoint   = form.getAttribute('data-endpoint') || GALLERY.ORDER_ENDPOINT || '/api/order';
+      const nameEl     = form.querySelector('input[name="name"]');
+      const emailEl    = form.querySelector('input[type="email"][name="email"]');
+      const hpEl       = form.querySelector('input[name="website"]');
+
+      function setStatus(msg, cls) {
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.hidden = false;
+        statusEl.className = 'text-sm ' + (cls || 'text-gray-300');
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (hpEl && hpEl.value && hpEl.value.trim() !== '') {
+          setStatus("Thanks! We received your order.", 'text-emerald-300');
+          form.reset();
+          return;
+        }
+
+        const name  = nameEl ? String(nameEl.value || '').trim() : '';
+        const email = emailEl ? String(emailEl.value || '').trim() : '';
+        const emailLooksGood = emailEl ? (emailEl.value = email, emailEl.checkValidity()) : false;
+        const nameLooksGood  = name.length > 0;
+
+        if (!nameLooksGood || !emailLooksGood) {
+          setStatus('Please provide your name and a valid email.', 'text-red-400');
+          return;
+        }
+
+        const items = ORDER.map(i => ({
+          file: i.file, size: i.size, qty: i.qty, unit: i.unit, line: i.unit * i.qty
+        }));
+
+        const addons = [];
+        if (document.getElementById("addonUsb").checked) addons.push("usb_drive");
+        if (document.getElementById("addonCd").checked)  addons.push("cd_dvd");
+
+        const printsTotal = items.reduce((s,i)=> s + i.line, 0);
+        const addonsTotal = addons.reduce((s,a)=> s + (a==="usb_drive" ? GALLERY.ADDON_PRICES.usb : GALLERY.ADDON_PRICES.cd), 0);
+        const total       = printsTotal + addonsTotal;
+
+        if (!items.length && !addons.length) {
+          setStatus('Your order is empty. Add prints or an add-on first.', 'text-red-400');
+          return;
+        }
+
+        const printsLines = items.map(i => `- ${i.file} — ${i.size} x ${i.qty} @ $${i.unit} = $${i.line}`).join("\n");
+        const message =
+`Gallery Order
+Client: ${GALLERY.clientName}
+Gallery ID: ${GALLERY.galleryId}
+
+Prints:
+${printsLines || "- (none)"}
+
+Add-ons:
+${addons.map(a => a==="usb_drive" ? "- USB Drive — $20" : "- CD / DVD — $10").join("\n") || "- (none)"}
+
+Totals:
+- Prints: $${printsTotal}
+- Add-ons: $${addonsTotal}
+- Total: $${total}
+`;
+
+        setStatus('Sending…', 'text-gray-300');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-70','cursor-not-allowed'); }
+
+        try {
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              source: 'gallery-order',
+              payload: {
+                name, email,
+                client:     GALLERY.clientName,
+                gallery_id: GALLERY.galleryId,
+                items, addons,
+                prints_total: printsTotal, addons_total: addonsTotal, total, message
+              }
+            })
+          });
+
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          setStatus("Thanks! We received your order and will invoice you shortly.", 'text-emerald-300');
+          form.reset();
+        } catch (err) {
+          console.error('Order submit error:', err);
+          setStatus('Something went wrong. Please try again in a minute.', 'text-red-400');
+        } finally {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-70','cursor-not-allowed'); }
+        }
+      });
+    })();
+    // =======================================================================
+
+    // Lightbox (use Dropbox FULL variant)
+    const lb = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lbImg");
+    function openLightbox(i){
+      const item = GALLERY.files[i];
+      if (!item || !item.full) { console.warn("No 'full' URL for item:", i, item); return; }
+      lightboxIndex = i;
+      lbImg.src = dropboxToRaw(item.full);
+      lbImg.alt = item.name || "";
+      lb.classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
+    function closeLightbox(){
+      lb.classList.remove("show");
+      document.body.style.overflow = "";
+      lbImg.src = ""; lightboxIndex = -1;
+    }
+    function navLightbox(delta){
+      if (lightboxIndex < 0) return;
+      lightboxIndex = (lightboxIndex + delta + GALLERY.files.length) % GALLERY.files.length;
+      const item = GALLERY.files[lightboxIndex];
+      lbImg.src = dropboxToRaw(item.full);
+      lbImg.alt = item.name || "";
+    }
+
+    const lbPrev = document.getElementById("lbPrev");
+    const lbNext = document.getElementById("lbNext");
+    const lbClose= document.getElementById("lbClose");
+
+    lbPrev.addEventListener("click", () => navLightbox(-1));
+    lbNext.addEventListener("click", () => navLightbox(1));
+    lbClose.addEventListener("click", closeLightbox);
+    lb.addEventListener("click", (e)=> { if (e.target === lb) closeLightbox(); });
+    window.addEventListener("keydown", (e)=> {
+      if (!lb.classList.contains("show")) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") navLightbox(-1);
+      if (e.key === "ArrowRight") navLightbox(1);
+    });
+  </script>
+</body>
+</html>
