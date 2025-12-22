@@ -9,6 +9,89 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Themes */
+    :root {
+      /* Default (Light) */
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #10b981;
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    [data-theme="dim"] {
+      --bg: #18181b;
+      --surface: #27272a;
+      --border: #3f3f46;
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+    }
+    [data-theme="sepia"] {
+      --bg: #fdf6e3;
+      --surface: #eee8d5;
+      --border: #d3cbb7;
+      --text: #5f5a4e;
+      --text-muted: #93a1a1;
+      --accent: #b58900;
+    }
+    [data-theme="nord"] {
+      --bg: #2e3440;
+      --surface: #3b4252;
+      --border: #4c566a;
+      --text: #eceff4;
+      --text-muted: #d8dee9;
+      --accent: #88c0d0;
+    }
+    [data-theme="midnight"] {
+      --bg: #020617;
+      --surface: #0f172a;
+      --border: #1e293b;
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --accent: #6366f1;
+    }
+    [data-theme="forest"] {
+      --bg: #1a2e1a;
+      --surface: #264026;
+      --border: #3a5c3a;
+      --text: #e8f5e9;
+      --text-muted: #a5d6a7;
+      --accent: #4ade80;
+    }
+    [data-theme="berry"] {
+      --bg: #2e1065;
+      --surface: #4c1d95;
+      --border: #5b21b6;
+      --text: #f3e8ff;
+      --text-muted: #d8b4fe;
+      --accent: #d946ef;
+    }
+
+    /* Apply Theme Variables */
+    body { background-color: var(--bg); color: var(--text); transition: background-color 0.3s, color 0.3s; }
+    .bar { background-color: var(--surface); border-bottom-color: var(--border); }
+    .box { background-color: var(--surface); border-color: var(--border); color: var(--text); }
+    input, select, .pill { background-color: var(--surface); border-color: var(--border); color: var(--text); }
+    .btn.ghost { color: var(--text); }
+    .under-name, .under-info { color: var(--text-muted); }
+    
+    /* Ensure inputs/selects inherit text color properly */
+    input::placeholder { color: var(--text-muted); opacity: 0.7; }
+    
+    /* Scrollbar styling for themes */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  </style>
 </head>
 <body>
 <div class="wrap" style="display:flex;flex-direction:column;min-height:100%">
@@ -57,6 +140,16 @@
       <div class="spacer"></div>
 
       <div class="controls" style="margin-left:auto">
+        <select id="themeSelect" aria-label="Select Theme" title="Theme">
+          <option value="">Light</option>
+          <option value="dark">Dark</option>
+          <option value="dim">Dim</option>
+          <option value="sepia">Sepia</option>
+          <option value="nord">Nord</option>
+          <option value="midnight">Midnight</option>
+          <option value="forest">Forest</option>
+          <option value="berry">Berry</option>
+        </select>
         <label class="pill">Zoom
           <input id="zoom" type="range" min="40" max="180" value="100" style="vertical-align:middle;margin-left:6px">
         </label>
@@ -120,5 +213,26 @@
 </div>
 
 <script defer src="app.js"></script>
+<script>
+  // Theme Logic
+  (function() {
+    const sel = document.getElementById('themeSelect');
+    const stored = localStorage.getItem('vm_theme') || '';
+    
+    // Apply initial
+    if (stored) {
+      document.documentElement.setAttribute('data-theme', stored);
+      if (sel) sel.value = stored;
+    }
+
+    // Listener
+    sel.addEventListener('change', e => {
+      const val = e.target.value;
+      if (val) document.documentElement.setAttribute('data-theme', val);
+      else document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('vm_theme', val);
+    });
+  })();
+</script>
 </body>
 </html>
