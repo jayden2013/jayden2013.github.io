@@ -108,6 +108,10 @@
   </div>
 
   <main class="flex-1 w-full max-w-6xl mx-auto px-6 pt-12">
+    <a href="../gallery.html" class="inline-block mb-6 text-emerald-300 hover:text-emerald-400 text-lg underline transition-colors">
+      ← Back to Portfolio
+    </a>
+
     <!-- Header card -->
     <section class="card bg-white/10 border border-white/20 rounded-2xl soft-shadow p-6 md:p-8">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
@@ -296,21 +300,22 @@
 
     function photoCard(fileObj, idx) {
       const el = document.createElement("div");
-      el.className = "relative bg-white/5 border border-white/10 rounded-xl overflow-hidden soft-shadow ring-emerald-soft";
+      el.className = "relative bg-white/5 border border-white/10 rounded-xl overflow-hidden soft-shadow ring-emerald-soft group";
       const thumbSrc = dropboxToRaw(fileObj.thumb);
 
       el.innerHTML = `
-        <div class="thumb-tile">
-          <img src="${thumbSrc}" alt="${fileObj.name}" class="thumb cursor-zoom-in"
+        <div class="thumb-tile bg-white/5 animate-pulse">
+          <img src="${thumbSrc}" alt="${fileObj.name}" class="thumb cursor-zoom-in opacity-0 transition-opacity duration-700"
                decoding="async" loading="lazy"
                sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw">
         </div>
 
-        <div class="absolute inset-0 pointer-events-none bg-gradient-to-t
-                    from-black/30 via-transparent to-transparent
-                    opacity-0 hover:opacity-100 transition z-10"></div>
+        <!-- Hover Overlay -->
+        <div class="absolute inset-0 pointer-events-none bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
+           <svg class="w-10 h-10 text-white/90 drop-shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+        </div>
 
-        <div class="absolute top-2 right-2 z-20 bg-black/60 rounded px-2 py-1 text-xs badge-nope">
+        <div class="absolute top-2 right-2 z-20 bg-black/60 backdrop-blur-sm rounded px-2 py-1 text-xs badge-nope text-white/90">
           ${fileObj.name}
         </div>
 
@@ -320,6 +325,15 @@
           Select
         </button>
       `;
+
+      const img = el.querySelector('img');
+      const wrapper = el.querySelector('.thumb-tile');
+      
+      img.onload = () => {
+        img.classList.remove('opacity-0');
+        wrapper.classList.remove('animate-pulse', 'bg-white/5');
+      };
+      if (img.complete) img.onload();
 
       const cb   = el.querySelector(".select-photo");
       const pill = el.querySelector(".select-pill");
