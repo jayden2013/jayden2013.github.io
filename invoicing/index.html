@@ -233,11 +233,8 @@
         <button class="btn" id="removeRowBtn">Remove row</button>
         <button class="btn" id="dupRowBtn">Duplicate row</button>
         <button class="btn" id="pasteRowsBtn">Paste rows</button>
-        <span style="width:16px"></span>
-        <button class="btn" id="miniBtn">Mini Session</button>
-        <button class="btn" id="stillBtn">Still Session</button>
-        <button class="btn" id="rollerBtn">Roller Session</button>
-        <button class="btn" id="featureBtn">Full Feature</button>
+        <div style="width:1px;height:24px;background:var(--line);margin:0 8px"></div>
+        <div id="presets" class="row"></div>
       </div>
 
       <!-- items table -->
@@ -300,7 +297,13 @@
   // ===== CONFIG =====
   const AUTH_USER = 'carsandcollectibles';
   const AUTH_PASSWORD_SHA256 = 'a185c321c381be70dce7271b1016e96e01a7a75041a6a74e68b43c23af374738'; // cars2024
-  const PRICE_MINI = 50.0, PRICE_STILL = 100.0, PRICE_ROLLER = 200.0, PRICE_FEATURE = 400.0;
+  
+  const PRESETS = [
+    { name: 'Mini Session', price: 50.0 },
+    { name: 'Still Session', price: 100.0 },
+    { name: 'Roller Session', price: 200.0 },
+    { name: 'Full Feature', price: 400.0 }
+  ];
   const DEFAULT_TAX = 6.0;
 
   // Locked business info (no UI)
@@ -389,10 +392,15 @@
     $('#dupRowBtn').addEventListener('click', duplicateSelected);
     $('#pasteRowsBtn').addEventListener('click', pasteRows);
 
-    $('#miniBtn').addEventListener('click', () => addOrBump('Mini Session', 1, PRICE_MINI));
-    $('#stillBtn').addEventListener('click', () => addOrBump('Still Session', 1, PRICE_STILL));
-    $('#rollerBtn').addEventListener('click', () => addOrBump('Roller Session', 1, PRICE_ROLLER));
-    $('#featureBtn').addEventListener('click', () => addOrBump('Full Feature', 1, PRICE_FEATURE));
+    // Generate Presets
+    const presetContainer = $('#presets');
+    PRESETS.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.innerHTML = `${p.name} <span style="opacity:0.6;font-size:0.9em">$${p.price}</span>`;
+      btn.addEventListener('click', () => addOrBump(p.name, 1, p.price));
+      presetContainer.appendChild(btn);
+    });
 
     // Totals controls
     $('#taxPercent').addEventListener('input', recalc);
