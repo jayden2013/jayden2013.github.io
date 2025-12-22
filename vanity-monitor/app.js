@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const CA_PROXY = "https://vanity-plate-ca.profit-alerts.workers.dev/api/validate-ca"; // e.g., "https://your-worker.example.com/api/validate-ca"
 
   const CHECK_DELAY_MS = 1200;
-  const REFRESH_CUTOFF_HOURS = 24;
 
   /*** Utils ***/
   const $ = s => document.querySelector(s);
@@ -90,7 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /*** High-level status helpers ***/
-  function isDue(p){ if(!p.lastCheckedUtc) return true; const t=Date.parse(p.lastCheckedUtc); if(Number.isNaN(t)) return true; return (Date.now()-t)>=REFRESH_CUTOFF_HOURS*3600*1000; }
+  function isDue(p){
+    if(!p.lastCheckedUtc) return true;
+    const last = new Date(p.lastCheckedUtc);
+    if(Number.isNaN(last.getTime())) return true;
+    const now = new Date();
+    // Refresh if current month or year is different from last check (resets on the 1st)
+    return last.getMonth() !== now.getMonth() || last.getFullYear() !== now.getFullYear();
+  }
   function markChecked(p,status,note){ const ts=new Date().toISOString(); p.lastStatus=status; p.lastCheckedUtc=ts; p.history=p.history||[]; const e={status,checkedUtc:ts}; if(note) e.note=note; p.history.push(e); }
   function statusClass(s){ if(s==="Available")return"available"; if(s==="Unavailable")return"unavailable"; if(s==="Error")return"error"; if(s==="Unknown"||!s)return"unknown"; return"unknown"; }
 
