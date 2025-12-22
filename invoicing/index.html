@@ -6,14 +6,14 @@
   <title>Cars & Collectibles — Invoice/Quote</title>
   <style>
     :root {
+      --bg: #f3f4f6; --panel: #ffffff; --input-bg: #f9fafb; --muted: #6b7280;
+      --line: #e5e7eb; --text: #111827; --accent: #2563eb; --warn: #d97706; --danger: #dc2626;
+      --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+    [data-theme="dark"] {
       --bg: #0b0c10; --panel: #11131a; --input-bg: #0f121a; --muted: #a3a7b7;
       --line: #232634; --text: #e9ecf1; --accent: #3b82f6; --warn: #f59e0b; --danger: #ef4444;
       --shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
-    }
-    [data-theme="light"] {
-      --bg: #f3f4f6; --panel: #ffffff; --input-bg: #f9fafb; --muted: #6b7280;
-      --line: #e5e7eb; --text: #111827; --accent: #2563eb; --warn: #d97706; --danger: #dc2626;
-      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
     [data-theme="midnight"] {
       --bg: #0f172a; --panel: #1e293b; --input-bg: #0f172a; --muted: #94a3b8;
@@ -70,9 +70,12 @@
     .totals .value{font-weight:600}
     .totals .total{font-weight:800;font-size:18px}
 
-    .login{max-width:380px;margin:10vh auto}
-    .login .title{font-weight:800;font-size:22px;margin-bottom:12px}
-    .help{color:var(--muted);font-size:12px}
+    .login-container{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh}
+    .login{width:100%;max-width:400px;padding:40px;border-radius:16px;background:var(--panel);box-shadow:var(--shadow)}
+    .login .title{font-weight:800;font-size:24px;margin-bottom:24px;text-align:center;color:var(--accent)}
+    .login input{padding:12px;font-size:15px}
+    .login .btn{width:100%;padding:12px;font-size:16px;margin-top:8px}
+    .help{color:var(--muted);font-size:13px}
 
     .menu{position:relative}
     .menu .menu-panel{position:absolute;z-index:10;top:100%;left:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:150px;display:none;box-shadow:var(--shadow)}
@@ -125,26 +128,22 @@
 <body>
   <div class="container">
     <!-- LOGIN -->
-    <div id="login" class="panel login">
-      <div class="title">Sign in</div>
-      <div class="row">
-        <div style="flex:1">
+    <div id="login" class="login-container">
+      <div class="login">
+        <div class="title">Cars & Collectibles</div>
+        <div style="margin-bottom:16px">
           <div class="label">Username</div>
-          <input id="lgUser" type="text" autocomplete="username" />
+          <input id="lgUser" type="text" autocomplete="username" placeholder="Enter username" />
         </div>
-      </div>
-      <div class="row">
-        <div style="flex:1">
+        <div style="margin-bottom:16px">
           <div class="label">Password</div>
-          <input id="lgPass" type="password" autocomplete="current-password" />
+          <input id="lgPass" type="password" autocomplete="current-password" placeholder="Enter password" />
         </div>
-      </div>
-      <div class="row">
-        <label><input id="lgShow" type="checkbox" /> Show password</label>
-      </div>
-      <div id="lgMsg" class="help">&nbsp;</div>
-      <div class="row" style="justify-content:flex-end;margin-top:8px">
-        <button id="lgBtn" class="btn primary">Sign in</button>
+        <div class="row" style="margin-bottom:16px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input id="lgShow" type="checkbox" /> Show password</label>
+        </div>
+        <div id="lgMsg" class="help" style="text-align:center;color:var(--danger);margin-bottom:16px">&nbsp;</div>
+        <button id="lgBtn" class="btn primary">Sign In</button>
       </div>
     </div>
 
@@ -163,8 +162,8 @@
         <div class="menu">
           <button class="btn" id="themeMenuBtn">Theme ▾</button>
           <div class="menu-panel" id="themeMenu">
-            <button class="menu-item" data-theme="dark">Dark (Default)</button>
-            <button class="menu-item" data-theme="light">Light</button>
+            <button class="menu-item" data-theme="light">Light (Default)</button>
+            <button class="menu-item" data-theme="dark">Dark</button>
             <button class="menu-item" data-theme="midnight">Midnight</button>
             <button class="menu-item" data-theme="forest">Forest</button>
           </div>
@@ -350,7 +349,7 @@
     $('#invNumber').value = nextNumber($('#invPrefix').value || 'INV-');
     
     // Theme Load
-    const savedTheme = localStorage.getItem('cc_theme') || 'dark';
+    const savedTheme = localStorage.getItem('cc_theme') || 'light';
     setTheme(savedTheme);
 
     // Autosave Load
