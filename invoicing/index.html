@@ -5,31 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cars & Collectibles — Invoice/Quote</title>
   <style>
-    :root{--bg:#0b0c10;--panel:#11131a;--muted:#a3a7b7;--line:#232634;--text:#e9ecf1;--accent:#3b82f6;--warn:#f59e0b;--danger:#ef4444}
+    :root {
+      --bg: #0b0c10; --panel: #11131a; --input-bg: #0f121a; --muted: #a3a7b7;
+      --line: #232634; --text: #e9ecf1; --accent: #3b82f6; --warn: #f59e0b; --danger: #ef4444;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+    }
+    [data-theme="light"] {
+      --bg: #f3f4f6; --panel: #ffffff; --input-bg: #f9fafb; --muted: #6b7280;
+      --line: #e5e7eb; --text: #111827; --accent: #2563eb; --warn: #d97706; --danger: #dc2626;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    [data-theme="midnight"] {
+      --bg: #0f172a; --panel: #1e293b; --input-bg: #0f172a; --muted: #94a3b8;
+      --line: #334155; --text: #f8fafc; --accent: #38bdf8; --warn: #fbbf24; --danger: #f87171;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+    }
+    [data-theme="forest"] {
+      --bg: #051a10; --panel: #0a2618; --input-bg: #051a10; --muted: #8ba896;
+      --line: #1b4d33; --text: #e8f5e9; --accent: #10b981; --warn: #f59e0b; --danger: #ef4444;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+    }
+
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
     a{color:var(--accent)}
     .container{max-width:1200px;margin:0 auto;padding:16px}
     .hidden{display:none!important}
-    .btn{appearance:none;border:1px solid var(--line);background:#1a1d29;color:var(--text);padding:8px 10px;border-radius:8px;cursor:pointer}
+    .btn{
+      appearance:none;border:1px solid var(--line);background:var(--panel);
+      color:var(--text);padding:8px 12px;border-radius:8px;cursor:pointer;
+      font-weight:500;transition: all 0.2s;
+    }
     .btn:hover{background:#1f2332}
+    [data-theme="light"] .btn:hover {background:#f3f4f6}
+
     .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
     .btn.ghost{background:transparent}
     .btn.warn{background:var(--warn);border-color:var(--warn);color:#111}
     .btn.danger{background:var(--danger);border-color:var(--danger)}
     .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+    .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;box-shadow:var(--shadow)}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:10px;box-shadow:var(--shadow)}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .label{font-size:12px;color:var(--muted);margin-bottom:4px}
-    input[type="text"], input[type="number"], textarea, select{width:100%;background:#0f121a;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px}
+    .label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+    input[type="text"], input[type="number"], input[type="date"], textarea, select{
+      width:100%;background:var(--input-bg);color:var(--text);
+      border:1px solid var(--line);border-radius:8px;padding:8px;transition:border-color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus{outline:none;border-color:var(--accent)}
     textarea{min-height:70px}
     table{width:100%;border-collapse:collapse}
     th,td{border-bottom:1px solid var(--line);padding:8px}
-    th{color:var(--muted);text-align:left;background:#0f1117}
+    th{color:var(--muted);text-align:left;background:var(--input-bg);font-weight:600}
     td.right, th.right{text-align:right}
-    tr.sel{background:#0f1524}
+    tr.sel{background:var(--line)}
+    tbody tr{cursor:pointer;transition:background 0.1s}
 
     .totals{display:grid;grid-template-columns:auto auto auto auto auto auto;gap:10px;align-items:center}
     .totals .value{font-weight:600}
@@ -40,10 +75,10 @@
     .help{color:var(--muted);font-size:12px}
 
     .menu{position:relative}
-    .menu .menu-panel{position:absolute;z-index:10;top:100%;left:0;background:#0f121a;border:1px solid var(--line);border-radius:10px;padding:6px;min-width:150px;display:none}
+    .menu .menu-panel{position:absolute;z-index:10;top:100%;left:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:150px;display:none;box-shadow:var(--shadow)}
     .menu.open .menu-panel{display:block}
     .menu .menu-item{display:block;width:100%;text-align:left;border:none;background:transparent;color:var(--text);padding:6px 8px;border-radius:8px}
-    .menu .menu-item:hover{background:#141827}
+    .menu .menu-item:hover{background:var(--line)}
 
     .section-title{font-weight:700;margin:8px 0 6px;color:#fff}
     .kv{display:grid;grid-template-columns:120px 1fr;gap:8px}
@@ -55,14 +90,14 @@
       .container{padding:12px}
       .grid{grid-template-columns:1fr}
       .kv{grid-template-columns:1fr}
-      .btn, input[type="text"], input[type="number"], textarea, select{min-height:44px}
+      .btn, input[type="text"], input[type="number"], input[type="date"], textarea, select{min-height:44px}
       .totals{grid-template-columns:auto 1fr}
 
       table thead{display:none}
       table, tbody, tr, td{display:block;width:100%}
       table{border:0}
       tbody{display:block}
-      tr{background:#0f1117;border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+      tr{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
       td{display:flex;justify-content:space-between;gap:12px;padding:10px}
       td.right{text-align:left}
 
@@ -72,8 +107,8 @@
       td:nth-child(4)::before{content:"Amount";color:var(--muted);font-weight:600}
 
       td:nth-child(1){flex-direction:column;align-items:stretch}
-      td:nth-child(1)::before{margin-bottom:6px}
-      td input[type="text"], td input[type="number"]{width:55%;min-width:140px;text-align:right;background:#0f121a}
+      td:nth-child(1)::before{margin-bottom:4px}
+      td input[type="text"], td input[type="number"]{width:55%;min-width:140px;text-align:right;background:var(--input-bg)}
 
       .menu .menu-panel{right:0;left:auto;min-width:180px}
     }
@@ -125,6 +160,15 @@
             <button class="menu-item" id="aboutBtn">About</button>
           </div>
         </div>
+        <div class="menu">
+          <button class="btn" id="themeMenuBtn">Theme ▾</button>
+          <div class="menu-panel" id="themeMenu">
+            <button class="menu-item" data-theme="dark">Dark (Default)</button>
+            <button class="menu-item" data-theme="light">Light</button>
+            <button class="menu-item" data-theme="midnight">Midnight</button>
+            <button class="menu-item" data-theme="forest">Forest</button>
+          </div>
+        </div>
         <button class="btn" id="copyTotalBtn">Copy Total</button>
         <span class="help">Cars & Collectibles — Invoice/Quote</span>
       </div>
@@ -159,8 +203,8 @@
               </div>
               <div class="label">Prefix</div><input id="invPrefix" type="text" value="INV-" />
               <div class="label" id="docNumberLabel">Number</div><input id="invNumber" type="text" />
-              <div class="label">Date</div><input id="invDate" type="text" />
-              <div class="label" id="dueLabel">Due</div><input id="dueDate" type="text" />
+              <div class="label">Date</div><input id="invDate" type="date" />
+              <div class="label" id="dueLabel">Due</div><input id="dueDate" type="date" />
               <div class="label">PO #</div><input id="poNumber" type="text" />
             </div>
           </div>
@@ -304,12 +348,20 @@
     $('#invDate').value = today();
     $('#dueDate').value = today();
     $('#invNumber').value = nextNumber($('#invPrefix').value || 'INV-');
+    
+    // Theme Load
+    const savedTheme = localStorage.getItem('cc_theme') || 'dark';
+    setTheme(savedTheme);
 
-    // Add first blank row
-    addBlankRow();
+    // Autosave Load
+    const saved = localStorage.getItem('cc_autosave');
+    if (saved) {
+      try { fromJson(JSON.parse(saved)); } catch(e) { console.error(e); addBlankRow(); }
+    } else { addBlankRow(); }
 
     // Menus
     attachMenu('#fileMenuBtn', '#fileMenu');
+    attachMenu('#themeMenuBtn', '#themeMenu');
     attachMenu('#discountBtn', '#discountMenu');
 
     // File menu
@@ -317,6 +369,12 @@
     $('#saveDraftBtn').addEventListener('click', saveDraft);
     $('#loadDraftBtn').addEventListener('click', loadDraft);
     $('#copyTotalBtn').addEventListener('click', () => navigator.clipboard.writeText($('#lbTotal').textContent));
+
+    // Theme menu
+    $('#themeMenu').addEventListener('click', e => {
+      const t = e.target.getAttribute('data-theme');
+      if(t) setTheme(t);
+    });
 
     // Quick actions
     $('#addRowBtn').addEventListener('click', addBlankRow);
@@ -382,13 +440,18 @@
     // NOTE: Logo upload removed (no UI, fixed logo)
     // Subtotal-dependent fields (safe, no-op if missing)
     ['currency','terms','accepted','instructions','notes','invPrefix','invNumber','invDate','dueDate','poNumber','custName','custEmail','custPhone','custAddress']
-      .forEach(id => { const el = $('#'+id); el && el.addEventListener('input', () => {}); });
+      .forEach(id => { const el = $('#'+id); el && el.addEventListener('input', saveState); });
 
     // Export buttons
     $('#exportPdfBtn').addEventListener('click', exportPDF);
     $('#exportPngBtn').addEventListener('click', exportPNG);
 
     recalc();
+  }
+
+  function setTheme(name) {
+    document.documentElement.setAttribute('data-theme', name);
+    localStorage.setItem('cc_theme', name);
   }
 
   // ===== Items Table =====
@@ -473,6 +536,7 @@
     $('#lbTax').textContent = money(tax, cur);
     $('#lbDiscount').textContent = '-' + money(discount||0, cur);
     $('#lbTotal').textContent = money(tot, cur);
+    saveState();
   }
 
   // ===== Export / Draft =====
@@ -723,6 +787,10 @@
       doc_type: docType,
       items: items.map(it => ({description: it.desc, qty: it.qty, rate: it.rate}))
     };
+  }
+
+  function saveState() {
+    localStorage.setItem('cc_autosave', JSON.stringify(toJson()));
   }
   function fromJson(m) {
     // Ignore business fields (locked)
