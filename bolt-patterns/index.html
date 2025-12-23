@@ -244,13 +244,15 @@
           return;
         }
 
-        // Parse Year Range (e.g. "1989-1997" or "89-97")
+        // --- Year Range Parsing ---
         let minYear = null;
         let maxYear = null;
-        const rangeRegex = /\b(\d{2,4})\s*-\s*(\d{2,4})\b/;
-        const rangeMatch = query.match(rangeRegex);
+        
+        // 1. Check for a complete range (e.g., "1990-1995" or "90-95")
+        const completeRangeRegex = /\b(\d{2,4})\s*-\s*(\d{2,4})\b/;
+        const completeRangeMatch = query.match(completeRangeRegex);
 
-        if (rangeMatch) {
+        if (completeRangeMatch) {
           const expandYear = (y) => {
             const val = parseInt(y, 10);
             if (val >= 100) return val;
@@ -258,13 +260,18 @@
             return val < 30 ? 2000 + val : 1900 + val;
           };
           
-          const y1 = expandYear(rangeMatch[1]);
-          const y2 = expandYear(rangeMatch[2]);
+          const y1 = expandYear(completeRangeMatch[1]);
+          const y2 = expandYear(completeRangeMatch[2]);
           minYear = Math.min(y1, y2);
           maxYear = Math.max(y1, y2);
           
-          // Remove range from query text
-          query = query.replace(rangeMatch[0], '').trim();
+          // Remove range from query text to allow other text searches
+          query = query.replace(completeRangeMatch[0], '').trim();
+        } else {
+          // 2. Handle incomplete range (e.g., "1990-") to prevent results from disappearing
+          if (/\b\d{2,4}\s*-\s*$/.test(query)) {
+            query = query.replace(/-\s*$/, '').trim();
+          }
         }
 
         const tokens = query.split(/\s+/).filter(t => t.length > 0);
