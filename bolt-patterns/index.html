@@ -234,18 +234,52 @@
 
     // Search Handler
     searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase().trim();
+      let query = e.target.value.toLowerCase().trim();
       
       if (!query) {
         resultsContainer.innerHTML = `<div class="text-center py-16 opacity-60"><p class="text-lg font-medium">Start typing to find vehicles</p></div>`;
         return;
       }
 
+      // Parse Year Range (e.g. "1989-1997" or "89-97")
+      let minYear = null;
+      let maxYear = null;
+      const rangeRegex = /\b(\d{2,4})\s*-\s*(\d{2,4})\b/;
+      const rangeMatch = query.match(rangeRegex);
+
+      if (rangeMatch) {
+        const expandYear = (y) => {
+          const val = parseInt(y, 10);
+          if (val >= 100) return val;
+          // Pivot: 00-29 -> 2000s, 30-99 -> 1900s
+          return val < 30 ? 2000 + val : 1900 + val;
+        };
+        
+        const y1 = expandYear(rangeMatch[1]);
+        const y2 = expandYear(rangeMatch[2]);
+        minYear = Math.min(y1, y2);
+        maxYear = Math.max(y1, y2);
+        
+        // Remove range from query text
+        query = query.replace(rangeMatch[0], '').trim();
+      }
+
       const tokens = query.split(/\s+/).filter(t => t.length > 0);
       
       // Filter: All tokens must exist in the search string (AND logic)
       const matches = db.filter(item => {
-        return tokens.every(token => item.searchStr.includes(token));
+        // 1. Text Match
+        const textMatch = tokens.every(token => item.searchStr.includes(token));
+        if (!textMatch) return false;
+
+        // 2. Year Range Match
+        if (minYear !== null) {
+          const itemYear = parseInt(item.year, 10);
+          if (isNaN(itemYear)) return false;
+          if (itemYear < minYear || itemYear > maxYear) return false;
+        }
+
+        return true;
       }).slice(0, 50); // Limit to 50 results for performance
 
       renderResults(matches);
