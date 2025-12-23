@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bolt Pattern Lookup</title>
+  <title>BOLT — Bolt Offset & Lug Tracker</title>
   <meta name="description" content="Vehicle bolt pattern lookup tool. Search by year, make, and model.">
   
   <!-- Tailwind CSS -->
@@ -39,14 +39,9 @@
   <header class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-500/20">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight leading-none">Bolt Pattern</h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Vehicle Fitment Lookup</p>
+          <h1 class="text-xl font-bold tracking-tight leading-none">BOLT</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Bolt Offset & Lug Tracker</p>
         </div>
       </div>
       
@@ -69,7 +64,7 @@
       </div>
       <input type="text" id="searchInput" 
         class="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-lg placeholder:text-slate-400"
-        placeholder="Search year, make, model (e.g. '2015 F-150' or 'Civic Honda')"
+        placeholder="Search vehicle or pattern (e.g. '2015 F-150' or '5x114.3')"
         autocomplete="off" spellcheck="false">
       
       <!-- Loading Spinner -->
@@ -90,8 +85,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
         </div>
-        <p class="text-lg font-medium">Start typing to find bolt patterns</p>
-        <p class="text-sm mt-1">Try "2018 Jeep Wrangler" or "BMW 328i"</p>
+        <p class="text-lg font-medium">Start typing to find vehicles</p>
+        <p class="text-sm mt-1">Try "2018 Jeep Wrangler" or "5x127"</p>
       </div>
     </div>
   </main>
@@ -164,7 +159,7 @@
           count: cols[6]?.trim() || '',
           circle: cols[7]?.trim() || '',
           // Pre-compute search string for fast filtering
-          searchStr: `${cols[0]} ${cols[1]} ${cols[2]} ${cols[3]}`.toLowerCase()
+          searchStr: `${cols[0]} ${cols[1]} ${cols[2]} ${cols[3]} ${cols[4]} ${cols[5]}`.toLowerCase()
         });
       }
     }
@@ -204,7 +199,7 @@
       const query = e.target.value.toLowerCase().trim();
       
       if (!query) {
-        resultsContainer.innerHTML = `<div class="text-center py-16 opacity-60"><p class="text-lg font-medium">Start typing to find bolt patterns</p></div>`;
+        resultsContainer.innerHTML = `<div class="text-center py-16 opacity-60"><p class="text-lg font-medium">Start typing to find vehicles</p></div>`;
         return;
       }
 
