@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bolt Pattern Lookup</title>
+  <meta name="description" content="Vehicle bolt pattern lookup tool. Search by year, make, and model.">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            emerald: { 400: '#34d399', 500: '#10b981', 600: '#059669' },
+            slate: { 850: '#151f32', 900: '#0f172a' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for a polished feel */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background-color: #475569; }
+    
+    /* Fade in animation for results */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .result-item { animation: fadeIn 0.2s ease-out forwards; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col font-sans">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-500/20">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight leading-none">Bolt Pattern</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Vehicle Fitment Lookup</p>
+        </div>
+      </div>
+      
+      <button id="themeToggle" class="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Toggle Theme">
+        <!-- Sun Icon -->
+        <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
+        <!-- Moon Icon -->
+        <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+    
+    <!-- Search Box -->
+    <div class="relative mb-8 group z-10">
+      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <svg class="w-6 h-6 text-slate-400 group-focus-within:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      </div>
+      <input type="text" id="searchInput" 
+        class="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-lg placeholder:text-slate-400"
+        placeholder="Search year, make, model (e.g. '2015 F-150' or 'Civic Honda')"
+        autocomplete="off" spellcheck="false">
+      
+      <!-- Loading Spinner -->
+      <div id="loading" class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none hidden">
+        <svg class="animate-spin h-5 w-5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Results Area -->
+    <div id="results" class="space-y-3">
+      <!-- Initial State -->
+      <div class="text-center py-16 opacity-60">
+        <div class="inline-block p-4 rounded-full bg-slate-100 dark:bg-slate-800 mb-4 text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <p class="text-lg font-medium">Start typing to find bolt patterns</p>
+        <p class="text-sm mt-1">Try "2018 Jeep Wrangler" or "BMW 328i"</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-6 text-center text-sm text-slate-400 dark:text-slate-600">
+    &copy; <script>document.write(new Date().getFullYear())</script> Cars & Collectibles
+  </footer>
+
+  <script>
+    // --- Theme Logic ---
+    const html = document.documentElement;
+    const toggle = document.getElementById('themeToggle');
+    
+    // Default to light, check storage
+    const savedTheme = localStorage.getItem('bp_theme');
+    if (savedTheme === 'dark') {
+      html.classList.add('dark');
+    }
+
+    toggle.addEventListener('click', () => {
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        localStorage.setItem('bp_theme', 'light');
+      } else {
+        html.classList.add('dark');
+        localStorage.setItem('bp_theme', 'dark');
+      }
+    });
+
+    // --- Data & Search Logic ---
+    let db = [];
+    const searchInput = document.getElementById('searchInput');
+    const resultsContainer = document.getElementById('results');
+    const loadingEl = document.getElementById('loading');
+
+    // Fetch CSV
+    async function init() {
+      loadingEl.classList.remove('hidden');
+      try {
+        const res = await fetch('bolt-patterns.csv');
+        if (!res.ok) throw new Error('Failed to load data');
+        const text = await res.text();
+        parseCSV(text);
+      } catch (err) {
+        resultsContainer.innerHTML = `<div class="text-center text-red-500 py-8">Error loading database. Please try refreshing.</div>`;
+        console.error(err);
+      } finally {
+        loadingEl.classList.add('hidden');
+      }
+    }
+
+    function parseCSV(text) {
+      const lines = text.split('\n');
+      // Skip header (index 0), start at 1
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        // Simple CSV split (assuming standard format without quoted commas based on prompt)
+        const cols = line.split(',');
+        if (cols.length < 3) continue;
+
+        db.push({
+          year: cols[0]?.trim() || '',
+          make: cols[1]?.trim() || '',
+          model: cols[2]?.trim() || '',
+          submodel: cols[3]?.trim() || '',
+          metric: cols[4]?.trim() || 'N/A',
+          standard: cols[5]?.trim() || 'N/A',
+          count: cols[6]?.trim() || '',
+          circle: cols[7]?.trim() || '',
+          // Pre-compute search string for fast filtering
+          searchStr: `${cols[0]} ${cols[1]} ${cols[2]} ${cols[3]}`.toLowerCase()
+        });
+      }
+    }
+
+    function renderResults(matches) {
+      if (matches.length === 0) {
+        resultsContainer.innerHTML = `<div class="text-center py-12 text-slate-500">No vehicles found matching your search.</div>`;
+        return;
+      }
+
+      const html = matches.map(item => `
+        <div class="result-item bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white">
+              ${item.year} ${item.make} ${item.model}
+            </h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">${item.submodel}</p>
+          </div>
+          <div class="flex gap-3 text-sm">
+            <div class="px-3 py-2 bg-slate-100 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-700">
+              <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Metric</span>
+              <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">${item.metric}</span>
+            </div>
+            <div class="px-3 py-2 bg-slate-100 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-700">
+              <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Standard</span>
+              <span class="font-mono font-bold text-slate-700 dark:text-slate-200">${item.standard}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      resultsContainer.innerHTML = html;
+    }
+
+    // Search Handler
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      
+      if (!query) {
+        resultsContainer.innerHTML = `<div class="text-center py-16 opacity-60"><p class="text-lg font-medium">Start typing to find bolt patterns</p></div>`;
+        return;
+      }
+
+      const tokens = query.split(/\s+/).filter(t => t.length > 0);
+      
+      // Filter: All tokens must exist in the search string (AND logic)
+      const matches = db.filter(item => {
+        return tokens.every(token => item.searchStr.includes(token));
+      }).slice(0, 50); // Limit to 50 results for performance
+
+      renderResults(matches);
+    });
+
+    // Start
+    init();
+  </script>
+</body>
+</html>

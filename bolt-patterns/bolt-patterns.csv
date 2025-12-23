@@ -1,0 +1,7 @@
+year,make,model,submodel,bolt_pattern_metric,bolt_pattern_standard,bolt_count,bolt_circle_mm
+2015,Chevrolet,Silverado 1500,4WD,5-127mm,5x5",5,127
+2015,Chevrolet,Silverado 1500,2WD,5-127mm,5x5",5,127
+2016,Ford,Mustang,GT,5-114.3mm,5x4.5",5,114.3
+2016,Ford,Mustang,Ecoboost,5-114.3mm,5x4.5",5,114.3
+2016,Toyota,Tacoma,4WD,6-139.7mm,6x5.5",6,139.7
+2016,Toyota,Tacoma,2WD,6-139.7mm,6x5.5",6,139.7
