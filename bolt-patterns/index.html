@@ -62,21 +62,35 @@
     /* Fade in animation for results */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     .result-item { animation: fadeIn 0.2s ease-out forwards; }
+    
+    /* Background pattern */
+    .bg-dot-pattern {
+      background-image: radial-gradient(currentColor 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30">
+
+  <!-- Background Texture -->
+  <div class="fixed inset-0 z-0 pointer-events-none text-slate-200 dark:text-slate-900 bg-dot-pattern [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)]"></div>
 
   <!-- Header -->
-  <header class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div>
-          <h1 class="text-xl font-bold tracking-tight leading-none">BOLT</h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Bolt Offset & Lug Tracker</p>
+  <header class="sticky top-4 z-50 px-4 mb-4">
+    <div class="max-w-3xl mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-2xl shadow-xl shadow-slate-200/20 dark:shadow-black/20 px-5 py-3 flex items-center justify-between transition-all duration-300">
+      <div class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <h1 class="text-2xl font-black tracking-tighter leading-none bg-gradient-to-r from-slate-800 to-slate-500 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">BOLT</h1>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Tracker</span>
         </div>
       </div>
       
-      <button id="themeToggle" class="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Toggle Theme">
+      <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 active:scale-95" aria-label="Toggle Theme">
         <!-- Sun Icon -->
         <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
         <!-- Moon Icon -->
@@ -86,15 +100,15 @@
   </header>
 
   <!-- Main Content -->
-  <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+  <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-4 z-10">
     
     <!-- Search Box -->
     <div class="relative mb-8 group z-10">
       <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-        <svg class="w-6 h-6 text-slate-400 group-focus-within:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <svg class="w-6 h-6 text-slate-400 group-focus-within:text-emerald-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
       </div>
       <input type="text" id="searchInput" 
-        class="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-lg placeholder:text-slate-400"
+        class="w-full pl-12 pr-12 py-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-200/40 dark:shadow-black/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 text-lg placeholder:text-slate-400 dark:placeholder:text-slate-500"
         placeholder="Search vehicle or pattern (e.g. '2015 F-150' or '5x114.3')"
         autocomplete="off" spellcheck="false">
       
@@ -116,8 +130,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
         </div>
-        <p class="text-lg font-medium">Start typing to find vehicles</p>
-        <p class="text-sm mt-1">Try "2018 Jeep Wrangler" or "5x127"</p>
+        <p class="text-xl font-semibold text-slate-600 dark:text-slate-300">Start typing to find vehicles</p>
+        <p class="text-sm mt-2 text-slate-400">Try "2018 Jeep Wrangler" or "5x127"</p>
       </div>
     </div>
   </main>
@@ -202,19 +216,19 @@
       }
 
       const html = matches.map(item => `
-        <div class="result-item bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="result-item group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h3 class="text-lg font-bold text-slate-800 dark:text-white">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
               ${item.year} ${item.make} ${item.model}
             </h3>
             <p class="text-sm text-slate-500 dark:text-slate-400">${item.submodel}</p>
           </div>
           <div class="flex gap-3 text-sm">
-            <div class="px-3 py-2 bg-slate-100 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div class="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 group-hover:border-emerald-200 dark:group-hover:border-emerald-900/50 transition-colors">
               <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Metric</span>
               <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">${item.metric}</span>
             </div>
-            <div class="px-3 py-2 bg-slate-100 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div class="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 group-hover:border-slate-300 dark:group-hover:border-slate-600 transition-colors">
               <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Standard</span>
               <span class="font-mono font-bold text-slate-700 dark:text-slate-200">${item.standard}</span>
             </div>
