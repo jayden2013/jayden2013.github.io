@@ -118,6 +118,10 @@
     <div class="text-center mb-12">
       <h1 class="text-7xl md:text-9xl font-black tracking-tighter bg-gradient-to-b from-slate-800 to-slate-400 dark:from-white dark:to-slate-500 bg-clip-text text-transparent mb-4 select-none">BOLT</h1>
       <h2 class="text-xl md:text-2xl font-medium text-slate-500 dark:text-slate-400 tracking-wide">Bolt Offset & Lug Tool</h2>
+      <a href="mailto:jayden@carsandcollectibles.com?subject=Report%20Issue%20-%20BOLT" class="inline-flex items-center gap-2 mt-4 text-sm font-medium text-slate-400 hover:text-red-500 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        Report an issue
+      </a>
     </div>
     
     <!-- Search Box -->
@@ -304,6 +308,10 @@
       const html = groupedMatches.map(item => {
         // Sort submodels and join them for display
         const submodelText = item.submodels.sort().join(', ');
+        
+        // Construct mailto link for reporting
+        const reportSubject = encodeURIComponent(`Correction: ${item.year} ${item.make} ${item.model}`);
+        const reportBody = encodeURIComponent(`Hi Jayden,\n\nI found inaccurate data for:\n\nVehicle: ${item.year} ${item.make} ${item.model}\nSubmodels: ${submodelText}\nListed Pattern: ${item.metric} / ${item.standard}\n\nThe correct information is:\n`);
 
         return `
         <div class="result-item group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -322,6 +330,9 @@
               <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Standard</span>
               <span class="font-mono font-bold text-slate-700 dark:text-slate-200">${item.standard}</span>
             </button>
+            <a href="mailto:jayden@carsandcollectibles.com?subject=${reportSubject}&body=${reportBody}" title="Report Inaccurate Data" class="flex items-center justify-center px-3 rounded-xl border border-transparent text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </a>
           </div>
         </div>
       `}).join('');
