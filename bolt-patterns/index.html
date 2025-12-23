@@ -76,32 +76,24 @@
   <!-- Background Texture -->
   <div class="fixed inset-0 z-0 pointer-events-none text-slate-200 dark:text-slate-900 bg-dot-pattern [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)]"></div>
 
-  <!-- Header -->
-  <header class="sticky top-4 z-50 px-4 mb-4">
-    <div class="max-w-3xl mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-2xl shadow-xl shadow-slate-200/20 dark:shadow-black/20 px-5 py-3 flex items-center justify-between transition-all duration-300">
-      <div class="flex items-center gap-3 group">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-105 transition-transform duration-300">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
-        <div class="flex flex-col">
-          <h1 class="text-2xl font-black tracking-tighter leading-none bg-gradient-to-r from-slate-800 to-slate-500 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">BOLT</h1>
-          <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Tracker</span>
-        </div>
-      </div>
-      
-      <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 active:scale-95" aria-label="Toggle Theme">
-        <!-- Sun Icon -->
-        <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
-        <!-- Moon Icon -->
-        <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-      </button>
-    </div>
-  </header>
+  <!-- Theme Toggle (Absolute) -->
+  <div class="absolute top-6 right-6 z-50">
+    <button id="themeToggle" class="p-3 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 active:scale-95 shadow-sm" aria-label="Toggle Theme">
+      <!-- Sun Icon -->
+      <svg id="sunIcon" class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
+      <!-- Moon Icon -->
+      <svg id="moonIcon" class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    </button>
+  </div>
 
   <!-- Main Content -->
-  <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-4 z-10">
+  <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-12 z-10 flex flex-col justify-center min-h-[80vh]">
+    
+    <!-- Title Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-7xl md:text-9xl font-black tracking-tighter bg-gradient-to-b from-slate-800 to-slate-400 dark:from-white dark:to-slate-500 bg-clip-text text-transparent mb-4 select-none">BOLT</h1>
+      <p class="text-xl md:text-2xl font-medium text-slate-500 dark:text-slate-400 tracking-wide">Bolt Offset & Lug Tracker</p>
+    </div>
     
     <!-- Search Box -->
     <div class="relative mb-8 group z-10">
