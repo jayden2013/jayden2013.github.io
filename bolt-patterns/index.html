@@ -69,6 +69,15 @@
       background-image: radial-gradient(currentColor 1px, transparent 1px);
       background-size: 24px 24px;
     }
+
+    /* Modal styles */
+    #modal.open {
+      opacity: 1;
+    }
+    #modal.open #modal-box {
+      transform: scale(1);
+      opacity: 1;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30">
@@ -140,6 +149,21 @@
     </div>
   </main>
 
+  <!-- Reverse Lookup Modal -->
+  <div id="modal" class="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div id="modal-box" class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col transform scale-95 opacity-0 transition-all duration-300">
+      <header class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between flex-shrink-0">
+        <h2 id="modal-title" class="text-xl font-bold">Vehicles with this Pattern</h2>
+        <button id="modal-close" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </header>
+      <div id="modal-content" class="p-6 overflow-y-auto">
+        <!-- Content will be injected here -->
+      </div>
+    </div>
+  </div>
+
   <footer class="py-6 text-center text-sm text-slate-400 dark:text-slate-600">
     &copy; <script>document.write(new Date().getFullYear())</script> Cars & Collectibles
   </footer>
@@ -163,6 +187,29 @@
         html.classList.add('dark');
         localStorage.setItem('bp_theme', 'dark');
       }
+    });
+
+    // --- Modal Logic ---
+    const modal = document.getElementById('modal');
+    const modalBox = document.getElementById('modal-box');
+    const modalClose = document.getElementById('modal-close');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+
+    function openModal() {
+      modal.classList.remove('hidden');
+      setTimeout(() => modal.classList.add('open'), 10);
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      // Only close if clicking the backdrop, not the content box
+      if (e.target === modal) closeModal();
     });
 
     // --- Data & Search Logic ---
@@ -228,14 +275,14 @@
             <p class="text-sm text-slate-500 dark:text-slate-400">${item.submodel}</p>
           </div>
           <div class="flex gap-3 text-sm">
-            <div class="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 group-hover:border-emerald-200 dark:group-hover:border-emerald-900/50 transition-colors">
+            <button onclick="showReverseLookup('${item.metric}', '${item.standard}')" class="text-left px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 group-hover:border-emerald-200 dark:group-hover:border-emerald-900/50 transition-all hover:!border-emerald-400 dark:hover:!border-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
               <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Metric</span>
               <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">${item.metric}</span>
-            </div>
-            <div class="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 group-hover:border-slate-300 dark:group-hover:border-slate-600 transition-colors">
+            </button>
+            <button onclick="showReverseLookup('${item.metric}', '${item.standard}')" class="text-left px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 group-hover:border-slate-300 dark:group-hover:border-slate-600 transition-all hover:!border-slate-400 dark:hover:!border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
               <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Standard</span>
               <span class="font-mono font-bold text-slate-700 dark:text-slate-200">${item.standard}</span>
-            </div>
+            </button>
           </div>
         </div>
       `).join('');
@@ -267,6 +314,69 @@
         </div>
       `;
     }
+
+    // --- Reverse Lookup Modal Function ---
+    window.showReverseLookup = (metricPattern, standardPattern) => {
+      if (!metricPattern || metricPattern === 'N/A') return;
+
+      modalTitle.textContent = `Vehicles with ${metricPattern} / ${standardPattern}`;
+      modalContent.innerHTML = '<div class="text-center p-8 text-slate-500">Loading...</div>';
+      openModal();
+
+      // Find all vehicles with the same metric pattern
+      const matches = db.filter(v => v.metric === metricPattern);
+
+      // Group by make and model
+      const grouped = matches.reduce((acc, vehicle) => {
+        const key = `${vehicle.make}|${vehicle.model}`;
+        if (!acc[key]) {
+          acc[key] = { make: vehicle.make, model: vehicle.model, years: [] };
+        }
+        const year = parseInt(vehicle.year, 10);
+        if (!isNaN(year) && !acc[key].years.includes(year)) {
+          acc[key].years.push(year);
+        }
+        return acc;
+      }, {});
+
+      // Process years into ranges
+      const processed = Object.values(grouped).map(group => {
+        group.years.sort((a, b) => a - b);
+        const yearRanges = [];
+        if (group.years.length > 0) {
+          let startYear = group.years[0];
+          let endYear = group.years[0];
+          for (let i = 1; i < group.years.length; i++) {
+            if (group.years[i] === endYear + 1) {
+              endYear = group.years[i];
+            } else {
+              yearRanges.push(startYear === endYear ? `${startYear}` : `${startYear}-${endYear}`);
+              startYear = endYear = group.years[i];
+            }
+          }
+          yearRanges.push(startYear === endYear ? `${startYear}` : `${startYear}-${endYear}`);
+        }
+        group.yearStr = yearRanges.join(', ');
+        return group;
+      });
+      
+      // Sort alphabetically by make then model
+      processed.sort((a, b) => a.make.localeCompare(b.make) || a.model.localeCompare(b.model));
+
+      // Render the final HTML
+      if (processed.length === 0) {
+        modalContent.innerHTML = '<div class="text-center p-8 text-slate-500">No other vehicles found with this pattern.</div>';
+        return;
+      }
+
+      const listHtml = processed.map(group => `
+        <div class="py-3 border-b border-slate-100 dark:border-slate-700 last:border-b-0">
+          <span class="font-bold text-slate-800 dark:text-slate-100">${group.make} ${group.model}</span>
+          <span class="ml-2 text-slate-500 dark:text-slate-400">(${group.yearStr})</span>
+        </div>`).join('');
+
+      modalContent.innerHTML = `<div class="divide-y divide-slate-100 dark:divide-slate-700">${listHtml}</div>`;
+    };
 
     // Search Handler
     let debounceTimer;
