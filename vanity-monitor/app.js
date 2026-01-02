@@ -325,11 +325,10 @@ function initApp() {
   /*** Start ***/
   requestAnimationFrame(fitAll);
   (function init(){
-    setTimeout(() => {
-      render();
-      refreshDue({force:false});
-    }, 50);
+    render();
+    refreshDue({force:false});
+    window.addEventListener('load', render);
   })();
 }
 
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initApp); else initApp();
+initApp();
