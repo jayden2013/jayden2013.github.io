@@ -196,16 +196,16 @@ function initApp() {
   function closeModal(sel){ const m=$(sel); if(m) m.style.display='none'; }
 
   /*** Add Plate ***/
-  $("#addPlateBtn").addEventListener("click", ()=> openModal('#modal'));
-  $("#m_cancel").addEventListener("click", ()=> closeModal('#modal'));
-  $("#m_plateText").addEventListener('input', e=>{
+  $("#addPlateBtn")?.addEventListener("click", ()=> openModal('#modal'));
+  $("#m_cancel")?.addEventListener("click", ()=> closeModal('#modal'));
+  $("#m_plateText")?.addEventListener('input', e=>{
     const caret=e.target.selectionStart ?? e.target.value.length;
     const normalized=normalizePlateText(e.target.value);
     e.target.value=normalized;
     e.target.selectionStart=e.target.selectionEnd=Math.min(caret, normalized.length);
   });
   function validatePlateText(s){ const t=normalizePlateText(s); if(!t) throw new Error("plateText must be 1–7 letters/numbers"); return t; }
-  $("#m_submit").addEventListener("click", async ()=>{
+  $("#m_submit")?.addEventListener("click", async ()=>{
     const msg=$("#m_msg"); msg.textContent="";
     try{
       const entry={
@@ -228,10 +228,9 @@ function initApp() {
   });
 
   /*** Confirm refresh ***/
-  $("#refresh").addEventListener("click", ()=> openModal('#confirmModal'));
-  $("#cfm_cancel").addEventListener("click", ()=> closeModal('#confirmModal'));
-  $("#cfm_due").addEventListener("click", async ()=>{ closeModal('#confirmModal'); await refreshDue({force:false}); });
-  $("#cfm_force").addEventListener("click", async ()=>{ closeModal('#confirmModal'); await refreshDue({force:true}); });
+  $("#refresh")?.addEventListener("click", ()=> openModal('#confirmModal'));
+  $("#cfm_cancel")?.addEventListener("click", ()=> closeModal('#confirmModal'));
+  $("#cfm_due")?.addEventListener("click", async ()=>{ closeModal('#confirmModal'); await refreshDue({force:false}); });
 
   /*** Delete flow ***/
   let pendingDeleteKey=null;
@@ -287,14 +286,14 @@ function initApp() {
   $("#del_confirm")?.addEventListener('click', ()=>{ if(pendingDeleteKey){ deleteByKey(pendingDeleteKey); pendingDeleteKey=null; } closeModal('#deleteModal'); });
 
   /*** Import/Export & Filters ***/
-  $("#q").addEventListener("input", render);
-  $("#status").addEventListener("change", render);
+  $("#q")?.addEventListener("input", render);
+  $("#status")?.addEventListener("change", render);
   $("#stateFilter")?.addEventListener("change", render); // <-- NEW: re-render on state select
-  $("#exportBtn").addEventListener("click", ()=>{
+  $("#exportBtn")?.addEventListener("click", ()=>{
     const blob=new Blob([localStorage.getItem(STORAGE_KEY)||"[]"],{type:"application/json"});
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="plates-export.json"; a.click(); URL.revokeObjectURL(a.href);
   });
-  $("#importFile").addEventListener("change", async e=>{
+  $("#importFile")?.addEventListener("change", async e=>{
     const f=e.target.files?.[0]; if(!f) return;
     const text=await f.text();
     try{
@@ -331,4 +330,4 @@ function initApp() {
   })();
 }
 
-initApp();
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initApp); else initApp();
