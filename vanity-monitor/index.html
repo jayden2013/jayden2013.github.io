@@ -479,17 +479,18 @@
   // Inject Refresh Buttons & Enhance UI
   const board = document.getElementById('board');
   if (board) {
-    const observer = new MutationObserver(mutations => {
-      mutations.forEach(m => {
-        m.addedNodes.forEach(node => {
-          if (node.nodeType === 1) {
-            if (node.querySelector('.plate-actions')) return;
+    const enhanceNode = (node) => {
+      if (node.nodeType !== 1) return;
+      if (node.querySelector('.plate-actions')) return;
+      if (node.querySelector('.add-plate-btn-injected')) return;
 
+      // Small delay to ensure content is populated if appended empty
+      setTimeout(() => {
             // Check if this is a real plate (has .fit class)
             if (!node.querySelector('.fit')) {
                // Likely the "No plates" empty state
                const addBtn = document.createElement('button');
-               addBtn.className = 'mt-4 px-6 py-2 rounded-lg bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 transition-all';
+               addBtn.className = 'add-plate-btn-injected mt-4 px-6 py-2 rounded-lg bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 transition-all';
                addBtn.innerText = 'Add a Plate';
                addBtn.onclick = () => document.getElementById('addPlateBtn').click();
                
@@ -556,11 +557,16 @@
             actions.appendChild(refreshBtn);
             actions.appendChild(deleteBtn);
             node.appendChild(actions);
-          }
-        });
-      });
+      }, 50);
+    };
+
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(m => m.addedNodes.forEach(enhanceNode));
     });
     observer.observe(board, { childList: true });
+    
+    // Handle existing nodes (if app.js ran before observer)
+    Array.from(board.children).forEach(enhanceNode);
   }
 </script>
 </body>
