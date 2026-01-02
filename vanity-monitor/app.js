@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!iso) return "—";
     const then = new Date(iso), now = new Date();
     const s = Math.floor((now - then)/1000);
+    if (s < 5) return "Just now";
     const m = Math.floor(s/60), h = Math.floor(m/60), d = Math.floor(h/24);
     if (s < 60) return s + "s ago";
     if (m < 60) return m + "m ago";
@@ -155,13 +156,16 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="top"><div class="state">${stateLabel}</div><div class="status ${cls}">${statusLabel}</div></div>
         <div class="text" title="${plateText}"><span class="fit">${plateText}</span></div>
         <div class="bottom"><div class="ago" title="${r.lastCheckedUtc?new Date(r.lastCheckedUtc).toLocaleString():""}">${when}</div></div>
-        <div class="delete-overlay" data-action="delete" data-key="${key}">
-          <button class="delete-button" data-action="delete" data-key="${key}" title="Delete plate">🗑 Delete Plate</button>
+        <div class="plate-actions">
+          <button class="plate-action-btn refresh" data-action="refresh" data-key="${key}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Refresh Plate
+          </button>
+          <button class="plate-action-btn delete" data-action="delete" data-key="${key}">Delete Plate</button>
         </div>
       </div>`;
     }).join("");
 
-    $("#board").innerHTML = html || `<div class="pill" style="margin:12px auto">No plates yet. Click “Add Plate”.</div>`;
+    $("#board").innerHTML = html || `<div class="flex flex-col items-center justify-center py-12"><div class="text-slate-500 mb-4">No plates yet.</div><button id="emptyAddBtn" class="px-6 py-2 rounded-lg bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 transition-all">Add a Plate</button></div>`;
     requestAnimationFrame(fitAll);
   }
 
@@ -235,9 +239,43 @@ document.addEventListener('DOMContentLoaded', () => {
   function deleteByKey(key){ const arr=loadPlates().filter(p=>mkKey(p)!==key); savePlates(arr); render(); }
   const boardEl=document.getElementById('board');
   if(boardEl){
-    boardEl.addEventListener('click', e=>{
-      const t=e.target.closest('[data-action="delete"]'); if(!t) return;
-      const key=t.getAttribute('data-key'); openDeleteModalByKey(key);
+    boardEl.addEventListener('click', async e=>{
+      // Handle Delete
+      const delBtn=e.target.closest('[data-action="delete"]'); 
+      if(delBtn) {
+        const key=delBtn.getAttribute('data-key'); 
+        openDeleteModalByKey(key);
+        return;
+      }
+      
+      // Handle Refresh
+      const refBtn=e.target.closest('[data-action="refresh"]');
+      if(refBtn){
+        const key=refBtn.getAttribute('data-key');
+        const p=loadPlates().find(x=>mkKey(x)===key);
+        if(!p) return;
+        
+        // UI Feedback
+        refBtn.innerHTML = `<svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Checking...`;
+        refBtn.disabled = true;
+        refBtn.style.opacity = '0.7';
+        const card = refBtn.closest('.plate');
+        if(card) card.style.opacity = '0.6';
+
+        try {
+          const status = await checkAvailability(p);
+          markChecked(p, status);
+        } catch(err) {
+          markChecked(p, "Error", String(err?.message||err));
+        }
+        upsertPlate(p); // Save and re-render
+        render();
+      }
+
+      // Handle Empty State Add Button
+      if(e.target.id === 'emptyAddBtn') {
+        $("#addPlateBtn").click();
+      }
     });
   }
   $("#del_cancel")?.addEventListener('click', ()=> closeModal('#deleteModal'));
