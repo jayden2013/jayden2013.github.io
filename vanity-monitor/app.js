@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   /*** Config ***/
   // IDAHO proxy you already have (returns { Available: boolean })
   const ID_ENDPOINT = "https://vanity-plate.profit-alerts.workers.dev/api/validate";
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /*** One-time migration: add state=ID to old entries ***/
-  (function migrate(){
+  try { (function migrate(){
     const list=loadPlates(); let changed=false;
     for(const p of list){
       const n=normalizePlateText(p.plateText); if(n!==p.plateText){p.plateText=n; changed=true;}
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
       p.selectedPlateProgramSubCategory=p.selectedPlateProgramSubCategory||"Select";
     }
     if(changed) savePlates(list);
-  })();
+  })(); } catch(e){ console.error("Migration error", e); }
 
   /*** Idaho check (your existing proxy) ***/
   async function postValidateID(payload){
@@ -125,12 +125,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function fitAll(){ $$('#board .fit').forEach(fitTileText); const t=document.getElementById('titleFit'); if(t) fitTileText(t); }
   window.addEventListener('resize', debounce(fitAll,120));
+  window.addEventListener('load', fitAll);
 
   /*** Render ***/
   function render(){
     const rows=loadPlates();
-    const q=$("#q").value.trim().toLowerCase();
-    const st=$("#status").value;
+    const q=($("#q")?.value||"").trim().toLowerCase();
+    const st=$("#status")?.value||"";
     const sf=$("#stateFilter")?.value || ""; // <-- NEW: state filter value
 
     const filtered=rows.filter(r=>{
@@ -323,4 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
     refreshDue({force:false});
   })();
-}); // DOMContentLoaded
+}
+
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initApp); else initApp();
