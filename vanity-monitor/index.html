@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="google-adsense-account" content="ca-pub-5978349780180432">
   <title>Plate Lookup &amp; Availability Tracking Eligibility System</title>
-  <meta name="description" content="Dashboard to track vanity license plate availability across states.">
+  <meta name="description" content="Dashboard to track vanity license plate availability for Idaho and California plates.">
   <meta name="keywords" content="vanity plate check, personalized license plate, dmv plate lookup, custom license plates, license plate availability, california vanity plate, idaho vanity plate" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -373,7 +373,7 @@
           The <strong>PLATES</strong> tool allows you to:
         </p>
         <ul class="list-disc pl-5 space-y-1">
-          <li>Instantly check availability for personalized plates in supported states.</li>
+          <li>Instantly check availability for personalized plates in Idaho and California.</li>
           <li>Track specific plate combinations over time.</li>
           <li>Visualize how the text looks on a simulated license plate.</li>
         </ul>
@@ -522,11 +522,11 @@
               node.style.transition = 'opacity 0.3s';
               node.style.opacity = '0.6';
 
-              const text = node.querySelector('.fit')?.innerText?.trim();
-              const state = node.querySelector('.state')?.innerText?.trim();
+              const text = node.querySelector('.fit')?.textContent?.trim().toUpperCase();
+              const state = node.querySelector('.state')?.textContent?.trim().toUpperCase();
               const timeEl = node.querySelector('.ago');
               
-              if (typeof checkPlate === 'function' && text) {
+              if (typeof checkPlate === 'function' && text && state) {
                 try {
                   console.log(`Force refreshing: ${text} (${state})`);
                   await checkPlate(text, state, true);
