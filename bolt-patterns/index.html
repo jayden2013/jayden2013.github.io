@@ -303,7 +303,7 @@
         return acc;
       }, {});
 
-      const groupedMatches = Object.values(grouped);
+      const groupedMatches = Object.values(grouped).slice(0, 100);
 
       const html = groupedMatches.map(item => {
         // Sort submodels and join them for display
@@ -498,7 +498,7 @@
           }
 
           return true;
-        }).slice(0, 50); // Limit to 50 results for performance
+        });
 
         renderResults(matches);
       }, 300);
