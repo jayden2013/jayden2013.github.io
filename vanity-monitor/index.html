@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* Themes */
     :root {
@@ -19,7 +19,8 @@
       --border: #e2e8f0;
       --text: #0f172a;
       --text-muted: #64748b;
-      --accent: #10b981;
+      --accent: #10b981; /* Emerald 500 */
+      --accent-hover: #059669;
 
       /* Light Plate Defaults */
       --plate-bg: radial-gradient(120% 120% at 50% -20%, #ffffff 0%, #f1f5f9 55%, #cbd5e1 100%);
@@ -33,6 +34,7 @@
       --border: #334155;
       --text: #f8fafc;
       --text-muted: #94a3b8;
+      --accent: #34d399; /* Emerald 400 */
 
       /* Dark Plate Override */
       --plate-bg: radial-gradient(120% 120% at 50% -20%, #1a1b21 0%, #0b0c10 55%, #000 100%);
@@ -125,22 +127,60 @@
     }
 
     /* Apply Theme Variables */
-    body { background-color: var(--bg); color: var(--text); transition: background-color 0.3s, color 0.3s; }
-    .bar { background-color: var(--surface); border-bottom-color: var(--border); }
-    .box { background-color: var(--surface); border-color: var(--border); color: var(--text); }
-
-    /* Fix inputs specificity to override styles.css */
-    .controls input, .controls select, .pill { background-color: var(--surface); border-color: var(--border); color: var(--text); }
+    body { 
+      background-color: var(--bg); 
+      color: var(--text); 
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.3s, color 0.3s; 
+    }
 
     /* Apply Plate Variables */
-    .header-plate { background: var(--plate-bg); border-color: var(--plate-border); color: var(--plate-text); box-shadow: var(--plate-shadow); }
+    .header-plate { 
+      width: 60px; height: 34px; 
+      border-radius: 4px; 
+      border: 1px solid var(--plate-border);
+      position: relative; 
+      display: flex; align-items: center; justify-content: center;
+      background: var(--plate-bg); 
+      color: var(--plate-text); 
+      box-shadow: var(--plate-shadow); 
+      flex-shrink: 0;
+    }
     .header-plate .title .fit { color: var(--plate-text); }
+    .header-plate .title { font-weight: 900; font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .header-plate .bolts { position: absolute; top: 3px; left: 4px; width: 3px; height: 3px; background: rgba(0,0,0,0.15); border-radius: 50%; box-shadow: 48px 0 0 rgba(0,0,0,0.15); }
+    .header-plate .bolts.btm { top: auto; bottom: 3px; }
 
-    .btn.ghost { background-color: var(--surface); border-color: var(--border); color: var(--text); }
-    .under-name, .under-info { color: var(--text-muted); }
+    /* Board Grid Layout */
+    #board {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      padding: 1.5rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* Dynamic Card Styling (Targeting generated elements) */
+    #board > div {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    #board > div:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      border-color: var(--accent);
+    }
     
     /* Ensure inputs/selects inherit text color properly */
-    input::placeholder { color: var(--text-muted); opacity: 0.7; }
+    input::placeholder { color: var(--text-muted); opacity: 0.5; }
     
     /* Scrollbar styling for themes */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -150,120 +190,154 @@
   </style>
 </head>
 <body>
-<div class="wrap" style="display:flex;flex-direction:column;min-height:100%">
-  <header>
-    <div class="bar">
-      <div class="header-stack">
+<div class="wrap flex flex-col min-h-screen">
+  <header class="sticky top-0 z-50">
+    <div class="bar bg-[var(--surface)] border-b border-[var(--border)] shadow-sm backdrop-blur-xl bg-opacity-90 transition-colors duration-300">
+      
+      <!-- Top Bar: Logo & Main Controls -->
+      <div class="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+        
+        <!-- Logo Section -->
+        <div class="header-stack flex items-center gap-4 self-start md:self-auto">
         <div class="header-plate" title="PLATES">
-          <div class="face"></div>
           <div class="bolts"></div>
           <div class="bolts btm"></div>
           <div class="title"><span id="titleFit" class="fit">PLATES</span></div>
         </div>
-        <div class="under-name">Plate Lookup &amp; Availability Tracking Eligibility System</div>
-        <div class="under-info">
-          <span class="site">carsandcollectibles.com</span>
-          <span class="date" id="hdrDate"></span>
+          <div class="flex flex-col">
+            <div class="font-bold text-lg leading-tight tracking-tight">Vanity Monitor</div>
+            <div class="under-info text-xs text-[var(--text-muted)] flex gap-2">
+              <span class="site font-medium">carsandcollectibles.com</span>
+              <span class="opacity-50">•</span>
+              <span class="date" id="hdrDate"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Controls -->
+        <div class="controls flex flex-wrap items-center justify-center gap-2 w-full md:w-auto">
+          <input id="q" type="search" placeholder="Search plates..." aria-label="Search plates" spellcheck="false"
+            class="px-3 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] w-full md:w-48 transition-all shadow-sm"/>
+          
+          <select id="status" aria-label="Filter by status" class="px-3 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] shadow-sm cursor-pointer">
+            <option value="">All Status</option>
+            <option value="Available">Available</option>
+            <option value="Unavailable">Unavailable</option>
+            <option value="Error">Error</option>
+            <option value="Unknown">Unknown</option>
+          </select>
+
+          <select id="stateFilter" title="State" aria-label="Filter by state" class="px-3 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] shadow-sm cursor-pointer">
+            <option value="">All States</option>
+            <option value="ID">Idaho (ID)</option>
+            <option value="CA">California (CA)</option>
+          </select>
+
+          <button id="refresh" class="btn px-4 py-2 rounded-lg bg-[var(--accent)] text-white font-medium hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            Refresh
+          </button>
+        </div>
+
+        <!-- Secondary Controls / Settings -->
+        <div class="controls flex items-center gap-2 text-sm">
+          <button id="addPlateBtn" class="px-3 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--bg)] transition-colors text-[var(--text)] font-medium">+ Add</button>
+          
+          <div class="relative group">
+            <button class="px-3 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--bg)] transition-colors text-[var(--text)]">Menu ▼</button>
+            <div class="absolute right-0 mt-2 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl p-2 hidden group-hover:block group-focus-within:block z-50">
+              <button id="exportBtn" class="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg)] text-[var(--text)]">Export JSON</button>
+              <label for="importFile" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg)] text-[var(--text)] cursor-pointer">Import JSON</label>
+              <input id="importFile" type="file" accept="application/json" style="display:none"/>
+              <div class="h-px bg-[var(--border)] my-1"></div>
+              <div class="px-3 py-1 text-xs text-[var(--text-muted)] font-bold uppercase">Theme</div>
+              <select id="themeSelect" class="w-full mt-1 px-2 py-1 rounded bg-[var(--bg)] border border-[var(--border)] text-xs">
+                <option value="">Light</option>
+                <option value="dark">Dark</option>
+                <option value="dim">Dim</option>
+                <option value="sepia">Sepia</option>
+                <option value="nord">Nord</option>
+                <option value="midnight">Midnight</option>
+                <option value="forest">Forest</option>
+                <option value="berry">Berry</option>
+              </select>
+              <div class="mt-2 px-3 py-1 text-xs text-[var(--text-muted)] font-bold uppercase">Zoom</div>
+              <input id="zoom" type="range" min="40" max="180" value="100" class="w-full accent-[var(--accent)]">
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="controls">
-        <input id="q" type="search" placeholder="Search…" aria-label="Search plates" spellcheck="false"/>
-        <select id="status" aria-label="Filter by status">
-          <option value="">All</option>
-          <option value="Available">Available</option>
-          <option value="Unavailable">Unavailable</option>
-          <option value="Error">Error</option>
-          <option value="Unknown">Unknown</option>
-        </select>
-
-        <!-- NEW: State filter -->
-        <select id="stateFilter" title="State" aria-label="Filter by state">
-          <option value="">All States</option>
-          <option value="ID">Idaho (ID)</option>
-          <option value="CA">California (CA)</option>
-        </select>
-
-        <button id="refresh" class="btn">Refresh</button>
-        <span id="runStatus" class="pill" style="display:none" role="status"></span>
-
-        <button id="addPlateBtn" class="btn secondary">Add Plate</button>
-        <button id="exportBtn" class="btn ghost">Export</button>
-        <label class="btn ghost" for="importFile" style="display:inline-block">Import</label>
-        <input id="importFile" type="file" accept="application/json" style="display:none"/>
-      </div>
-
-      <div class="spacer"></div>
-
-      <div class="controls" style="margin-left:auto">
-        <select id="themeSelect" aria-label="Select Theme" title="Theme">
-          <option value="">Light</option>
-          <option value="dark">Dark</option>
-          <option value="dim">Dim</option>
-          <option value="sepia">Sepia</option>
-          <option value="nord">Nord</option>
-          <option value="midnight">Midnight</option>
-          <option value="forest">Forest</option>
-          <option value="berry">Berry</option>
-        </select>
-        <label class="pill">Zoom
-          <input id="zoom" type="range" min="40" max="180" value="100" style="vertical-align:middle;margin-left:6px">
-        </label>
-        <span id="updated" class="pill" role="status">—</span>
+      
+      <!-- Status Bar -->
+      <div class="px-4 py-1 bg-[var(--bg)] border-b border-[var(--border)] text-xs flex justify-between items-center text-[var(--text-muted)]">
+        <span id="runStatus" class="font-mono" role="status">Ready</span>
+        <span id="updated" role="status">Last updated: —</span>
       </div>
     </div>
   </header>
 
-  <main class="board-wrap">
-    <div id="board" class="board"></div>
+  <main class="flex-1 bg-[var(--bg)]">
+    <div id="board" class="w-full"></div>
   </main>
 </div>
 
 <!-- Add Plate Modal -->
-<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-  <div class="box">
-    <h3 id="modalTitle" style="margin:0 0 10px">Add a Plate</h3>
-    <div class="controls" style="margin:0 0 12px">
-      <input id="m_plateText" placeholder="Plate text (e.g., B00ST)" aria-label="Plate text" autocapitalize="characters" autocomplete="off" spellcheck="false"/>
-      <select id="m_state" title="State" aria-label="Select state">
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="box bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-all">
+    <h3 id="modalTitle" class="text-xl font-bold mb-4 text-[var(--text)]">Add a Plate</h3>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Plate Text</label>
+        <input id="m_plateText" placeholder="e.g. B00ST" aria-label="Plate text" autocapitalize="characters" autocomplete="off" spellcheck="false"
+          class="w-full px-4 py-3 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-lg font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"/>
+      </div>
+      
+      <div>
+        <label class="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">State</label>
+        <select id="m_state" title="State" aria-label="Select state"
+          class="w-full px-4 py-3 rounded-xl bg-[var(--bg)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]">
         <option value="ID" selected>Idaho</option>
         <option value="CA">California</option>
       </select>
     </div>
-    <div class="controls small" style="margin:0 0 8px">
-      <span>Vehicle: PassengerVehicle • Kind: Personalized</span>
+
+    <div class="text-xs text-[var(--text-muted)] bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+      Vehicle: PassengerVehicle • Kind: Personalized
     </div>
-    <div class="controls">
-      <span id="m_msg" class="muted small" style="flex:1"></span>
-      <button id="m_cancel" class="pill">Cancel</button>
-      <button id="m_submit" class="btn">Add</button>
+
+    <div class="flex items-center justify-end gap-3 mt-6">
+      <span id="m_msg" class="text-red-500 text-sm mr-auto"></span>
+      <button id="m_cancel" class="px-4 py-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg)] transition-colors">Cancel</button>
+      <button id="m_submit" class="px-6 py-2 rounded-lg bg-[var(--accent)] text-white font-bold shadow-lg shadow-[var(--accent)]/30 hover:opacity-90 transition-all">Add Plate</button>
+    </div>
     </div>
   </div>
 </div>
 
 <!-- Refresh confirmation modal -->
-<div id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-  <div class="box">
-    <h3 id="confirmTitle" style="margin:0 0 8px">Refresh checks?</h3>
-    <p class="small" style="margin-top:0">To protect the DMV endpoint, choose carefully. “Check due only” is safe and recommended.</p>
-    <div class="controls" style="justify-content:flex-end">
-      <button id="cfm_cancel" class="pill">Cancel</button>
-      <button id="cfm_due" class="btn ghost">Check due only</button>
-      <button id="cfm_force" class="btn" style="background:#ef4444">Force recheck all</button>
+<div id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="box bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-md p-6">
+    <h3 id="confirmTitle" class="text-xl font-bold mb-2 text-[var(--text)]">Refresh checks?</h3>
+    <p class="text-sm text-[var(--text-muted)] mb-6">To protect the DMV endpoint, choose carefully. “Check due only” is safe and recommended.</p>
+    <div class="flex justify-end gap-3">
+      <button id="cfm_cancel" class="px-4 py-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg)]">Cancel</button>
+      <button id="cfm_due" class="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--text)] hover:bg-[var(--bg)]">Check due only</button>
+      <button id="cfm_force" class="px-4 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600">Force recheck all</button>
     </div>
   </div>
 </div>
 
 <!-- Delete confirmation modal -->
-<div id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
-  <div class="box">
-    <h3 id="deleteTitle" style="margin:0 0 8px">Delete plate?</h3>
-    <p class="small" style="margin-top:0">
+<div id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle" class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="box bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-sm p-6">
+    <h3 id="deleteTitle" class="text-xl font-bold mb-2 text-[var(--text)]">Delete plate?</h3>
+    <p class="text-sm text-[var(--text-muted)] mb-6">
       You are about to remove <strong id="delLabel"></strong> from this dashboard. You can re-add it later.
     </p>
-    <div class="controls" style="justify-content:flex-end">
-      <button id="del_cancel" class="pill">Cancel</button>
-      <button id="del_confirm" class="btn" style="background:#ef4444">Delete</button>
+    <div class="flex justify-end gap-3">
+      <button id="del_cancel" class="px-4 py-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg)]">Cancel</button>
+      <button id="del_confirm" class="px-4 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600">Delete</button>
     </div>
   </div>
 </div>
