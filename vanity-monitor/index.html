@@ -343,27 +343,21 @@
     </div>
   </header>
 
-  <main class="flex-1 bg-[var(--bg)]">
-    <div id="board" class="w-full"></div>
+  <main class="flex-1 bg-[var(--bg)] flex flex-col xl:flex-row">
+    <div class="flex-1 min-w-0">
+      <div id="board" class="w-full"></div>
+    </div>
     
-    <!-- SEO Content & AdSense -->
-    <article class="max-w-4xl mx-auto px-6 py-12 text-[var(--text)] border-t border-[var(--border)] mt-8">
-      <h1 class="text-2xl md:text-3xl font-bold mb-6">Vanity License Plate Checker & Tracker</h1>
-      <div class="prose dark:prose-invert max-w-none text-[var(--text-muted)] space-y-6 leading-relaxed">
+    <!-- Sidebar: SEO Content & AdSense -->
+    <aside class="w-full xl:w-96 flex-shrink-0 border-t xl:border-t-0 xl:border-l border-[var(--border)] bg-[var(--surface)] p-6">
+      <h1 class="text-xl font-bold mb-4 text-[var(--text)]">Vanity Plate Tracker</h1>
+      <div class="prose dark:prose-invert max-w-none text-[var(--text-muted)] text-sm space-y-4 leading-relaxed">
         <p>
           Finding the perfect <strong>vanity license plate</strong> (also known as a personalized plate) can be difficult. DMVs often have slow search tools, and popular combinations like "FAST", "COOL", or specific names are frequently taken.
         </p>
-        <p>
-          The <strong>PLATES (Plate Lookup & Availability Tracking Eligibility System)</strong> tool allows you to:
-        </p>
-        <ul class="list-disc pl-5 space-y-2">
-          <li>Instantly check availability for personalized plates in supported states (currently Idaho and California).</li>
-          <li>Track specific plate combinations over time to see if they become available.</li>
-          <li>Visualize how the text looks on a simulated license plate.</li>
-        </ul>
         
-        <!-- In-article Ad -->
-        <div class="my-8 flex justify-center overflow-hidden bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)]">
+        <!-- Sidebar Ad -->
+        <div class="my-6 flex justify-center overflow-hidden bg-[var(--bg)] p-2 rounded-xl border border-[var(--border)]">
            <ins class="adsbygoogle"
              style="display:block; width: 100%; min-width: 300px;"
              data-ad-client="ca-pub-5978349780180432"
@@ -373,30 +367,23 @@
            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
 
-        <h2 class="text-xl md:text-2xl font-semibold mt-8 mb-4 text-[var(--text)]">Tips for Personalized Plates</h2>
+        <p>
+          The <strong>PLATES</strong> tool allows you to:
+        </p>
+        <ul class="list-disc pl-5 space-y-1">
+          <li>Instantly check availability for personalized plates in supported states.</li>
+          <li>Track specific plate combinations over time.</li>
+          <li>Visualize how the text looks on a simulated license plate.</li>
+        </ul>
+
+        <h2 class="text-lg font-semibold mt-6 mb-2 text-[var(--text)]">Tips for Personalized Plates</h2>
         <p>
           If your first choice is taken, try using numbers in place of letters (e.g., "E" to "3", "A" to "4", "S" to "5"). You can also try phonetic spellings. Remember that DMVs reject plates that are considered offensive or misleading.
         </p>
       </div>
-    </article>
+    </aside>
   </main>
 
-  <footer class="w-full py-6 bg-[var(--surface)] border-t border-[var(--border)] mt-auto">
-    <div class="max-w-7xl mx-auto px-4 flex justify-center overflow-hidden">
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5978349780180432"
-           crossorigin="anonymous"></script>
-      <!-- banner ad -->
-      <ins class="adsbygoogle"
-           style="display:block; width: 100%;"
-           data-ad-client="ca-pub-5978349780180432"
-           data-ad-slot="3728400476"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>
-           (adsbygoogle = window.adsbygoogle || []).push({});
-      </script>
-    </div>
-  </footer>
 </div>
 
 <!-- Add Plate Modal -->
