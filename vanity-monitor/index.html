@@ -522,12 +522,12 @@
               refreshBtn.style.opacity = '0.7';
 
               const text = node.querySelector('.fit')?.innerText;
-              const state = node.querySelector('.state')?.innerText;
+              const state = node.querySelector('.state')?.innerText?.trim();
               const timeEl = node.querySelector('.ago');
               
               if (typeof checkPlate === 'function' && text) {
                 try {
-                  await checkPlate(text, state);
+                  await checkPlate(text, state, true);
                   if (timeEl) {
                     timeEl.innerText = 'Just now';
                     timeEl.style.opacity = '1';
