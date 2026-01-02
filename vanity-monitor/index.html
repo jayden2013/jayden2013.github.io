@@ -31,6 +31,7 @@
       --st-avail-bg: #ecfdf5; --st-avail-brd: #6ee7b7; --st-avail-txt: #065f46;
       --st-unavail-bg: #fef2f2; --st-unavail-brd: #fca5a5; --st-unavail-txt: #991b1b;
       --st-error-bg: #fffbeb; --st-error-brd: #fcd34d; --st-error-txt: #92400e;
+      --zoom: 1;
     }
     [data-theme="dark"] {
       --bg: #0f172a;
@@ -167,6 +168,8 @@
       padding: 1.5rem;
       max-width: 1600px;
       margin: 0 auto;
+      transform: scale(var(--zoom));
+      transform-origin: top center;
     }
 
     /* Dynamic Card Styling (Targeting generated elements) */
@@ -234,7 +237,7 @@
           <div class="title"><span id="titleFit" class="fit">PLATES</span></div>
         </div>
           <div class="flex flex-col">
-            <div class="font-bold text-lg leading-tight tracking-tight">Vanity Monitor</div>
+            <div class="font-bold text-lg leading-tight tracking-tight">PLATES</div>
             <div class="under-info text-xs text-[var(--text-muted)] flex gap-2">
               <span class="site font-medium">carsandcollectibles.com</span>
               <span class="opacity-50">•</span>
@@ -391,6 +394,12 @@
       else document.documentElement.removeAttribute('data-theme');
       localStorage.setItem('vm_theme', val);
     });
+
+    // Zoom Logic
+    const zoom = document.getElementById('zoom');
+    if (zoom) {
+      zoom.addEventListener('input', e => document.documentElement.style.setProperty('--zoom', e.target.value / 100));
+    }
   })();
 
   // Inject Refresh Buttons & Enhance UI
