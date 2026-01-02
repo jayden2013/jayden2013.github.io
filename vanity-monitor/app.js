@@ -129,6 +129,9 @@ function initApp() {
 
   /*** Render ***/
   function render(){
+    const board = $("#board");
+    if (!board) return;
+
     const rows=loadPlates();
     const q=($("#q")?.value||"").trim().toLowerCase();
     const st=$("#status")?.value||"";
@@ -142,7 +145,8 @@ function initApp() {
     });
 
     const latest=rows.reduce((a,b)=>{ const ta=a?.lastCheckedUtc?Date.parse(a.lastCheckedUtc):0; const tb=b?.lastCheckedUtc?Date.parse(b.lastCheckedUtc):0; return tb>ta?b:a; },null);
-    $("#updated").textContent = latest?.lastCheckedUtc ? `latest: ${relTime(latest.lastCheckedUtc)}` : "no checks yet";
+    const updatedEl = $("#updated");
+    if(updatedEl) updatedEl.textContent = latest?.lastCheckedUtc ? `latest: ${relTime(latest.lastCheckedUtc)}` : "no checks yet";
 
     const html=filtered.map(r=>{
       const cls=statusClass(r.lastStatus||"Unknown");
@@ -166,12 +170,12 @@ function initApp() {
       </div>`;
     }).join("");
 
-    $("#board").innerHTML = html || `<div class="flex flex-col items-center justify-center py-12"><div class="text-slate-500 mb-4">No plates yet.</div><button id="emptyAddBtn" class="px-6 py-2 rounded-lg bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 transition-all">Add a Plate</button></div>`;
+    board.innerHTML = html || `<div class="flex flex-col items-center justify-center py-12"><div class="text-slate-500 mb-4">No plates yet.</div><button id="emptyAddBtn" class="px-6 py-2 rounded-lg bg-[var(--accent)] text-white font-bold shadow-lg hover:opacity-90 transition-all">Add a Plate</button></div>`;
     requestAnimationFrame(fitAll);
   }
 
   /*** Refresh flow ***/
-  function setRunStatus(txt){ const el=$("#runStatus"); if(!txt){el.style.display="none"; el.textContent=""; return;} el.style.display="inline-block"; el.textContent=txt; }
+  function setRunStatus(txt){ const el=$("#runStatus"); if(!el) return; if(!txt){el.style.display="none"; el.textContent=""; return;} el.style.display="inline-block"; el.textContent=txt; }
   async function refreshDue({force=false}={}){
     const btn=$("#refresh"); if(!btn) return;
     const all=loadPlates();
@@ -321,8 +325,10 @@ function initApp() {
   /*** Start ***/
   requestAnimationFrame(fitAll);
   (function init(){
-    render();
-    refreshDue({force:false});
+    setTimeout(() => {
+      render();
+      refreshDue({force:false});
+    }, 50);
   })();
 }
 
