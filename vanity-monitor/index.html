@@ -185,8 +185,7 @@
       padding: 1.5rem;
       max-width: 1600px;
       margin: 0 auto;
-      transform: scale(var(--zoom));
-      transform-origin: top center;
+      zoom: var(--zoom);
     }
 
     /* Dynamic Card Styling (Targeting generated elements) */
@@ -344,7 +343,7 @@
   </header>
 
   <main class="flex-1 bg-[var(--bg)] flex flex-col xl:flex-row">
-    <div class="flex-1 min-w-0 overflow-hidden">
+    <div class="flex-1 min-w-0">
       <div id="board" class="w-full"></div>
     </div>
     
