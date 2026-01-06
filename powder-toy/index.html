@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAC Sandbox</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+            overflow: hidden; /* Fullscreen */
+        }
+        h1 {
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+            color: #aaa;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            text-shadow: 0 0 8px #000;
+        }
+        .game-container {
+            position: absolute;
+            inset: 0;
+            line-height: 0;
+        }
+        canvas {
+            background-color: #87CEEB;
+            image-rendering: pixelated;
+            cursor: crosshair;
+            touch-action: none; /* Prevent scrolling on mobile */
+            width: 100%;
+            height: 100%;
+        }
+        #entityCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none; /* Let clicks pass through to simCanvas */
+            background-color: transparent;
+        }
+        .controls {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            z-index: 10;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            width: 110px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        button {
+            padding: 10px 16px;
+            border: 1px solid #333;
+            background-color: #1e1e1e;
+            color: #aaa;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background-color: #2a2a2a;
+            color: #fff;
+        }
+        button.active {
+            border-color: #fff;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        /* Element Colors for Buttons */
+        .btn-sand.active { background-color: #f6d750; color: #000; border-color: #f6d750; }
+        .btn-water.active { background-color: #4fa3f7; color: #fff; border-color: #4fa3f7; }
+        .btn-stone.active { background-color: #999; color: #fff; border-color: #999; }
+        .btn-dirt.active { background-color: #8b5e3c; color: #fff; border-color: #8b5e3c; }
+        .btn-plant.active { background-color: #2ecc71; color: #fff; border-color: #2ecc71; }
+        .btn-seed.active { background-color: #9ccc65; color: #000; border-color: #9ccc65; }
+        .btn-fire.active { background-color: #ff5722; color: #fff; border-color: #ff5722; }
+        .btn-stickman.active { background-color: #ffccab; color: #000; border-color: #ffccab; }
+        .btn-enemy.active { background-color: #e53935; color: #fff; border-color: #e53935; }
+        .btn-gas.active { background-color: #e67e22; color: #fff; border-color: #e67e22; }
+        .btn-firework.active { background-color: #9b59b6; color: #fff; border-color: #9b59b6; }
+        .btn-tnt.active { background-color: #b71c1c; color: #fff; border-color: #b71c1c; }
+        .btn-car.active { background-color: #90caf9; color: #000; border-color: #90caf9; }
+        .btn-lava.active { background-color: #e64a19; color: #fff; border-color: #e64a19; }
+        .btn-acid.active { background-color: #76ff03; color: #000; border-color: #76ff03; }
+        .btn-cow.active { background-color: #795548; color: #fff; border-color: #795548; }
+        .btn-chicken.active { background-color: #fff; color: #000; border-color: #fff; }
+        .btn-eraser.active { background-color: #f44336; color: #fff; border-color: #f44336; }
+
+    </style>
+</head>
+<body>
+
+    <h1>CAC Sandbox</h1>
+    
+    <div class="game-container">
+        <canvas id="simCanvas"></canvas>
+        <canvas id="entityCanvas"></canvas>
+    </div>
+
+    <div class="controls">
+        <button class="btn-sand active" onclick="selectElement(1)">Sand</button>
+        <button class="btn-water" onclick="selectElement(2)">Water</button>
+        <button class="btn-stone" onclick="selectElement(3)">Stone</button>
+        <button class="btn-dirt" onclick="selectElement(7)">Dirt</button>
+        <button class="btn-plant" onclick="selectElement(5)">Plant</button>
+        <button class="btn-seed" onclick="selectElement(8)">Seed</button>
+        <button class="btn-fire" onclick="selectElement(4)">Fire</button>
+        <button class="btn-stickman" onclick="selectElement(11)">Stickman</button>
+        <button class="btn-enemy" onclick="selectElement(17)">Enemy</button>
+        <button class="btn-gas" onclick="selectElement(14)">Gas</button>
+        <button class="btn-firework" onclick="selectElement(15)">Firework</button>
+        <button class="btn-tnt" onclick="selectElement(19)">TNT</button>
+        <button class="btn-car" onclick="selectElement(20)">Car</button>
+        <button class="btn-lava" onclick="selectElement(21)">Lava</button>
+        <button class="btn-acid" onclick="selectElement(18)">Acid</button>
+        <button class="btn-cow" onclick="selectElement(24)">Cow</button>
+        <button class="btn-chicken" onclick="selectElement(25)">Chicken</button>
+        <button class="btn-eraser" onclick="selectElement(0)">Eraser</button>
+        <div style="width: 100%; height: 1px; background: #444; margin: 4px 0;"></div> <!-- Break -->
+        <button onclick="clearCanvas()">Clear Board</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const entityCanvas = document.getElementById('entityCanvas');
+        const ctxEntity = entityCanvas.getContext('2d');
+
+        // Configuration
+        const scale = 4;
+        let width = Math.floor(window.innerWidth / scale);
+        let height = Math.floor(window.innerHeight / scale);
+        
+        canvas.width = width;
+        canvas.height = height;
+        entityCanvas.width = window.innerWidth;
+        entityCanvas.height = window.innerHeight;
+
+        // State
+        let grid = new Int8Array(width * height).fill(0);
+        let grid2 = new Int8Array(width * height).fill(0); // For secondary state (e.g. drowning timer)
+        let selectedType = 1; // Default Sand
+        let isDrawing = false;
+        let tntBoxes = [];
+        let cars = [];
+        let lavaRocks = [];
+        let birds = [];
+        let draggingCar = null;
+        let dragStartPos = {x:0, y:0};
+        let mousePos = {x:0, y:0};
+
+        // Element Types
+        const EMPTY = 0;
+        const SAND = 1;
+        const WATER = 2;
+        const STONE = 3;
+        const FIRE = 4;
+        const PLANT = 5;
+        const SMOKE = 6;
+        const DIRT = 7;
+        const SEED = 8;
+        const TRUNK = 9;
+        const LEAF = 10;
+        const STICKMAN_BTN = 11;
+        const STICKMAN_SWIM = 12;
+        const STICKMAN_DROWN = 13;
+        const GASOLINE = 14;
+        const FIREWORK = 15;
+        const SPARK = 16;
+        const STICKMAN_ENEMY = 17;
+        const ACID = 18;
+        const TNT = 19;
+        const CAR = 20;
+        const LAVA = 21;
+        const BEDROCK = 22;
+        const VOLCANO = 23;
+        const COW = 24;
+        const CHICKEN = 25;
+
+        // Colors (R, G, B)
+        const colors = {
+            [EMPTY]: [0, 0, 0],
+            [SAND]: [246, 215, 80],
+            [WATER]: [79, 163, 247],
+            [STONE]: [150, 150, 150],
+            [FIRE]: [255, 87, 34],
+            [PLANT]: [46, 204, 113],
+            [SMOKE]: [80, 80, 80],
+            [DIRT]: [139, 94, 60],
+            [SEED]: [156, 204, 101],
+            [TRUNK]: [93, 64, 55],
+            [LEAF]: [76, 175, 80],
+            [STICKMAN_SWIM]: [255, 204, 171],
+            [STICKMAN_DROWN]: [255, 204, 171],
+            [STICKMAN_ENEMY]: [229, 57, 53],
+            [GASOLINE]: [230, 126, 34],
+            [FIREWORK]: [255, 255, 255],
+            [SPARK]: [255, 215, 0],
+            [ACID]: [118, 255, 3],
+            [TNT]: [183, 28, 28],
+            [CAR]: [144, 202, 249],
+            [LAVA]: [230, 74, 25],
+            [BEDROCK]: [40, 40, 40],
+            [VOLCANO]: [60, 60, 60],
+            [COW]: [121, 85, 72],
+            [CHICKEN]: [255, 255, 255],
+        };
+
+        // Input Handling
+        function selectElement(type) {
+            if (type === STICKMAN_BTN) {
+                // When stickman is selected, the next drawn particle will be a random type
+                selectedType = Math.random() > 0.5 ? STICKMAN_SWIM : STICKMAN_DROWN;
+            } else {
+                selectedType = type;
+            }
+            // Update UI
+            document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+            const map = {1:'btn-sand', 2:'btn-water', 3:'btn-stone', 4:'btn-fire', 5:'btn-plant', 0:'btn-eraser', 7:'btn-dirt', 8:'btn-seed', 11:'btn-stickman', 12:'btn-stickman', 13:'btn-stickman', 14:'btn-gas', 15:'btn-firework', 17:'btn-enemy', 18:'btn-acid', 19:'btn-tnt', 20:'btn-car', 21:'btn-lava', 24:'btn-cow', 25:'btn-chicken'};
+            const buttonClass = map[type] || map[selectedType];
+            if(buttonClass) document.querySelector(`.${buttonClass}`).classList.add('active');
+        }
+
+        function clearCanvas() {
+            grid.fill(EMPTY);
+            grid2.fill(0);
+            tntBoxes = [];
+            cars = [];
+            birds = [];
+            lavaRocks = [];
+            // Restore Bedrock
+            for(let x=0; x<width; x++) grid[(height-1)*width+x] = BEDROCK;
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: Math.floor((clientX - rect.left) / scale),
+                y: Math.floor((clientY - rect.top) / scale)
+            };
+        }
+
+        function draw(e) {
+            const pos = getPos(e);
+            const brushRadius = (selectedType === SEED) ? 0 : 4;
+
+            if (selectedType === TNT) {
+                tntBoxes.push({x: pos.x, y: pos.y, vx: 0, vy: 0, w: 6, h: 6});
+                isDrawing = false;
+                return;
+            }
+            if (selectedType === CAR) {
+                // Spawn car centered
+                cars.push({x: pos.x - 5, y: pos.y - 3, vx: 0, vy: 0, w: 12, h: 6, waterBounce: false, driver: null});
+                isDrawing = false;
+                return;
+            }
+            
+            for (let dy = -brushRadius; dy <= brushRadius; dy++) {
+                for (let dx = -brushRadius; dx <= brushRadius; dx++) {
+                    if (dx*dx + dy*dy > brushRadius*brushRadius) continue;
+
+                    const x = pos.x + dx;
+                    const y = pos.y + dy;
+                    if (x >= 0 && x < width && y >= 0 && y < height) {
+                        const i = y * width + x;
+                        const currentType = grid[i];
+                        
+                        // Don't overwrite static elements unless erasing
+                        if (selectedType !== EMPTY && (currentType === STONE || currentType === TRUNK || currentType === DIRT || currentType === BEDROCK)) continue;
+                        
+                        // If placing a stickman, only place one and re-randomize for the next
+                        if (selectedType === STICKMAN_SWIM || selectedType === STICKMAN_DROWN || selectedType === STICKMAN_ENEMY || selectedType === COW || selectedType === CHICKEN) {
+                            if (grid[i] === EMPTY) {
+                                grid[i] = selectedType;
+                                grid2[i] = (selectedType === COW || selectedType === CHICKEN) ? (Math.random() > 0.5 ? 1 : -1) : (Math.random() > 0.5 ? 100 : -100);
+                                if (selectedType === STICKMAN_SWIM || selectedType === STICKMAN_DROWN) {
+                                     selectedType = Math.random() > 0.5 ? STICKMAN_SWIM : STICKMAN_DROWN;
+                                }
+                                return; // Only draw one stickman per click
+                            }
+                        } else {
+                            grid[i] = selectedType;
+                        }
+                    }
+                }
+            }
+        }
+
+        function growTree(x, y) {
+            const i = y * width + x;
+            if (grid[i] !== SEED) return;
+
+            grid[i] = TRUNK; // Seed becomes the base of the trunk
+
+            const trunkHeight = 10 + Math.floor(Math.random() * 15);
+            for (let j = 1; j < trunkHeight; j++) {
+                const ny = y - j;
+                if (ny < 0) break;
+                const ni = ny * width + x;
+                if (grid[ni] === EMPTY) {
+                    grid[ni] = TRUNK;
+                } else {
+                    break; // Stop if blocked
+                }
+            }
+
+            const canopyRadius = 5 + Math.floor(Math.random() * 4);
+            const canopyY = y - trunkHeight;
+            for (let dy = -canopyRadius; dy <= canopyRadius; dy++) {
+                for (let dx = -canopyRadius; dx <= canopyRadius; dx++) {
+                    if (dx*dx + dy*dy > canopyRadius*canopyRadius) continue;
+                    if (Math.random() < 0.3) continue; // Make it patchy
+
+                    const nx = x + dx;
+                    const ny = canopyY + dy;
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                        const ni = ny * width + nx;
+                        if (grid[ni] === EMPTY) {
+                            grid[ni] = LEAF;
+                        }
+                    }
+                }
+            }
+        }
+
+        function generateTerrain() {
+            // Clear first
+            grid.fill(EMPTY);
+            grid2.fill(0);
+            tntBoxes = [];
+            cars = [];
+
+            // Volcano parameters
+            const volcanoX = Math.floor(width * 0.2 + Math.random() * width * 0.6);
+            const volcanoHeight = 40 + Math.random() * 40;
+            const volcanoWidth = 30 + Math.random() * 20;
+            const createVolcano = Math.random() < 0.3; // ~30% chance
+
+            // Simple 1D terrain generation
+            let y = height * 0.6;
+            let slope = 0;
+            const seaLevel = Math.floor(height * 0.75);
+            
+            for (let x = 0; x < width; x++) {
+                // Add volcano shape to terrain height
+                const dist = Math.abs(x - volcanoX);
+                let volcanoInfluence = 0;
+                if (createVolcano && dist < volcanoWidth) {
+                    // Use a cosine curve for a smoother mountain
+                    volcanoInfluence = Math.cos((dist / volcanoWidth) * (Math.PI / 2)) * volcanoHeight;
+                }
+
+                // Random walk slope
+                slope += (Math.random() - 0.5) * 0.5;
+                slope = Math.max(-1.5, Math.min(1.5, slope)); // Clamp slope
+                y += slope;
+                
+                // Keep within bounds
+                if (y < height * 0.3) { y = height * 0.3; slope += 0.5; }
+                if (y > height * 0.9) { y = height * 0.9; slope -= 0.5; }
+                
+                const surface = Math.floor(y - volcanoInfluence);
+                
+                for (let ky = surface; ky < height; ky++) {
+                    const i = ky * width + x;
+                    if (ky < 0) continue;
+                    // Top 3 layers dirt, rest stone
+                    if (ky < surface + 2) {
+                        grid[i] = (Math.random() > 0.3 && surface < seaLevel - 5) ? DIRT : SAND;
+                    } else if (ky < surface + 15) {
+                        grid[i] = DIRT;
+                    } else {
+                        grid[i] = DIRT; // Base layer is dirt, stone added in clumps below
+                    }
+                }
+
+                // Water
+                if (surface > seaLevel) {
+                    for (let wy = seaLevel; wy < surface; wy++) {
+                        if (wy < 0) continue;
+                        grid[wy * width + x] = WATER;
+                    }
+                }
+
+                // Chance for trees (not on volcano if it exists)
+                if ((!createVolcano || dist > volcanoWidth * 0.8) && Math.random() < 0.02 && x > 5 && x < width - 5 && surface < seaLevel) {
+                    if (grid[surface * width + x] === DIRT) {
+                        grid[surface * width + x] = SEED;
+                        growTree(x, surface);
+                    }
+                }
+                
+                // Chance for plants
+                if (Math.random() < 0.1 && grid[(surface-1)*width+x] === EMPTY) {
+                     grid[(surface-1)*width+x] = PLANT;
+                }
+            }
+
+            // Generate Stone Clusters (Veins)
+            // 1. Find all dirt pixels to ensure valid placement
+            const dirtIndices = [];
+            for(let i=0; i<grid.length; i++) {
+                if (grid[i] === DIRT) dirtIndices.push(i);
+            }
+
+            if (dirtIndices.length > 0) {
+                // Place Stone Veins
+                const numStone = 12 + Math.floor(Math.random() * 5);
+                for(let i=0; i<numStone; i++) {
+                    const idx = dirtIndices[Math.floor(Math.random() * dirtIndices.length)];
+                    const cx = idx % width;
+                    const cy = Math.floor(idx / width);
+                    const r = 5 + Math.random() * 10;
+                    for(let dy=-r; dy<=r; dy++) for(let dx=-r; dx<=r; dx++) {
+                        if(dx*dx+dy*dy <= r*r) {
+                            const nIdx = (Math.floor(cy)+dy)*width + (Math.floor(cx)+dx);
+                            if(nIdx>=0 && nIdx<grid.length && grid[nIdx] !== EMPTY && grid[nIdx] !== WATER && grid[nIdx] !== BEDROCK) {
+                                grid[nIdx] = STONE;
+                            }
+                        }
+                    }
+                }
+
+                // Place Lava Pools
+                const numLava = 5 + Math.floor(Math.random() * 3);
+                for(let i=0; i<numLava; i++) {
+                    const idx = dirtIndices[Math.floor(Math.random() * dirtIndices.length)];
+                    const cx = idx % width;
+                    const cy = Math.floor(idx / width);
+                    const r = 4 + Math.random() * 8;
+                    for(let dy=-r; dy<=r; dy++) for(let dx=-r; dx<=r; dx++) {
+                        if(dx*dx+dy*dy <= r*r) {
+                            const nIdx = (Math.floor(cy)+dy)*width + (Math.floor(cx)+dx);
+                            if(nIdx>=0 && nIdx<grid.length && grid[nIdx] !== BEDROCK) {
+                                grid[nIdx] = LAVA;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Carve volcano vent and place source
+            if (createVolcano) {
+                let volcanoPeakY = 0;
+                while(volcanoPeakY < height && grid[volcanoPeakY*width+volcanoX] === EMPTY) volcanoPeakY++;
+                
+                if (volcanoPeakY < height - 10) {
+                    const ventDepth = 25 + Math.floor(Math.random() * 20);
+                    // Vent & Reservoir
+                    for(let y = volcanoPeakY; y < volcanoPeakY + ventDepth; y++) {
+                        // Wider vent: radius 2 at top, expanding to 6 at bottom for reservoir
+                        const progress = (y - volcanoPeakY) / ventDepth;
+                        const r = 2 + Math.floor(progress * 5); 
+                        
+                        for(let dx = -r; dx <= r; dx++) {
+                            const idx = y*width + (volcanoX + dx);
+                            if (idx >= 0 && idx < grid.length && grid[idx] !== BEDROCK) {
+                                grid[idx] = LAVA;
+                            }
+                        }
+                    }
+                    // Source Block
+                    const sIdx = (volcanoPeakY + ventDepth)*width+volcanoX;
+                    if (sIdx >= 0 && sIdx < grid.length) grid[sIdx] = VOLCANO;
+                }
+            }
+
+            // Bedrock Layer
+            for(let x=0; x<width; x++) grid[(height-1)*width+x] = BEDROCK;
+        }
+
+        function onResize() {
+            width = Math.floor(window.innerWidth / scale);
+            height = Math.floor(window.innerHeight / scale);
+            canvas.width = width;
+            canvas.height = height;
+            entityCanvas.width = window.innerWidth;
+            entityCanvas.height = window.innerHeight;
+            grid = new Int8Array(width * height).fill(0);
+            grid2 = new Int8Array(width * height).fill(0);
+            tntBoxes = [];
+            cars = [];
+            lavaRocks = [];
+            birds = [];
+            generateTerrain();
+        }
+        window.addEventListener('resize', onResize);
+
+        canvas.addEventListener('mousedown', e => { 
+            const pos = getPos(e);
+            mousePos = pos;
+            
+            // Check Car Click
+            for(const car of cars) {
+                if (pos.x >= car.x && pos.x <= car.x + car.w && pos.y >= car.y && pos.y <= car.y + car.h) {
+                    draggingCar = car;
+                    dragStartPos = {x: pos.x, y: pos.y};
+                    return;
+                }
+            }
+
+            isDrawing = true; 
+            draw(e); 
+        });
+        
+        window.addEventListener('mousemove', e => { 
+            mousePos = getPos(e);
+            if (draggingCar) return;
+            if (isDrawing) draw(e); 
+        });
+        
+        window.addEventListener('mouseup', () => {
+            if (draggingCar) {
+                const dx = dragStartPos.x - mousePos.x;
+                const dy = dragStartPos.y - mousePos.y;
+                draggingCar.vx += dx * 0.15;
+                draggingCar.vy += dy * 0.15;
+                draggingCar = null;
+            }
+            isDrawing = false;
+        });
+        
+        canvas.addEventListener('touchstart', e => { isDrawing = true; draw(e); e.preventDefault(); }, {passive: false});
+        canvas.addEventListener('touchmove', e => { if (isDrawing) draw(e); e.preventDefault(); }, {passive: false});
+        window.addEventListener('touchend', () => isDrawing = false);
+
+        // Game Loop
+        function update() {
+            const neighbors = [
+                -width - 1, -width, -width + 1,
+                -1,                1,
+                 width - 1,  width,  width + 1
+            ];
+            const flammable = [PLANT, LEAF, TRUNK, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, GASOLINE, ACID, TNT, COW, CHICKEN];
+            const stickmen = [];
+            const animals = [];
+
+            // Spawn Birds Randomly
+            if (Math.random() < 0.005 && birds.length < 5) {
+                birds.push({
+                    x: Math.random() < 0.5 ? -5 : width + 5,
+                    y: 10 + Math.random() * (height * 0.4),
+                    vx: (Math.random() * 0.5 + 0.5) * (Math.random() < 0.5 ? 1 : -1),
+                    vy: 0,
+                    color: Math.random() > 0.5 ? "#4fc3f7" : "#ef5350",
+                    landed: false
+                });
+            }
+
+            // Iterate Bottom-Up for falling physics
+            for (let y = height - 1; y >= 0; y--) {
+                // Randomize X direction to prevent bias
+                const leftToRight = Math.random() > 0.5;
+                const startX = leftToRight ? 0 : width - 1;
+                const endX = leftToRight ? width : -1;
+                const stepX = leftToRight ? 1 : -1;
+
+                for (let x = startX; x !== endX; x += stepX) {
+                    const i = y * width + x;
+                    const type = grid[i];
+
+                    if (type === EMPTY || type === STONE || type === DIRT || type === TRUNK || type === BEDROCK) continue;
+
+                    // Complex particle logic first
+                    if (type === FIRE) {
+                        // Spread
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length && flammable.includes(grid[ni]) && Math.random() < 0.2) {
+                                grid[ni] = FIRE;
+                            }
+                        }
+                        // Rise or die
+                        if (Math.random() < 0.1) { grid[i] = SMOKE; continue; }
+                        if (Math.random() < 0.05) { grid[i] = EMPTY; continue; }
+                        if (y > 0) {
+                            const up = (y - 1) * width + x;
+                            if (grid[up] === EMPTY) { grid[up] = FIRE; grid[i] = EMPTY; } 
+                            else if (grid[up] === WATER) { grid[i] = EMPTY; }
+                        }
+                        continue;
+                    }
+                    else if (type === SEED) {
+                        const below = (y + 1) * width + x;
+                        if (y < height - 1 && grid[below] === DIRT) {
+                            growTree(x, y); continue;
+                        }
+                        // Fall like sand
+                        if (y === height - 1) continue;
+                        if (grid[below] === EMPTY || grid[below] === WATER) {
+                            grid[i] = grid[below]; grid[below] = SEED;
+                        }
+                        continue;
+                    }
+                    else if (type === LEAF) {
+                        // No decay
+                        continue;
+                    }
+                    else if (type === STICKMAN_SWIM || type === STICKMAN_DROWN || type === STICKMAN_ENEMY) {
+                        let dir = Math.sign(grid2[i]) || 1;
+                        stickmen.push({x, y, type, dir});
+                        
+                        // Fighting
+                        const isEnemy = (type === STICKMAN_ENEMY);
+
+                        // Extract Health and Direction from grid2
+                        let health = Math.abs(grid2[i]);
+
+                        // Check for Cars to Drive
+                        let droveCar = false;
+                        for (let c of cars) {
+                            if (!c.driver && x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) {
+                                c.driver = type; // Enter car
+                                grid[i] = EMPTY;
+                                grid2[i] = 0;
+                                droveCar = true;
+                                break;
+                            }
+                        }
+                        if (droveCar) continue;
+
+                        
+                        // Look for enemies
+                        let moveDir = 0;
+                        const viewRange = 40;
+                        for (let dx = -viewRange; dx <= viewRange; dx += 2) {
+                            if (dx === 0) continue;
+                            const nx = x + dx;
+                            if (nx >= 0 && nx < width) {
+                                const t = grid[y * width + nx];
+                                if (t === STICKMAN_SWIM || t === STICKMAN_DROWN || t === STICKMAN_ENEMY) {
+                                    const isTargetEnemy = (t === STICKMAN_ENEMY);
+                                    if (isEnemy !== isTargetEnemy) {
+                                        moveDir = Math.sign(dx);
+                                        break; // Chase closest
+                                    }
+                                }
+                            }
+                        }
+
+                        let fighting = false;
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length) {
+                                const other = grid[ni];
+                                if (other === STICKMAN_SWIM || other === STICKMAN_DROWN || other === STICKMAN_ENEMY) {
+                                    const otherIsEnemy = (other === STICKMAN_ENEMY);
+                                    if (isEnemy !== otherIsEnemy) {
+                                        // Fight!
+                                        fighting = true;
+                                        if (Math.random() < 0.2) { // Fight speed
+                                            if (Math.random() < 0.5) {
+                                                health -= 8; // I take damage
+                                                grid2[i] = health * dir;
+                                                if (y > 0) grid[(y-1)*width+x] = SPARK;
+                                            } else {
+                                                let h2 = Math.abs(grid2[ni]) - 8;
+                                                let d2 = Math.sign(grid2[ni]) || 1;
+                                                grid2[ni] = h2 * d2; // They take damage
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (health <= 0) { grid[i] = EMPTY; continue; } // Die
+
+                        // Movement Logic
+                        let inWater = grid[(y + 1) * width + x] === WATER || grid[y * width + x - 1] === WATER || grid[y * width + x + 1] === WATER;
+                        const destructible = [DIRT, PLANT, TRUNK, LEAF, SAND];
+                        
+                        // Helper to check if we can move to a spot (Empty, Water, or Breakable)
+                        const canMove = (idx) => {
+                            const t = grid[idx];
+                            return t === EMPTY || t === WATER || (Math.random() < 0.01 && destructible.includes(t)); // Reduced dig chance
+                        };
+                        
+                        // Helper to perform move (Swap if fluid, Overwrite if solid)
+                        const doMove = (targetIdx) => {
+                            const t = grid[targetIdx];
+                            if (destructible.includes(t)) { 
+                                // Dig bigger hole (Clear radius)
+                                const tx = targetIdx % width;
+                                const ty = Math.floor(targetIdx / width);
+                                for(let dy=-2; dy<=2; dy++) for(let dx=-1; dx<=1; dx++) {
+                                    const idx = (ty+dy)*width + (tx+dx);
+                                    if(idx>=0 && idx<grid.length && destructible.includes(grid[idx]) && grid[idx] !== BEDROCK) {
+                                        grid[idx] = EMPTY;
+                                    }
+                                }
+                                grid[targetIdx] = type; grid[i] = EMPTY; 
+                            } // Break
+                            else { grid[targetIdx] = type; grid[i] = t; } // Swap (Empty/Water)
+                            // Move state if needed
+                            if (grid2[i] !== 0) { grid2[targetIdx] = grid2[i]; grid2[i] = 0; }
+                        };
+
+                        if (inWater) {
+                            if (type === STICKMAN_SWIM || type === STICKMAN_ENEMY) { // Swim
+                                if (y > 0 && Math.random() > 0.5 && canMove((y - 1) * width + x)) {
+                                    doMove((y - 1) * width + x); continue;
+                                }
+                            } else { // Drown
+                                health--;
+                                grid2[i] = health * dir;
+                                if (health <= 0) { grid[i] = EMPTY; continue; }
+                                if (y < height - 1 && Math.random() > 0.5 && canMove((y + 1) * width + x)) {
+                                    doMove((y + 1) * width + x); continue;
+                                }
+                            }
+                        }
+                        // Gravity
+                        if (y < height - 1 && canMove((y + 1) * width + x)) {
+                            doMove((y + 1) * width + x); continue;
+                        }
+                        // Walk & Climb
+                        // Smooth movement: Keep direction unless blocked or random chance
+                        if (moveDir !== 0) {
+                            dir = moveDir; // Chase overrides
+                        } else if (Math.random() < (inWater ? 0.005 : 0.02)) { // Turn less often in water
+                            dir = -dir; // Randomly change direction
+                        }
+                        grid2[i] = health * dir; // Save direction
+                        
+                        if (x + dir >= 0 && x + dir < width) {
+                            if (canMove(y * width + (x + dir))) { // Walk
+                                doMove(y * width + (x + dir)); continue;
+                            } else if (y > 0 && canMove((y - 1) * width + (x + dir))) { // Climb
+                                doMove((y - 1) * width + (x + dir)); continue;
+                            } else if (Math.random() < 0.01 && destructible.includes(grid[y*width+(x+dir)])) { // Reduced dig chance
+                                // Dig horizontal tunnel
+                                doMove(y * width + (x + dir)); continue;
+                            }
+                        }
+                        continue;
+                    }
+                    else if (type === COW || type === CHICKEN) {
+                        let dir = grid2[i];
+                        if (dir === 0) { dir = Math.random() > 0.5 ? 1 : -1; grid2[i] = dir; }
+                        
+                        animals.push({x, y, type, dir});
+
+                        // Gravity
+                        if (y < height - 1) {
+                            const below = (y + 1) * width + x;
+                            if (grid[below] === EMPTY || grid[below] === WATER) {
+                                grid[below] = type; grid[i] = EMPTY;
+                                grid2[below] = dir; grid2[i] = 0;
+                                continue;
+                            }
+                        }
+
+                        // Move
+                        if (Math.random() < 0.02) { // Change direction occasionally
+                            dir = -dir; grid2[i] = dir;
+                        }
+                        
+                        const nextX = x + dir;
+                        if (nextX >= 0 && nextX < width) {
+                            const nextIdx = y * width + nextX;
+                            if (grid[nextIdx] === EMPTY || grid[nextIdx] === WATER) {
+                                grid[nextIdx] = type; grid[i] = EMPTY;
+                                grid2[nextIdx] = dir; grid2[i] = 0;
+                            } else if (y > 0 && (grid[(y-1)*width+nextX] === EMPTY || grid[(y-1)*width+nextX] === WATER)) {
+                                // Jump/Climb
+                                grid[(y-1)*width+nextX] = type; grid[i] = EMPTY;
+                                grid2[(y-1)*width+nextX] = dir; grid2[i] = 0;
+                            } else {
+                                grid2[i] = -dir; // Turn around
+                            }
+                        } else { grid2[i] = -dir; }
+                        continue;
+                    }
+                    else if (type === PLANT) {
+                        // Plants don't do anything on their own for now
+                    }
+                    else if (type === GASOLINE) {
+                        if (Math.random() < 0.001) { grid[i] = EMPTY; continue; } // Evaporate slowly
+                        // Liquid movement
+                        if (y === height - 1) continue;
+                        const below = (y + 1) * width + x;
+                        if (grid[below] === EMPTY) {
+                            grid[below] = GASOLINE; grid[i] = EMPTY;
+                        } else if (grid[below] === WATER) {
+                            // Float on water
+                            grid[below] = GASOLINE; grid[i] = WATER;
+                        } else {
+                            const dir = Math.random() > 0.5 ? 1 : -1;
+                            const belowA = (y + 1) * width + (x + dir);
+                            const belowB = (y + 1) * width + (x - dir);
+                            if (x + dir >= 0 && x + dir < width && grid[belowA] === EMPTY) {
+                                grid[belowA] = GASOLINE; grid[i] = EMPTY;
+                            } else if (x - dir >= 0 && x - dir < width && grid[belowB] === EMPTY) {
+                                grid[belowB] = GASOLINE; grid[i] = EMPTY;
+                            } else if (x + dir >= 0 && x + dir < width && grid[y * width + x + dir] === EMPTY) {
+                                grid[y * width + x + dir] = GASOLINE; grid[i] = EMPTY;
+                            } else if (x - dir >= 0 && x - dir < width && grid[y * width + x - dir] === EMPTY) {
+                                grid[y * width + x - dir] = GASOLINE; grid[i] = EMPTY;
+                            }
+                        }
+                    }
+                    else if (type === FIREWORK) {
+                        if (y > 0 && grid[(y - 1) * width + x] === EMPTY) {
+                            grid[(y - 1) * width + x] = FIREWORK; grid[i] = EMPTY;
+                            if (Math.random() < 0.05) { // Explode
+                                const exX = x; const exY = y - 1;
+                                grid[exY * width + exX] = FIRE;
+                                for(let dy=-4; dy<=4; dy++) for(let dx=-4; dx<=4; dx++) {
+                                    if(dx*dx+dy*dy <= 16 && exX+dx>=0 && exX+dx<width && exY+dy>=0 && exY+dy<height)
+                                        if(grid[(exY+dy)*width+(exX+dx)] === EMPTY && grid[(exY+dy)*width+(exX+dx)] !== BEDROCK) grid[(exY+dy)*width+(exX+dx)] = Math.random()>0.5?SPARK:FIRE;
+                                }
+                            }
+                        }
+                    }
+                    else if (type === SPARK) {
+                        if (Math.random() < 0.1) { grid[i] = EMPTY; continue; }
+                        if (y < height - 1 && grid[(y + 1) * width + x] === EMPTY) {
+                            grid[(y + 1) * width + x] = SPARK; grid[i] = EMPTY;
+                        }
+                    }
+                    else if (type === ACID) {
+                        // Dissolve
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length) {
+                                const t = grid[ni];
+                                if (t !== EMPTY && t !== ACID && t !== STONE && t !== SMOKE && t !== FIRE && t !== SPARK) {
+                                    if (Math.random() < 0.05) {
+                                        grid[ni] = SMOKE; // Dissolve target
+                                        if (Math.random() < 0.1) grid[i] = SMOKE; // Acid used up
+                                    }
+                                }
+                            }
+                        }
+                        // Move like water
+                        if (y === height - 1) continue;
+                        const below = (y + 1) * width + x;
+                        if (grid[below] === EMPTY) {
+                            grid[below] = ACID; grid[i] = EMPTY;
+                        } else {
+                            const dir = Math.random() > 0.5 ? 1 : -1;
+                            if (x + dir >= 0 && x + dir < width && grid[y * width + x + dir] === EMPTY) {
+                                grid[y * width + x + dir] = ACID; grid[i] = EMPTY;
+                            } else if (x - dir >= 0 && x - dir < width && grid[y * width + x - dir] === EMPTY) {
+                                grid[y * width + x - dir] = ACID; grid[i] = EMPTY;
+                            }
+                        }
+                    }
+                    else if (type === LAVA) {
+                        // Ignite neighbors
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length) {
+                                if (flammable.includes(grid[ni])) grid[ni] = FIRE;
+                                else if (grid[ni] === WATER) { grid[i] = STONE; grid[ni] = STONE; }
+                            }
+                        }
+                        // Flow
+                        if (y === height - 1) continue;
+                        const below = (y + 1) * width + x;
+                        if (grid[below] === EMPTY) {
+                            grid[below] = LAVA; grid[i] = EMPTY;
+                        } else if (grid[below] === WATER) {
+                            grid[below] = STONE; grid[i] = STONE;
+                        } else {
+                            const dir = Math.random() > 0.5 ? 1 : -1;
+                            const belowA = (y + 1) * width + (x + dir);
+                            const belowB = (y + 1) * width + (x - dir);
+                            if (x + dir >= 0 && x + dir < width && grid[belowA] === EMPTY) {
+                                grid[belowA] = LAVA; grid[i] = EMPTY;
+                            } else if (x - dir >= 0 && x - dir < width && grid[belowB] === EMPTY) {
+                                grid[belowB] = LAVA; grid[i] = EMPTY;
+                            }
+                        }
+                    }
+                    else if (type === VOLCANO) {
+                        // Erupt periodically
+                        if (Math.random() < 0.05) {
+                            // Push lava up
+                            let spawnY = y - 1;
+                            // Find top of vent
+                            while (spawnY > 0 && grid[spawnY*width+x] === LAVA) spawnY--;
+                            
+                            if (spawnY > 0) {
+                                grid[spawnY*width+x] = LAVA;
+                                // Eruption effects
+                                if (Math.random() < 0.3) grid[(spawnY-1)*width+x] = FIRE;
+                                if (Math.random() < 0.2) grid[(spawnY-2)*width+x] = SMOKE;
+                                // Force
+                                if (Math.random() < 0.1 && grid[(spawnY-1)*width+x] === EMPTY) grid[(spawnY-1)*width+x] = LAVA;
+                            }
+
+                            // Spawn lava rocks
+                            if (Math.random() < 0.4) {
+                                const numRocks = 3 + Math.floor(Math.random() * 5);
+                                for (let i = 0; i < numRocks; i++) {
+                                    lavaRocks.push({
+                                        x: x,
+                                        y: spawnY - 2,
+                                        vx: (Math.random() - 0.5) * 4,
+                                        vy: -2 - Math.random() * 3,
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    // Simple falling particles
+                    else if (type === SAND) {
+                        if (y === height - 1) continue;
+                        const below = (y + 1) * width + x;
+                        if (grid[below] === EMPTY || grid[below] === WATER) {
+                            grid[i] = grid[below] === WATER ? WATER : EMPTY;
+                            grid[below] = SAND;
+                        } else {
+                            const dir = Math.random() > 0.5 ? 1 : -1;
+                            const belowA = (y + 1) * width + (x + dir);
+                            const belowB = (y + 1) * width + (x - dir);
+                            
+                            if (x + dir >= 0 && x + dir < width && (grid[belowA] === EMPTY || grid[belowA] === WATER)) {
+                                grid[i] = grid[belowA] === WATER ? WATER : EMPTY;
+                                grid[belowA] = SAND;
+                            } else if (x - dir >= 0 && x - dir < width && (grid[belowB] === EMPTY || grid[belowB] === WATER)) {
+                                grid[i] = grid[belowB] === WATER ? WATER : EMPTY;
+                                grid[belowB] = SAND;
+                            }
+                        }
+                    } 
+                    else if (type === WATER) {
+                        if (y === height - 1) continue;
+                        const below = (y + 1) * width + x;
+                        if (grid[below] === EMPTY) {
+                            grid[below] = WATER; grid[i] = EMPTY;
+                        } else {
+                            // Grow trees
+                            let touchedTree = false;
+                            for (const offset of neighbors) {
+                                const ni = i + offset;
+                                if (ni >= 0 && ni < grid.length && (grid[ni] === TRUNK || grid[ni] === LEAF)) {
+                                    grid[i] = LEAF; // Displace water with leaf
+                                    touchedTree = true; break;
+                                }
+                            }
+                            if (touchedTree) continue;
+
+                            const dir = Math.random() > 0.5 ? 1 : -1;
+                            const belowA = (y + 1) * width + (x + dir);
+                            const belowB = (y + 1) * width + (x - dir);
+                            const sideA = y * width + (x + dir);
+                            const sideB = y * width + (x - dir);
+
+                            if (x + dir >= 0 && x + dir < width && grid[belowA] === EMPTY) {
+                                grid[belowA] = WATER; grid[i] = EMPTY;
+                            } else if (x - dir >= 0 && x - dir < width && grid[belowB] === EMPTY) {
+                                grid[belowB] = WATER; grid[i] = EMPTY;
+                            } else if (x + dir >= 0 && x + dir < width && grid[sideA] === EMPTY) {
+                                grid[sideA] = WATER; grid[i] = EMPTY;
+                            } else if (x - dir >= 0 && x - dir < width && grid[sideB] === EMPTY) {
+                                grid[sideB] = WATER; grid[i] = EMPTY;
+                            }
+                        }
+                    }
+                    else if (type === SMOKE) {
+                        if (Math.random() < 0.05) { grid[i] = EMPTY; continue; }
+                        if (y > 0 && Math.random() < 0.5) {
+                            const dir = Math.floor(Math.random() * 3) - 1;
+                            const targetX = x + dir;
+                            if (targetX >= 0 && targetX < width) {
+                                const target = (y - 1) * width + targetX;
+                                if (grid[target] === EMPTY) {
+                                    grid[target] = SMOKE; grid[i] = EMPTY;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Render
+            const imgData = ctx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+            for (let i = 0; i < grid.length; i++) {
+                const type = grid[i];
+                const col = colors[type];
+                const idx = i * 4;
+                if (type === EMPTY) {
+                    data[idx+3] = 0; // Transparent
+                } else {
+                    data[idx] = col[0]; data[idx+1] = col[1]; data[idx+2] = col[2]; data[idx+3] = 255;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+
+            // Update & Draw Entities
+            ctxEntity.clearRect(0, 0, entityCanvas.width, entityCanvas.height);
+            
+            // TNT
+            for (let i = tntBoxes.length - 1; i >= 0; i--) {
+                let t = tntBoxes[i];
+                t.vy += 0.1;
+                t.x += t.vx; t.y += t.vy;
+                t.vx *= 0.95;
+                
+                // Collision
+                if (t.y + t.h >= height) { t.y = height - t.h; t.vy = 0; }
+                else if (grid[Math.floor(t.y + t.h) * width + Math.floor(t.x + t.w/2)] !== EMPTY && 
+                         grid[Math.floor(t.y + t.h) * width + Math.floor(t.x + t.w/2)] !== WATER) {
+                    t.y = Math.floor(t.y); t.vy = 0; t.vx *= 0.5;
+                }
+
+                // Check Explosion
+                let explode = false;
+                const cx = Math.floor(t.x + t.w/2);
+                const cy = Math.floor(t.y + t.h/2);
+                if (cx >= 0 && cx < width && cy >= 0 && cy < height) {
+                    // Check neighbors for fire
+                    for(let dy=-2; dy<=t.h+2; dy++) for(let dx=-2; dx<=t.w+2; dx++) {
+                        const idx = (Math.floor(t.y)+dy)*width + (Math.floor(t.x)+dx);
+                        if (idx>=0 && idx<grid.length && (grid[idx]===FIRE || grid[idx]===SPARK || grid[idx]===FIREWORK)) {
+                            explode = true; break;
+                        }
+                    }
+                }
+
+                if (explode) {
+                    for(let dy=-10; dy<=10; dy++) for(let dx=-10; dx<=10; dx++) {
+                        if(dx*dx+dy*dy <= 100 && cx+dx>=0 && cx+dx<width && cy+dy>=0 && cy+dy<height)
+                            if (grid[(cy+dy)*width+(cx+dx)] !== BEDROCK) grid[(cy+dy)*width+(cx+dx)] = Math.random()>0.3?FIRE:SPARK;
+                    }
+                    tntBoxes.splice(i, 1);
+                    continue;
+                }
+
+                // Draw
+                const sx = t.x * scale; const sy = t.y * scale;
+                ctxEntity.fillStyle = "#b71c1c";
+                ctxEntity.fillRect(sx, sy, t.w * scale, t.h * scale);
+                ctxEntity.fillStyle = "white";
+                ctxEntity.font = "bold 10px Arial";
+                ctxEntity.fillText("TNT", sx + 2, sy + 14);
+            }
+
+            // Lava Rocks
+            for (let i = lavaRocks.length - 1; i >= 0; i--) {
+                let r = lavaRocks[i];
+                r.vy += 0.12; // gravity
+                r.x += r.vx;
+                r.y += r.vy;
+
+                if (r.y >= height || r.x < 0 || r.x >= width) {
+                    lavaRocks.splice(i, 1); // remove if out of bounds
+                    continue;
+                }
+
+                const gx = Math.floor(r.x);
+                const gy = Math.floor(r.y);
+                
+                if (gy >= 0) {
+                    const idx = gy * width + gx;
+                    if (grid[idx] !== EMPTY && grid[idx] !== SMOKE) {
+                        // Hit something, turn into LAVA
+                        if (grid[idx] !== BEDROCK && grid[idx] !== STONE) {
+                            grid[idx] = LAVA;
+                        }
+                        lavaRocks.splice(i, 1);
+                        continue;
+                    }
+                }
+                
+                ctxEntity.fillStyle = "#e64a19"; // Lava color
+                ctxEntity.fillRect(r.x * scale, r.y * scale, scale, scale);
+            }
+
+            // Cars
+            for (let i = cars.length - 1; i >= 0; i--) {
+                let c = cars[i];
+                c.vy += 0.15; // Gravity
+
+                // AI Driver
+                if (c.driver) {
+                    if (Math.abs(c.vx) < 2) {
+                        c.vx += (c.vx >= 0 ? 0.1 : -0.1); // Accelerate
+                    }
+                }
+                
+                // X Movement
+                c.x += c.vx;
+                
+                // Check X Collision (Leading Edge)
+                let hitX = false;
+                const startY = Math.floor(c.y);
+                const endY = Math.floor(c.y + c.h - 1);
+                const checkX = c.vx > 0 ? Math.floor(c.x + c.w) : Math.floor(c.x);
+                
+                if (checkX >= 0 && checkX < width) {
+                    for (let y = startY; y <= endY; y++) {
+                        if (y >= 0 && y < height) {
+                            const t = grid[y * width + checkX];
+                            if (t !== EMPTY && t !== WATER && t !== SMOKE && t !== FIRE && t !== SPARK && t !== GASOLINE) {
+                                // Hit Solid
+                                if ((t === TRUNK || t === LEAF || t === PLANT) && Math.abs(c.vx) > 3) {
+                                    grid[y * width + checkX] = EMPTY; // Break tree
+                                    c.vx *= 0.9;
+                                } else if (c.driver) {
+                                    c.vx *= -0.8; // Reverse if driven
+                                    hitX = true; break;
+                                } else {
+                                    hitX = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (hitX) {
+                    // Try to climb (Slope smoothing)
+                    let canClimb = false;
+                    for (let s = 1; s <= 4; s++) { // Climb up to 4 pixels
+                        let clear = true;
+                        for (let y = startY - s; y <= endY - s; y++) {
+                            if (y < 0 || y >= height) { clear = false; break; }
+                            const t = grid[y * width + checkX];
+                            if (t !== EMPTY && t !== WATER && t !== SMOKE && t !== FIRE && t !== SPARK && t !== GASOLINE) {
+                                clear = false; break;
+                            }
+                        }
+                        if (clear) {
+                            c.y -= s;
+                            canClimb = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!canClimb) {
+                        c.x -= c.vx;
+                        c.vx *= -0.5;
+                    }
+                }
+
+                // Y Movement
+                c.y += c.vy;
+                c.vx *= 0.99;
+
+                // Y Collision (Bottom Edge)
+                const bottomY = Math.floor(c.y + c.h);
+                const startX = Math.floor(c.x);
+                const endX = Math.floor(c.x + c.w);
+                
+                if (bottomY >= height) { 
+                    c.y = height - c.h; 
+                    c.vy *= -0.5; 
+                }
+                else {
+                    // Check horizontal strip under car
+                    for (let x = startX; x < endX; x++) {
+                        if (x >= 0 && x < width) {
+                            const t = grid[bottomY * width + x];
+                            if (t === WATER) {
+                                if (!c.waterBounce) {
+                                    c.y = bottomY - c.h;
+                                    c.vy *= -0.5;
+                                    c.waterBounce = true;
+                                } else {
+                                    c.vy *= 0.9;
+                                    c.vx *= 0.9;
+                                }
+                            }
+                            else if (t !== EMPTY && t !== SMOKE && t !== FIRE && t !== SPARK && t !== GASOLINE) {
+                                // Solid
+                                if ((t === TRUNK || t === LEAF || t === PLANT) && Math.abs(c.vy) > 3) {
+                                    grid[bottomY * width + x] = EMPTY;
+                                    c.vy *= 0.8;
+                                } else {
+                                    c.y = bottomY - c.h;
+                                    c.vy *= -0.4;
+                                    c.vx *= 0.95; // Friction
+                                    break; // Stop checking once we hit ground
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Draw Car
+                const sx = c.x * scale; const sy = c.y * scale;
+                const sw = c.w * scale; const sh = c.h * scale;
+                
+                // Body (Corvette Style)
+                ctxEntity.fillStyle = c.driver ? (c.driver === STICKMAN_ENEMY ? "#b71c1c" : "#1976d2") : "#d32f2f"; // Change color if driven
+                ctxEntity.beginPath();
+                ctxEntity.moveTo(sx, sy + sh - 4); // Bottom Left
+                ctxEntity.lineTo(sx, sy + sh * 0.4); // Nose tip
+                ctxEntity.quadraticCurveTo(sx + sw * 0.3, sy + sh * 0.3, sx + sw * 0.4, sy + sh * 0.3); // Hood
+                ctxEntity.lineTo(sx + sw * 0.5, sy); // Windshield
+                ctxEntity.lineTo(sx + sw * 0.8, sy); // Roof
+                ctxEntity.quadraticCurveTo(sx + sw, sy + sh * 0.2, sx + sw, sy + sh * 0.5); // Rear slope
+                ctxEntity.lineTo(sx + sw, sy + sh - 4); // Rear
+                ctxEntity.closePath();
+                ctxEntity.fill();
+
+                // Wheels
+                ctxEntity.fillStyle = "#222";
+                ctxEntity.beginPath(); ctxEntity.arc(sx + sw*0.25, sy + sh, 4, 0, Math.PI*2); ctxEntity.fill();
+                ctxEntity.beginPath(); ctxEntity.arc(sx + sw*0.75, sy + sh, 4, 0, Math.PI*2); ctxEntity.fill();
+                
+                // Rims
+                ctxEntity.fillStyle = "#ccc";
+                ctxEntity.beginPath(); ctxEntity.arc(sx + sw*0.25, sy + sh, 2, 0, Math.PI*2); ctxEntity.fill();
+                ctxEntity.beginPath(); ctxEntity.arc(sx + sw*0.75, sy + sh, 2, 0, Math.PI*2); ctxEntity.fill();
+
+                // Kill Stickmen
+                if (c.driver) {
+                    // Draw driver head
+                    ctxEntity.fillStyle = c.driver === STICKMAN_ENEMY ? "#ff5252" : "#fff";
+                    ctxEntity.beginPath(); ctxEntity.arc(sx + sw*0.6, sy + sh*0.3, 3, 0, Math.PI*2); ctxEntity.fill();
+                }
+                const speed = Math.sqrt(c.vx*c.vx + c.vy*c.vy);
+                if (speed > 1) {
+                    for (let j = stickmen.length - 1; j >= 0; j--) {
+                        const s = stickmen[j];
+                        if (s.x >= c.x && s.x <= c.x + c.w && s.y >= c.y && s.y <= c.y + c.h) {
+                            grid[s.y * width + s.x] = EMPTY; // Poof
+                        }
+                    }
+                    // Kill Animals
+                    for (let j = animals.length - 1; j >= 0; j--) {
+                        const a = animals[j];
+                        if (a.x >= c.x && a.x <= c.x + c.w && a.y >= c.y && a.y <= c.y + c.h) {
+                            grid[a.y * width + a.x] = EMPTY;
+                        }
+                    }
+                    // Kill Birds
+                    for (let j = birds.length - 1; j >= 0; j--) {
+                        const b = birds[j];
+                        if (b.x >= c.x && b.x <= c.x + c.w && b.y >= c.y && b.y <= c.y + c.h) {
+                            birds.splice(j, 1);
+                        }
+                    }
+                }
+            }
+
+            // Birds
+            for (let i = birds.length - 1; i >= 0; i--) {
+                let b = birds[i];
+                
+                if (b.landed) {
+                    const cx = Math.floor(b.x);
+                    const cy = Math.floor(b.y + 1);
+                    // Check support or disturbance
+                    let disturbed = false;
+                    if (cy >= height || (grid[cy*width+cx] !== TRUNK && grid[cy*width+cx] !== LEAF)) disturbed = true;
+                    
+                    // Check neighbors for threats
+                    if (!disturbed) {
+                        for(let dy=-2; dy<=2; dy++) for(let dx=-2; dx<=2; dx++) {
+                            const idx = (Math.floor(b.y)+dy)*width + (Math.floor(b.x)+dx);
+                            if (idx >= 0 && idx < grid.length) {
+                                const t = grid[idx];
+                                if (t !== EMPTY && t !== TRUNK && t !== LEAF && t !== WATER) { disturbed = true; break; }
+                            }
+                        }
+                    }
+
+                    if (disturbed) {
+                        b.landed = false;
+                        b.vx = (Math.random() * 0.5 + 0.5) * (Math.random() < 0.5 ? 1 : -1);
+                        b.y -= 2; // Hop up
+                    }
+                } else {
+                    b.x += b.vx;
+                    b.y += Math.sin(Date.now() / 200) * 0.2;
+                    
+                    // Bounds
+                    if (b.x < -20 || b.x > width + 20) { birds.splice(i, 1); continue; }
+
+                    // Collision
+                    const cx = Math.floor(b.x); const cy = Math.floor(b.y);
+                    if (cx >= 0 && cx < width && cy >= 0 && cy < height) {
+                        const t = grid[cy * width + cx];
+                        if (t === FIRE || t === SPARK || t === FIREWORK) {
+                            grid[cy * width + cx] = EMPTY; birds.splice(i, 1); continue;
+                        } else if (t !== EMPTY && t !== SMOKE) {
+                            if ((t === TRUNK || t === LEAF) && Math.random() < 0.1) {
+                                b.landed = true; // Land on tree
+                            } else {
+                                b.y -= 1; // Fly up over obstacles
+                            }
+                        }
+                    }
+                }
+
+                // Draw Bird
+                const sx = b.x * scale; const sy = b.y * scale;
+                ctxEntity.save();
+                ctxEntity.translate(sx, sy);
+                if (b.vx < 0) ctxEntity.scale(-1, 1); // Face direction
+                
+                ctxEntity.fillStyle = b.color;
+                ctxEntity.beginPath();
+                ctxEntity.ellipse(0, 0, 8, 5, 0, 0, Math.PI*2); // Body
+                ctxEntity.fill();
+                
+                // Beak
+                ctxEntity.fillStyle = "#ffeb3b";
+                ctxEntity.beginPath();
+                ctxEntity.arc(6, -2, 2, 0, Math.PI*2);
+                ctxEntity.fill();
+
+                // Wing
+                ctxEntity.fillStyle = "#fff";
+                ctxEntity.beginPath();
+                ctxEntity.ellipse(-2, -4, 6, 3, b.landed ? 0 : Math.sin(Date.now()/50)*0.5, 0, Math.PI*2); // Wing
+                ctxEntity.fill();
+                ctxEntity.restore();
+            }
+
+            // Drag Line
+            if (draggingCar) {
+                const sx = draggingCar.x * scale + (draggingCar.w*scale)/2;
+                const sy = draggingCar.y * scale + (draggingCar.h*scale)/2;
+                const mx = mousePos.x * scale;
+                const my = mousePos.y * scale;
+                
+                ctxEntity.strokeStyle = "white";
+                ctxEntity.lineWidth = 2;
+                ctxEntity.beginPath();
+                ctxEntity.moveTo(sx, sy);
+                ctxEntity.lineTo(mx, my);
+                ctxEntity.stroke();
+            }
+
+            // Draw Stickmen
+            ctxEntity.lineWidth = 3;
+            ctxEntity.lineCap = 'round';
+            ctxEntity.lineJoin = 'round';
+            
+            for (const s of stickmen) {
+                const sx = s.x * scale + scale/2;
+                const sy = s.y * scale + scale/2;
+                const i = Math.floor(s.y) * width + Math.floor(s.x);
+                
+                // Check if swimming (swapped with water OR touching water)
+                let isSwimming = false;
+                if (grid[i] === WATER) isSwimming = true;
+                else {
+                    const neighbors = [-1, 1, -width, width];
+                    for(let n of neighbors) {
+                        const ni = i + n;
+                        if (ni >= 0 && ni < grid.length && grid[ni] === WATER) { isSwimming = true; break; }
+                    }
+                }
+                
+                ctxEntity.save();
+                ctxEntity.translate(sx, sy);
+                if (isSwimming) ctxEntity.rotate(s.dir * Math.PI / 2);
+
+                ctxEntity.strokeStyle = (s.type === STICKMAN_ENEMY) ? "#e53935" : "#ffffff";
+                ctxEntity.beginPath();
+                // Head
+                ctxEntity.moveTo(6, -16); ctxEntity.arc(0, -16, 6, 0, Math.PI * 2);
+                // Body
+                ctxEntity.moveTo(0, -10); ctxEntity.lineTo(0, 0);
+                // Arms
+                ctxEntity.moveTo(-8, -8); ctxEntity.lineTo(8, -8);
+                // Legs
+                ctxEntity.moveTo(0, 0); ctxEntity.lineTo(-6, 12); ctxEntity.moveTo(0, 0); ctxEntity.lineTo(6, 12);
+                ctxEntity.stroke();
+                ctxEntity.restore();
+            }
+
+            // Draw Animals
+            for (const a of animals) {
+                const sx = a.x * scale + scale/2;
+                const sy = a.y * scale + scale/2;
+                
+                ctxEntity.save();
+                ctxEntity.translate(sx, sy);
+                if (a.dir < 0) ctxEntity.scale(-1, 1);
+
+                if (a.type === COW) {
+                    ctxEntity.fillStyle = "#795548";
+                    ctxEntity.fillRect(-6, -6, 12, 8); // Body
+                    ctxEntity.fillRect(4, -8, 4, 5); // Head
+                    ctxEntity.fillStyle = "white";
+                    ctxEntity.fillRect(-2, -4, 3, 3); // Spot
+                } else if (a.type === CHICKEN) {
+                    ctxEntity.fillStyle = "#fff";
+                    ctxEntity.beginPath(); ctxEntity.arc(0, -2, 4, 0, Math.PI*2); ctxEntity.fill(); // Body
+                    ctxEntity.fillStyle = "red";
+                    ctxEntity.beginPath(); ctxEntity.arc(2, -5, 1.5, 0, Math.PI*2); ctxEntity.fill(); // Comb
+                    ctxEntity.fillStyle = "orange";
+                    ctxEntity.beginPath(); ctxEntity.moveTo(3, -3); ctxEntity.lineTo(6, -2); ctxEntity.lineTo(3, -1); ctxEntity.fill(); // Beak
+                }
+                ctxEntity.restore();
+            }
+            
+            requestAnimationFrame(update);
+        }
+        generateTerrain();
+        update();
+    </script>
+</body>
+</html>

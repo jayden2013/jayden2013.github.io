@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crash Ramp Stunt</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  canvas { display: block; }
+  #ui { position: absolute; top: 20px; left: 20px; color: white; text-shadow: 2px 2px 0 #000; pointer-events: none; user-select: none; }
+  #ui h1 { margin: 0; font-size: 24px; color: #FFD700; }
+  #ui p { margin: 5px 0; font-size: 18px; font-weight: bold; }
+  #overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    color: white; text-align: center;
+  }
+  #overlay.hidden { display: none; }
+  button {
+    padding: 15px 30px; font-size: 20px; background: #FF4500; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;
+    box-shadow: 0 4px 0 #b33200; transition: transform 0.1s;
+  }
+  button:active { transform: translateY(4px); box-shadow: none; }
+  .key { display: inline-block; padding: 2px 8px; background: #333; border-radius: 4px; border-bottom: 2px solid #111; color: #fff; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <h1>CRASH RAMP</h1>
+  <p>Score: <span id="scoreVal">0</span></p>
+  <p>Flips: <span id="flipVal">0</span></p>
+  <p>Speed: <span id="speedVal">0</span> km/h</p>
+</div>
+
+<div id="overlay">
+  <h1 id="msgTitle">READY TO LAUNCH?</h1>
+  <div id="msgBody">
+    <p>Hold <span class="key">SPACE</span> to charge power.</p>
+    <p>Release to LAUNCH.</p>
+    <p>Use <span class="key">←</span> and <span class="key">→</span> to rotate in air.</p>
+    <p>Land on your wheels!</p>
+  </div>
+  <button id="btnAction">START ENGINE</button>
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// Game Constants
+const GRAVITY = 0.25;
+const DRAG = 0.995;
+const GROUND_Y_OFFSET = 100;
+const RAMP_START = 200;
+const RAMP_LENGTH = 400;
+const RAMP_HEIGHT = 200;
+const GAP_SIZE = 300;
+const LANDING_START = RAMP_START + RAMP_LENGTH + GAP_SIZE;
+
+// Game State
+let state = 'MENU'; // MENU, CHARGING, DRIVING, FLYING, CRASHED, LANDED
+let width, height;
+let score = 0;
+let power = 0;
+let powerDir = 1;
+let camX = 0;
+let totalRotation = 0;
+let flips = 0;
+
+// Car Object
+const car = {
+  x: 50, y: 0, w: 50, h: 25,
+  vx: 0, vy: 0, angle: 0, vAngle: 0,
+  color: '#FF4500',
+  wheelColor: '#333'
+};
+
+// Obstacles & Particles
+let obstacles = [];
+let particles = [];
+
+// Input
+const keys = {};
+
+// Setup
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => {
+  keys[e.code] = false;
+  if (state === 'CHARGING' && e.code === 'Space') {
+    launch();
+  }
+  if ((state === 'CRASHED' || state === 'LANDED') && e.code === 'Space') {
+    resetGame();
+  }
+});
+
+const btn = document.getElementById('btnAction');
+const overlay = document.getElementById('overlay');
+const msgTitle = document.getElementById('msgTitle');
+const msgBody = document.getElementById('msgBody');
+
+btn.addEventListener('click', () => {
+  if (state === 'MENU' || state === 'CRASHED' || state === 'LANDED') {
+    resetGame();
+  }
+});
+
+function resetGame() {
+  state = 'CHARGING';
+  overlay.classList.add('hidden');
+  
+  car.x = 50;
+  car.y = getTerrainHeight(50) - car.h/2;
+  car.vx = 0;
+  car.vy = 0;
+  car.angle = 0;
+  car.vAngle = 0;
+  
+  power = 0;
+  camX = 0;
+  score = 0;
+  totalRotation = 0;
+  flips = 0;
+  
+  // Generate obstacles on landing strip
+  obstacles = [];
+  for(let i=0; i<5; i++) {
+    obstacles.push({
+      x: LANDING_START + 400 + (i * 300),
+      y: 0, // calculated later
+      w: 40, h: 40,
+      hit: false
+    });
+  }
+  
+  particles = [];
+  updateUI();
+}
+
+function launch() {
+  state = 'DRIVING';
+  // Power 0-100 maps to speed
+  const launchSpeed = 10 + (power / 100) * 25; 
+  car.vx = launchSpeed;
+}
+
+function getTerrainHeight(x) {
+  const groundLevel = height - GROUND_Y_OFFSET;
+  
+  // Start Platform
+  if (x < RAMP_START) return groundLevel;
+  
+  // Ramp (Quadratic curve up)
+  if (x < RAMP_START + RAMP_LENGTH) {
+    const progress = (x - RAMP_START) / RAMP_LENGTH;
+    // y = x^2 curve
+    const rise = progress * progress * RAMP_HEIGHT;
+    return groundLevel - rise;
+  }
+  
+  // Gap
+  if (x < LANDING_START) {
+    return height + 1000; // Pit
+  }
+  
+  // Landing
+  return groundLevel + 50; // Slightly lower landing
+}
+
+function getRampAngle(x) {
+  if (x < RAMP_START) return 0;
+  if (x < RAMP_START + RAMP_LENGTH) {
+    const progress = (x - RAMP_START) / RAMP_LENGTH;
+    // Derivative of quadratic curve
+    const slope = -2 * RAMP_HEIGHT * progress / RAMP_LENGTH;
+    return Math.atan(slope);
+  }
+  return 0;
+}
+
+function update() {
+  // Power Meter Logic
+  if (state === 'CHARGING') {
+    power += powerDir * 1.5;
+    if (power >= 100) { power = 100; powerDir = -1; }
+    if (power <= 0) { power = 0; powerDir = 1; }
+  }
+  
+  // Driving on Ramp
+  if (state === 'DRIVING') {
+    car.x += car.vx;
+    car.y = getTerrainHeight(car.x) - car.h/2;
+    car.angle = getRampAngle(car.x);
+    
+    // Check if left ramp
+    if (car.x > RAMP_START + RAMP_LENGTH) {
+      state = 'FLYING';
+      // Convert speed to vector based on ramp angle
+      const launchAngle = getRampAngle(RAMP_START + RAMP_LENGTH);
+      const speed = car.vx;
+      car.vx = speed * Math.cos(launchAngle);
+      car.vy = speed * Math.sin(launchAngle);
+    }
+  }
+  
+  // Flying Physics
+  if (state === 'FLYING') {
+    car.x += car.vx;
+    car.y += car.vy;
+    car.vy += GRAVITY;
+    car.vx *= DRAG;
+    
+    car.angle += car.vAngle;
+    totalRotation += car.vAngle;
+    flips = Math.floor(Math.abs(totalRotation) / (Math.PI * 2));
+    
+    // Air Control
+    if (keys['ArrowLeft']) car.vAngle -= 0.002;
+    if (keys['ArrowRight']) car.vAngle += 0.002;
+    car.vAngle *= 0.95; // Angular drag
+    
+    // Collision Check
+    const terrainY = getTerrainHeight(car.x);
+    if (car.y + car.h/2 >= terrainY) {
+      handleLanding(terrainY);
+    }
+    
+    // Obstacle Collision
+    obstacles.forEach(obs => {
+      if (!obs.hit && 
+          car.x + car.w/2 > obs.x && car.x - car.w/2 < obs.x + obs.w &&
+          car.y + car.h/2 > terrainY - obs.h) {
+            obs.hit = true;
+            score += 100;
+            createParticles(obs.x + obs.w/2, terrainY - obs.h/2, '#FFD700');
+            car.vx *= 0.8; // Slow down
+      }
+    });
+  }
+  
+  // Post-game slide
+  if (state === 'LANDED' || state === 'CRASHED') {
+    car.x += car.vx;
+    car.vx *= 0.9; // Ground friction
+    car.y = getTerrainHeight(car.x) - car.h/2;
+    if (Math.abs(car.vx) < 0.1) car.vx = 0;
+  }
+  
+  // Camera
+  camX = car.x - width * 0.3;
+  
+  // Particles
+  particles.forEach((p, i) => {
+    p.x += p.vx; p.y += p.vy; p.life--;
+    if(p.life <= 0) particles.splice(i, 1);
+  });
+  
+  updateUI();
+  draw();
+  requestAnimationFrame(update);
+}
+
+function handleLanding(groundY) {
+  car.y = groundY - car.h/2; // Snap to ground
+  
+  // Normalize angle (-PI to PI)
+  let normAngle = car.angle % (Math.PI * 2);
+  if (normAngle > Math.PI) normAngle -= Math.PI * 2;
+  if (normAngle < -Math.PI) normAngle += Math.PI * 2;
+  
+  // Check if upright (allow +/- 45 degrees approx)
+  if (Math.abs(normAngle) < 0.8) {
+    state = 'LANDED';
+    car.vy = 0; car.vAngle = 0; car.angle = 0;
+    
+    const distance = Math.floor((car.x - LANDING_START) / 10);
+    if (distance > 0) score += distance;
+    score += flips * 500;
+    
+    showEndScreen("NICE LANDING!", `Score: ${score} | Flips: ${flips}`);
+  } else {
+    state = 'CRASHED';
+    car.vx *= 0.5;
+    createParticles(car.x, car.y, 'orange');
+    showEndScreen("CRASHED!", "You wrecked the car.");
+  }
+}
+
+function showEndScreen(title, msg) {
+  setTimeout(() => {
+    msgTitle.innerText = title;
+    msgBody.innerHTML = `<p>${msg}</p><p>Press SPACE to try again</p>`;
+    btn.innerText = "RETRY";
+    overlay.classList.remove('hidden');
+  }, 1000);
+}
+
+function createParticles(x, y, color) {
+  for(let i=0; i<20; i++) {
+    particles.push({
+      x: x, y: y,
+      vx: (Math.random() - 0.5) * 10,
+      vy: (Math.random() - 0.5) * 10,
+      life: 30 + Math.random() * 20,
+      color: color
+    });
+  }
+}
+
+function updateUI() {
+  document.getElementById('scoreVal').innerText = score;
+  document.getElementById('flipVal').innerText = flips;
+  document.getElementById('speedVal').innerText = Math.floor(car.vx * 10);
+}
+
+function draw() {
+  // Clear
+  ctx.fillStyle = '#87CEEB';
+  ctx.fillRect(0, 0, width, height);
+  
+  ctx.save();
+  ctx.translate(-camX, 0);
+  
+  // Draw Terrain
+  ctx.beginPath();
+  ctx.moveTo(camX, height);
+  for (let x = Math.floor(camX); x < camX + width + 100; x+=20) {
+    ctx.lineTo(x, getTerrainHeight(x));
+  }
+  ctx.lineTo(camX + width + 100, height);
+  ctx.fillStyle = '#228B22';
+  ctx.fill();
+  ctx.strokeStyle = '#006400';
+  ctx.stroke();
+  
+  // Draw Obstacles
+  ctx.fillStyle = '#8B4513';
+  obstacles.forEach(obs => {
+    if (!obs.hit) {
+      const groundY = getTerrainHeight(obs.x + obs.w/2);
+      ctx.fillRect(obs.x, groundY - obs.h, obs.w, obs.h);
+    }
+  });
+  
+  // Draw Car
+  ctx.save();
+  ctx.translate(car.x, car.y); // Pivot at center
+  ctx.rotate(car.angle);
+  
+  // Body
+  ctx.fillStyle = car.color;
+  ctx.fillRect(-car.w/2, -car.h/2, car.w, car.h);
+  // Roof
+  ctx.fillStyle = '#cc3700';
+  ctx.fillRect(-car.w/4, -car.h, car.w/2, car.h/2);
+  // Wheels
+  ctx.fillStyle = car.wheelColor;
+  ctx.beginPath(); ctx.arc(-car.w/3, car.h/2, 8, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(car.w/3, car.h/2, 8, 0, Math.PI*2); ctx.fill();
+  
+  ctx.restore();
+  
+  // Particles
+  particles.forEach(p => {
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, 4, 4);
+  });
+  
+  // Power Meter (if charging)
+  if (state === 'CHARGING') {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(car.x - 30, car.y - 60, 60, 10);
+    ctx.fillStyle = `rgb(${255 * (power/100)}, ${255 * (1 - power/100)}, 0)`;
+    ctx.fillRect(car.x - 30, car.y - 60, 60 * (power/100), 10);
+    ctx.strokeStyle = 'white';
+    ctx.strokeRect(car.x - 30, car.y - 60, 60, 10);
+  }
+  
+  ctx.restore();
+}
+
+// Start loop
+requestAnimationFrame(update);
+
+</script>
+</body>
+</html>
