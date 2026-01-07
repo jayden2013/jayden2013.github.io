@@ -10,30 +10,36 @@
             background-color: #121212;
             color: #e0e0e0;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            flex-direction: row;
+            align-items: stretch;
+            height: 100vh;
             margin: 0;
             user-select: none;
             overflow: hidden; /* Fullscreen */
         }
         h1 {
-            font-weight: 300;
-            letter-spacing: 2px;
+            font-weight: 600;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            font-size: 1.5rem;
-            color: #aaa;
+            font-size: 2rem;
+            color: #fff;
+            background-color: rgba(20, 20, 20, 0.85);
+            padding: 10px 30px;
+            border-radius: 50px;
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            text-shadow: 0 0 8px #000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: none;
         }
         .game-container {
-            position: absolute;
-            inset: 0;
-            line-height: 0;
+            position: relative;
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
         }
         canvas {
             background-color: #87CEEB;
@@ -51,32 +57,38 @@
             background-color: transparent;
         }
         .controls {
-            position: absolute;
-            top: 50%;
-            right: 10px;
-            transform: translateY(-50%);
+            position: relative;
+            top: 0;
+            right: 0;
+            transform: none;
             z-index: 10;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.2);
             padding: 10px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            width: 110px;
-            max-height: 90vh;
+            border-radius: 0;
+            border: none;
+            border-left: 1px solid #333;
+            width: 340px;
+            height: 100%;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: 40px;
             gap: 8px;
+            box-sizing: border-box;
         }
         button {
-            padding: 10px 16px;
+            padding: 0;
             border: 1px solid #333;
             background-color: #1e1e1e;
             color: #aaa;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 600;
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         button:hover {
             background-color: #2a2a2a;
@@ -87,6 +99,13 @@
             color: #fff;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .controls-break {
+            grid-column: 1 / -1;
+            width: 100%;
+            height: 1px;
+            background: #444;
+            margin: 4px 0;
         }
         
         /* Element Colors for Buttons */
@@ -113,14 +132,17 @@
         .btn-virus.active { background-color: #9c27b0; color: #fff; border-color: #9c27b0; }
         .btn-lightning.active { background-color: #ffeb3b; color: #000; border-color: #ffeb3b; }
         .btn-laser.active { background-color: #f44336; color: #fff; border-color: #f44336; }
+        .btn-gravityrift.active { background-color: #311b92; color: #fff; border-color: #311b92; }
+        .btn-termite.active { background-color: #d2b48c; color: #000; border-color: #d2b48c; }
+        .btn-wood.active { background-color: #5d4037; color: #fff; border-color: #5d4037; }
+        .btn-fungus.active { background-color: #6d4c41; color: #fff; border-color: #6d4c41; }
 
     </style>
 </head>
 <body>
 
-    <h1>CAC Sandbox</h1>
-    
     <div class="game-container">
+        <h1>CAC Sandbox</h1>
         <canvas id="simCanvas"></canvas>
         <canvas id="entityCanvas"></canvas>
     </div>
@@ -148,8 +170,12 @@
         <button class="btn-virus" onclick="selectElement(28)">Virus</button>
         <button class="btn-lightning" onclick="selectElement(29)">Lightning</button>
         <button class="btn-laser" onclick="selectElement(30)">Laser</button>
+        <button class="btn-gravityrift" onclick="selectElement(31)">Gravity Rift</button>
+        <button class="btn-termite" onclick="selectElement(32)">Termite</button>
+        <button class="btn-wood" onclick="selectElement(34)">Wood</button>
+        <button class="btn-fungus" onclick="selectElement(37)">Fungus</button>
         <button class="btn-eraser" onclick="selectElement(0)">Eraser</button>
-        <div style="width: 100%; height: 1px; background: #444; margin: 4px 0;"></div> <!-- Break -->
+        <div class="controls-break"></div> <!-- Break -->
         <button onclick="clearCanvas()">Clear Board</button>
     </div>
 
@@ -158,16 +184,17 @@
         const ctx = canvas.getContext('2d');
         const entityCanvas = document.getElementById('entityCanvas');
         const ctxEntity = entityCanvas.getContext('2d');
+        const container = document.querySelector('.game-container');
 
         // Configuration
         const scale = 4;
-        let width = Math.floor(window.innerWidth / scale);
-        let height = Math.floor(window.innerHeight / scale);
+        let width = Math.floor(container.clientWidth / scale);
+        let height = Math.floor(container.clientHeight / scale);
         
         canvas.width = width;
         canvas.height = height;
-        entityCanvas.width = window.innerWidth;
-        entityCanvas.height = window.innerHeight;
+        entityCanvas.width = container.clientWidth;
+        entityCanvas.height = container.clientHeight;
 
         // State
         let grid = new Int8Array(width * height).fill(0);
@@ -179,6 +206,7 @@
         let lavaRocks = [];
         let birds = [];
         let lasers = [];
+        let gravityRifts = [];
         let draggingCar = null;
         let dragStartPos = {x:0, y:0};
         let mousePos = {x:0, y:0};
@@ -215,8 +243,15 @@
         const VIRUS = 28;
         const LIGHTNING = 29;
         const LASER = 30;
+        const GRAVITY_RIFT = 31;
+        const TERMITE = 32;
+        const WOOD = 34;
+        const STICKMAN_ZOMBIE = 35;
+        const ANIMAL_ZOMBIE = 36;
+        const FUNGUS = 37;
 
         // Colors (R, G, B)
+        const MAGMA = VOLCANO;
         const colors = {
             [EMPTY]: [0, 0, 0],
             [SAND]: [246, 215, 80],
@@ -247,6 +282,12 @@
             [ICE]: [178, 235, 242],
             [VIRUS]: [156, 39, 176],
             [LASER]: [255, 0, 0],
+            [GRAVITY_RIFT]: [30, 0, 40],
+            [TERMITE]: [210, 180, 140],
+            [WOOD]: [101, 67, 33],
+            [STICKMAN_ZOMBIE]: [100, 221, 23],
+            [ANIMAL_ZOMBIE]: [100, 221, 23],
+            [FUNGUS]: [141, 110, 99],
         };
 
         // Input Handling
@@ -259,7 +300,7 @@
             }
             // Update UI
             document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
-            const map = {1:'btn-sand', 2:'btn-water', 3:'btn-stone', 4:'btn-fire', 5:'btn-plant', 0:'btn-eraser', 7:'btn-dirt', 8:'btn-seed', 11:'btn-stickman', 12:'btn-stickman', 13:'btn-stickman', 14:'btn-gas', 15:'btn-firework', 17:'btn-enemy', 18:'btn-acid', 19:'btn-tnt', 20:'btn-car', 21:'btn-lava', 24:'btn-cow', 25:'btn-chicken', 26:'btn-nuke', 27:'btn-ice', 28:'btn-virus', 29:'btn-lightning', 30:'btn-laser'};
+            const map = {1:'btn-sand', 2:'btn-water', 3:'btn-stone', 4:'btn-fire', 5:'btn-plant', 0:'btn-eraser', 7:'btn-dirt', 8:'btn-seed', 11:'btn-stickman', 12:'btn-stickman', 13:'btn-stickman', 14:'btn-gas', 15:'btn-firework', 17:'btn-enemy', 18:'btn-acid', 19:'btn-tnt', 20:'btn-car', 21:'btn-lava', 24:'btn-cow', 25:'btn-chicken', 26:'btn-nuke', 27:'btn-ice', 28:'btn-virus', 29:'btn-lightning', 30:'btn-laser', 31:'btn-gravityrift', 32:'btn-termite', 34:'btn-wood', 37:'btn-fungus'};
             const buttonClass = map[type] || map[selectedType];
             if(buttonClass) document.querySelector(`.${buttonClass}`).classList.add('active');
         }
@@ -286,9 +327,9 @@
             };
         }
 
-        function draw(e) {
-            const pos = getPos(e);
-            const brushRadius = (selectedType === SEED) ? 0 : 4;
+        function draw() {
+            const pos = mousePos;
+            const brushRadius = (selectedType === SEED || selectedType === TERMITE) ? 0 : 4;
 
             if (selectedType === TNT) {
                 tntBoxes.push({x: pos.x, y: pos.y, vx: 0, vy: 0, w: 6, h: 6});
@@ -324,6 +365,11 @@
                 // Continuous drawing allowed for laser
                 return; 
             }
+            if (selectedType === GRAVITY_RIFT) {
+                grid[pos.y * width + pos.x] = GRAVITY_RIFT;
+                isDrawing = false;
+                return;
+            }
             
             for (let dy = -brushRadius; dy <= brushRadius; dy++) {
                 for (let dx = -brushRadius; dx <= brushRadius; dx++) {
@@ -336,7 +382,7 @@
                         const currentType = grid[i];
                         
                         // Don't overwrite static elements unless erasing
-                        if (selectedType !== EMPTY && (currentType === STONE || currentType === TRUNK || currentType === DIRT || currentType === BEDROCK)) continue;
+                        if (selectedType !== EMPTY && (currentType === STONE || currentType === TRUNK || currentType === WOOD || currentType === DIRT || currentType === BEDROCK)) continue;
                         
                         // If placing a stickman, only place one and re-randomize for the next
                         if (selectedType === STICKMAN_SWIM || selectedType === STICKMAN_DROWN || selectedType === STICKMAN_ENEMY || selectedType === COW || selectedType === CHICKEN) {
@@ -552,12 +598,12 @@
         }
 
         function onResize() {
-            width = Math.floor(window.innerWidth / scale);
-            height = Math.floor(window.innerHeight / scale);
+            width = Math.floor(container.clientWidth / scale);
+            height = Math.floor(container.clientHeight / scale);
             canvas.width = width;
             canvas.height = height;
-            entityCanvas.width = window.innerWidth;
-            entityCanvas.height = window.innerHeight;
+            entityCanvas.width = container.clientWidth;
+            entityCanvas.height = container.clientHeight;
             grid = new Int8Array(width * height).fill(0);
             grid2 = new Int8Array(width * height).fill(0);
             tntBoxes = [];
@@ -581,18 +627,18 @@
                     return;
                 }
             }
-
+            
             isDrawing = true; 
-            draw(e); 
+            // draw handled in update
         });
         
         window.addEventListener('mousemove', e => { 
             mousePos = getPos(e);
             if (draggingCar) return;
-            if (isDrawing) draw(e); 
+            // draw handled in update
         });
         
-        window.addEventListener('mouseup', () => {
+        function handleInputEnd() {
             if (draggingCar) {
                 const dx = dragStartPos.x - mousePos.x;
                 const dy = dragStartPos.y - mousePos.y;
@@ -601,21 +647,44 @@
                 draggingCar = null;
             }
             isDrawing = false;
-        });
+        }
         
-        canvas.addEventListener('touchstart', e => { isDrawing = true; draw(e); e.preventDefault(); }, {passive: false});
-        canvas.addEventListener('touchmove', e => { if (isDrawing) draw(e); e.preventDefault(); }, {passive: false});
-        window.addEventListener('touchend', () => isDrawing = false);
+        window.addEventListener('mouseup', handleInputEnd);
+        window.addEventListener('touchend', handleInputEnd);
+
+        canvas.addEventListener('touchstart', e => { 
+            const pos = getPos(e);
+            mousePos = pos;
+            
+            // Check Car Click
+            for(const car of cars) {
+                if (pos.x >= car.x && pos.x <= car.x + car.w && pos.y >= car.y && pos.y <= car.y + car.h) {
+                    draggingCar = car;
+                    dragStartPos = {x: pos.x, y: pos.y};
+                    e.preventDefault();
+                    return;
+                }
+            }
+            
+            isDrawing = true; 
+            e.preventDefault(); 
+        }, {passive: false});
+
+        canvas.addEventListener('touchmove', e => { mousePos = getPos(e); e.preventDefault(); }, {passive: false});
 
         // Game Loop
         function update() {
+            if (isDrawing && !draggingCar) draw();
+
+            gravityRifts = []; // Reset list
             const neighbors = [
                 -width - 1, -width, -width + 1,
                 -1,                1,
                  width - 1,  width,  width + 1
             ];
-            const organics = [PLANT, LEAF, TRUNK, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, COW, CHICKEN];
-            const flammable = [PLANT, LEAF, TRUNK, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, GASOLINE, ACID, TNT, COW, CHICKEN];
+            const organics = [PLANT, LEAF, TRUNK, WOOD, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, COW, CHICKEN];
+            const flammable = [PLANT, LEAF, TRUNK, WOOD, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, STICKMAN_ZOMBIE, ANIMAL_ZOMBIE, GASOLINE, ACID, TNT, COW, CHICKEN, WOOD];
+            const dangerous = [FIRE, LAVA, ACID, TNT, NUKE, STICKMAN_ZOMBIE, ANIMAL_ZOMBIE, MAGMA];
             const stickmen = [];
             const animals = [];
 
@@ -680,12 +749,12 @@
                         // No decay
                         continue;
                     }
-                    else if (type === STICKMAN_SWIM || type === STICKMAN_DROWN || type === STICKMAN_ENEMY) {
+                    else if (type === STICKMAN_SWIM || type === STICKMAN_DROWN || type === STICKMAN_ENEMY || type === STICKMAN_ZOMBIE) {
                         let dir = Math.sign(grid2[i]) || 1;
                         stickmen.push({x, y, type, dir});
                         
                         // Fighting
-                        const isEnemy = (type === STICKMAN_ENEMY);
+                        const isEnemy = (type === STICKMAN_ENEMY || type === STICKMAN_ZOMBIE);
 
                         // Extract Health and Direction from grid2
                         let health = Math.abs(grid2[i]);
@@ -703,6 +772,8 @@
                         }
                         if (droveCar) continue;
 
+                        // Zombie Decay (approx 2 mins)
+                        if (type === STICKMAN_ZOMBIE && Math.random() < 0.00014) { grid[i] = EMPTY; continue; }
                         
                         // Look for enemies
                         let moveDir = 0;
@@ -711,14 +782,8 @@
                             if (dx === 0) continue;
                             const nx = x + dx;
                             if (nx >= 0 && nx < width) {
-                                const t = grid[y * width + nx];
-                                if (t === STICKMAN_SWIM || t === STICKMAN_DROWN || t === STICKMAN_ENEMY) {
-                                    const isTargetEnemy = (t === STICKMAN_ENEMY);
-                                    if (isEnemy !== isTargetEnemy) {
-                                        moveDir = Math.sign(dx);
-                                        break; // Chase closest
-                                    }
-                                }
+                                // Simple AI: Zombies chase non-zombies, Enemies chase Stickmen
+                                // Not implemented fully for performance, just random walk mostly
                             }
                         }
 
@@ -727,10 +792,15 @@
                             const ni = i + offset;
                             if (ni >= 0 && ni < grid.length) {
                                 const other = grid[ni];
-                                if (other === STICKMAN_SWIM || other === STICKMAN_DROWN || other === STICKMAN_ENEMY) {
-                                    const otherIsEnemy = (other === STICKMAN_ENEMY);
+                                if (other === STICKMAN_SWIM || other === STICKMAN_DROWN || other === STICKMAN_ENEMY || other === STICKMAN_ZOMBIE) {
+                                    const otherIsEnemy = (other === STICKMAN_ENEMY || other === STICKMAN_ZOMBIE);
                                     if (isEnemy !== otherIsEnemy) {
                                         // Fight!
+                                        if (type === STICKMAN_ZOMBIE) {
+                                            // Infect
+                                            grid[ni] = STICKMAN_ZOMBIE;
+                                            continue;
+                                        }
                                         fighting = true;
                                         if (Math.random() < 0.2) { // Fight speed
                                             if (Math.random() < 0.5) {
@@ -752,36 +822,23 @@
 
                         // Movement Logic
                         let inWater = grid[(y + 1) * width + x] === WATER || grid[y * width + x - 1] === WATER || grid[y * width + x + 1] === WATER;
-                        const destructible = [DIRT, PLANT, TRUNK, LEAF, SAND];
                         
                         // Helper to check if we can move to a spot (Empty, Water, or Breakable)
                         const canMove = (idx) => {
                             const t = grid[idx];
-                            return t === EMPTY || t === WATER || (Math.random() < 0.01 && destructible.includes(t)); // Reduced dig chance
+                            return t === EMPTY || t === WATER;
                         };
                         
                         // Helper to perform move (Swap if fluid, Overwrite if solid)
                         const doMove = (targetIdx) => {
                             const t = grid[targetIdx];
-                            if (destructible.includes(t)) { 
-                                // Dig bigger hole (Clear radius)
-                                const tx = targetIdx % width;
-                                const ty = Math.floor(targetIdx / width);
-                                for(let dy=-2; dy<=2; dy++) for(let dx=-1; dx<=1; dx++) {
-                                    const idx = (ty+dy)*width + (tx+dx);
-                                    if(idx>=0 && idx<grid.length && destructible.includes(grid[idx]) && grid[idx] !== BEDROCK) {
-                                        grid[idx] = EMPTY;
-                                    }
-                                }
-                                grid[targetIdx] = type; grid[i] = EMPTY; 
-                            } // Break
-                            else { grid[targetIdx] = type; grid[i] = t; } // Swap (Empty/Water)
+                            grid[targetIdx] = type; grid[i] = t; // Swap (Empty/Water)
                             // Move state if needed
                             if (grid2[i] !== 0) { grid2[targetIdx] = grid2[i]; grid2[i] = 0; }
                         };
 
                         if (inWater) {
-                            if (type === STICKMAN_SWIM || type === STICKMAN_ENEMY) { // Swim
+                            if (type === STICKMAN_SWIM || type === STICKMAN_ENEMY || type === STICKMAN_ZOMBIE) { // Swim
                                 if (y > 0 && Math.random() > 0.5 && canMove((y - 1) * width + x)) {
                                     doMove((y - 1) * width + x); continue;
                                 }
@@ -807,21 +864,30 @@
                         }
                         grid2[i] = health * dir; // Save direction
                         
+                        // Avoid Danger
+                        if (x + dir >= 0 && x + dir < width) {
+                            const nextT = grid[y*width + (x+dir)];
+                            const belowNextT = (y+1 < height) ? grid[(y+1)*width + (x+dir)] : BEDROCK;
+                            if (dangerous.includes(nextT) || dangerous.includes(belowNextT)) {
+                                dir = -dir; grid2[i] = dir * health; // Turn away
+                            }
+                        }
+
                         if (x + dir >= 0 && x + dir < width) {
                             if (canMove(y * width + (x + dir))) { // Walk
                                 doMove(y * width + (x + dir)); continue;
                             } else if (y > 0 && canMove((y - 1) * width + (x + dir))) { // Climb
                                 doMove((y - 1) * width + (x + dir)); continue;
-                            } else if (Math.random() < 0.01 && destructible.includes(grid[y*width+(x+dir)])) { // Reduced dig chance
-                                // Dig horizontal tunnel
-                                doMove(y * width + (x + dir)); continue;
                             }
                         }
                         continue;
                     }
-                    else if (type === COW || type === CHICKEN) {
+                    else if (type === COW || type === CHICKEN || type === ANIMAL_ZOMBIE) {
                         let dir = grid2[i];
                         if (dir === 0) { dir = Math.random() > 0.5 ? 1 : -1; grid2[i] = dir; }
+
+                        // Zombie Decay
+                        if (type === ANIMAL_ZOMBIE && Math.random() < 0.00014) { grid[i] = EMPTY; continue; }
 
                         // Gravity (Always apply first)
                         if (y < height - 1) {
@@ -831,6 +897,14 @@
                                 grid2[below] = dir; grid2[i] = 0;
                                 animals.push({x, y: y+1, type, dir});
                                 continue;
+                            }
+                        }
+
+                        // Infect Neighbors
+                        if (type === ANIMAL_ZOMBIE) {
+                            for (const offset of neighbors) {
+                                const ni = i + offset;
+                                if (ni >= 0 && ni < grid.length && (grid[ni] === COW || grid[ni] === CHICKEN)) grid[ni] = ANIMAL_ZOMBIE;
                             }
                         }
 
@@ -1016,7 +1090,7 @@
                                 continue;
                             } else if (grid[below] !== NUKE) {
                                 // Explode!
-                                const r = 40;
+                                const r = 60;
                                 for(let dy=-r; dy<=r; dy++) {
                                     for(let dx=-r; dx<=r; dx++) {
                                         if (dx*dx + dy*dy <= r*r) {
@@ -1025,11 +1099,26 @@
                                             if (ex >= 0 && ex < width && ey >= 0 && ey < height) {
                                                 const idx = ey * width + ex;
                                                 if (grid[idx] !== BEDROCK) {
-                                                    if (Math.random() < 0.6) grid[idx] = EMPTY;
+                                                    if (Math.random() < 0.7) grid[idx] = EMPTY;
                                                     else if (Math.random() < 0.5) grid[idx] = FIRE;
                                                     else grid[idx] = SMOKE;
                                                 }
                                             }
+                                        }
+                                    }
+                                }
+                                // Mushroom Cloud
+                                for (let cy = y; cy > y - 90; cy--) {
+                                    if (cy < 0) break;
+                                    // Stem
+                                    for (let cx = x - 8; cx <= x + 8; cx++) {
+                                        if (cx>=0 && cx<width && Math.random() > 0.3) grid[cy*width+cx] = SMOKE;
+                                    }
+                                    // Cap
+                                    if (cy < y - 60) {
+                                        const capR = 40 - Math.abs((y-90) - cy);
+                                        for (let cx = x - capR; cx <= x + capR; cx++) {
+                                            if (cx>=0 && cx<width && Math.random() > 0.4) grid[cy*width+cx] = (Math.random()>0.7)?FIRE:SMOKE;
                                         }
                                     }
                                 }
@@ -1056,11 +1145,120 @@
                     else if (type === VIRUS) {
                         for (const offset of neighbors) {
                             const ni = i + offset;
-                            if (ni >= 0 && ni < grid.length && organics.includes(grid[ni])) {
-                                grid[ni] = VIRUS;
+                            if (ni >= 0 && ni < grid.length) {
+                                const t = grid[ni];
+                                if (t === STICKMAN_SWIM || t === STICKMAN_DROWN || t === STICKMAN_ENEMY) {
+                                    grid[ni] = STICKMAN_ZOMBIE;
+                                } else if (t === COW || t === CHICKEN) {
+                                    grid[ni] = ANIMAL_ZOMBIE;
+                                } else if (organics.includes(t) && t !== STICKMAN_ZOMBIE && t !== ANIMAL_ZOMBIE) {
+                                    grid[ni] = VIRUS;
+                                }
                             }
                         }
                         if (Math.random() < 0.02) grid[i] = EMPTY; // Decay
+                    }
+                    else if (type === GRAVITY_RIFT) {
+                        gravityRifts.push({x, y});
+                       // Sucks things in
+                        const r = 25; // Stronger radius
+                        for(let dy=-r; dy<=r; dy++) {
+                            for(let dx=-r; dx<=r; dx++) {
+                                const dist = dx*dx + dy*dy;
+                                if (dist <= r*r && dist > 0) {
+                                    const tx = x + dx;
+                                    const ty = y + dy;
+                                    if (tx>=0 && tx<width && ty>=0 && ty<height) {
+                                        const tidx = ty*width+tx;
+                                        if (grid[tidx] !== EMPTY && grid[tidx] !== GRAVITY_RIFT && grid[tidx] !== BEDROCK) {
+                                            if (dist < 16) {
+                                                grid[tidx] = EMPTY; // Eat
+                                            } else if (Math.random() < 0.1) {
+                                                // Move towards center
+                                                const mx = tx - Math.sign(dx);
+                                                const my = ty - Math.sign(dy);
+                                                if (mx>=0 && mx<width && my>=0 && my<height && grid[my*width+mx] === EMPTY) {
+                                                    grid[my*width+mx] = grid[tidx];
+                                                    grid[tidx] = EMPTY;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (type === TERMITE) {
+                        // Move randomly
+                        const dir = Math.floor(Math.random() * 9); // 0-8
+                        let dx = (dir % 3) - 1;
+                        let dy = Math.floor(dir / 3) - 1;
+                        
+                        // Seek Wood
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length && grid[ni] === WOOD) {
+                                const nx = ni % width;
+                                const ny = Math.floor(ni / width);
+                                dx = Math.sign(nx - x);
+                                dy = Math.sign(ny - y);
+                            }
+                        }
+                        
+                        if (dx !== 0 || dy !== 0) {
+                            const nx = x + dx;
+                            const ny = y + dy;
+                            if (nx>=0 && nx<width && ny>=0 && ny<height) {
+                                const nidx = ny*width+nx;
+                                const t = grid[nidx];
+                                if (t === TRUNK || t === LEAF || t === PLANT || t === SEED || t === WOOD) {
+                                    grid[nidx] = TERMITE; grid[i] = EMPTY; // Eat and move
+                                    if (Math.random() < 0.05) grid[i] = TERMITE; // Reproduce
+                                } else if (t === EMPTY) {
+                                    grid[nidx] = TERMITE; grid[i] = EMPTY; // Move
+                                }
+                            }
+                        }
+                    }
+                    else if (type === FUNGUS) {
+                        // Spread to organics
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length) {
+                                const t = grid[ni];
+                                if (t === PLANT || t === LEAF || t === TRUNK || t === WOOD || t === SEED) {
+                                    if (Math.random() < 0.05) { grid[ni] = FUNGUS; grid2[ni] = 0; }
+                                }
+                            }
+                        }
+                        
+                        // Mushroom Shape Growth
+                        if (Math.random() < 0.1) {
+                            const age = grid2[i];
+                            
+                            // Stem Growth (Vertical)
+                            if (age < 10 && y > 0 && grid[i - width] === EMPTY) {
+                                // Grow up
+                                grid[i - width] = FUNGUS;
+                                grid2[i - width] = age + 1;
+                            }
+                            
+                            // Cap Growth (Horizontal)
+                            if (age >= 5 && age < 20) {
+                                const dir = Math.random() > 0.5 ? 1 : -1;
+                                const ni = i + dir;
+                                if (ni >= 0 && ni < grid.length && grid[ni] === EMPTY) {
+                                    let newAge = 0;
+                                    if (age <= 10) newAge = 20; // Start cap
+                                    else if (age >= 20 && age < 24) newAge = age + 1; // Extend cap
+                                    
+                                    if (newAge > 0) {
+                                        grid[ni] = FUNGUS;
+                                        grid2[ni] = newAge;
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     // Simple falling particles
@@ -1149,6 +1347,19 @@
             }
             ctx.putImageData(imgData, 0, 0);
 
+            // Apply Gravity Rift Gravity to Entities
+            const applyGravity = (obj) => {
+                for(const bh of gravityRifts) {
+                    const dx = bh.x - obj.x;
+                    const dy = bh.y - obj.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 100 && dist > 2) {
+                        obj.vx += (dx / dist) * 0.5;
+                        obj.vy += (dy / dist) * 0.5;
+                    }
+                }
+            };
+
             // Update & Draw Entities
             ctxEntity.clearRect(0, 0, entityCanvas.width, entityCanvas.height);
             
@@ -1181,6 +1392,7 @@
             // TNT
             for (let i = tntBoxes.length - 1; i >= 0; i--) {
                 let t = tntBoxes[i];
+                applyGravity(t);
                 t.vy += 0.1;
                 t.x += t.vx; t.y += t.vy;
                 t.vx *= 0.95;
@@ -1200,7 +1412,7 @@
                     // Check neighbors for fire
                     for(let dy=-2; dy<=t.h+2; dy++) for(let dx=-2; dx<=t.w+2; dx++) {
                         const idx = (Math.floor(t.y)+dy)*width + (Math.floor(t.x)+dx);
-                        if (idx>=0 && idx<grid.length && (grid[idx]===FIRE || grid[idx]===SPARK || grid[idx]===FIREWORK)) {
+                        if (idx>=0 && idx<grid.length && (grid[idx]===FIRE || grid[idx]===SPARK || grid[idx]===FIREWORK || grid[idx]===LAVA)) {
                             explode = true; break;
                         }
                     }
@@ -1258,6 +1470,7 @@
             // Cars
             for (let i = cars.length - 1; i >= 0; i--) {
                 let c = cars[i];
+                applyGravity(c);
                 c.vy += 0.15; // Gravity
 
                 // AI Driver
@@ -1427,6 +1640,7 @@
             // Birds
             for (let i = birds.length - 1; i >= 0; i--) {
                 let b = birds[i];
+                applyGravity(b);
                 
                 if (b.landed) {
                     const cx = Math.floor(b.x);
@@ -1499,7 +1713,7 @@
                 ctxEntity.restore();
             }
 
-            // Drag Line
+            // Drag Line (Car)
             if (draggingCar) {
                 const sx = draggingCar.x * scale + (draggingCar.w*scale)/2;
                 const sy = draggingCar.y * scale + (draggingCar.h*scale)/2;
@@ -1539,7 +1753,7 @@
                 ctxEntity.translate(sx, sy);
                 if (isSwimming) ctxEntity.rotate(s.dir * Math.PI / 2);
 
-                ctxEntity.strokeStyle = (s.type === STICKMAN_ENEMY) ? "#e53935" : "#ffffff";
+                ctxEntity.strokeStyle = (s.type === STICKMAN_ENEMY) ? "#e53935" : (s.type === STICKMAN_ZOMBIE ? "#64dd17" : "#ffffff");
                 ctxEntity.beginPath();
                 // Head
                 ctxEntity.moveTo(6, -16); ctxEntity.arc(0, -16, 6, 0, Math.PI * 2);
@@ -1562,13 +1776,13 @@
                 ctxEntity.translate(sx, sy);
                 if (a.dir < 0) ctxEntity.scale(-1, 1);
 
-                if (a.type === COW) {
-                    ctxEntity.fillStyle = "#795548";
+                if (a.type === COW || a.type === ANIMAL_ZOMBIE) {
+                    ctxEntity.fillStyle = (a.type === ANIMAL_ZOMBIE) ? "#64dd17" : "#795548";
                     ctxEntity.fillRect(-6, -6, 12, 8); // Body
                     ctxEntity.fillRect(4, -8, 4, 5); // Head
                     ctxEntity.fillStyle = "white";
                     ctxEntity.fillRect(-2, -4, 3, 3); // Spot
-                } else if (a.type === CHICKEN) {
+                } else if (a.type === CHICKEN || (a.type === ANIMAL_ZOMBIE && Math.random()>0.5)) { // Simplified zombie chicken
                     ctxEntity.fillStyle = "#fff";
                     ctxEntity.beginPath(); ctxEntity.arc(0, -2, 4, 0, Math.PI*2); ctxEntity.fill(); // Body
                     ctxEntity.fillStyle = "red";
@@ -1577,6 +1791,15 @@
                     ctxEntity.beginPath(); ctxEntity.moveTo(3, -3); ctxEntity.lineTo(6, -2); ctxEntity.lineTo(3, -1); ctxEntity.fill(); // Beak
                 }
                 ctxEntity.restore();
+            }
+
+            // Draw Gravity Rifts
+            ctxEntity.fillStyle = "#000";
+            for(const bh of gravityRifts) {
+                const sx = bh.x * scale; const sy = bh.y * scale;
+                ctxEntity.beginPath();
+                ctxEntity.arc(sx, sy, 12, 0, Math.PI*2);
+                ctxEntity.fill();
             }
             
             requestAnimationFrame(update);
