@@ -108,6 +108,11 @@
         .btn-cow.active { background-color: #795548; color: #fff; border-color: #795548; }
         .btn-chicken.active { background-color: #fff; color: #000; border-color: #fff; }
         .btn-eraser.active { background-color: #f44336; color: #fff; border-color: #f44336; }
+        .btn-nuke.active { background-color: #00e676; color: #000; border-color: #00e676; }
+        .btn-ice.active { background-color: #00bcd4; color: #fff; border-color: #00bcd4; }
+        .btn-virus.active { background-color: #9c27b0; color: #fff; border-color: #9c27b0; }
+        .btn-lightning.active { background-color: #ffeb3b; color: #000; border-color: #ffeb3b; }
+        .btn-laser.active { background-color: #f44336; color: #fff; border-color: #f44336; }
 
     </style>
 </head>
@@ -138,6 +143,11 @@
         <button class="btn-acid" onclick="selectElement(18)">Acid</button>
         <button class="btn-cow" onclick="selectElement(24)">Cow</button>
         <button class="btn-chicken" onclick="selectElement(25)">Chicken</button>
+        <button class="btn-nuke" onclick="selectElement(26)">Nuke</button>
+        <button class="btn-ice" onclick="selectElement(27)">Ice</button>
+        <button class="btn-virus" onclick="selectElement(28)">Virus</button>
+        <button class="btn-lightning" onclick="selectElement(29)">Lightning</button>
+        <button class="btn-laser" onclick="selectElement(30)">Laser</button>
         <button class="btn-eraser" onclick="selectElement(0)">Eraser</button>
         <div style="width: 100%; height: 1px; background: #444; margin: 4px 0;"></div> <!-- Break -->
         <button onclick="clearCanvas()">Clear Board</button>
@@ -168,6 +178,7 @@
         let cars = [];
         let lavaRocks = [];
         let birds = [];
+        let lasers = [];
         let draggingCar = null;
         let dragStartPos = {x:0, y:0};
         let mousePos = {x:0, y:0};
@@ -199,6 +210,11 @@
         const VOLCANO = 23;
         const COW = 24;
         const CHICKEN = 25;
+        const NUKE = 26;
+        const ICE = 27;
+        const VIRUS = 28;
+        const LIGHTNING = 29;
+        const LASER = 30;
 
         // Colors (R, G, B)
         const colors = {
@@ -227,6 +243,10 @@
             [VOLCANO]: [60, 60, 60],
             [COW]: [121, 85, 72],
             [CHICKEN]: [255, 255, 255],
+            [NUKE]: [0, 230, 118],
+            [ICE]: [178, 235, 242],
+            [VIRUS]: [156, 39, 176],
+            [LASER]: [255, 0, 0],
         };
 
         // Input Handling
@@ -239,7 +259,7 @@
             }
             // Update UI
             document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
-            const map = {1:'btn-sand', 2:'btn-water', 3:'btn-stone', 4:'btn-fire', 5:'btn-plant', 0:'btn-eraser', 7:'btn-dirt', 8:'btn-seed', 11:'btn-stickman', 12:'btn-stickman', 13:'btn-stickman', 14:'btn-gas', 15:'btn-firework', 17:'btn-enemy', 18:'btn-acid', 19:'btn-tnt', 20:'btn-car', 21:'btn-lava', 24:'btn-cow', 25:'btn-chicken'};
+            const map = {1:'btn-sand', 2:'btn-water', 3:'btn-stone', 4:'btn-fire', 5:'btn-plant', 0:'btn-eraser', 7:'btn-dirt', 8:'btn-seed', 11:'btn-stickman', 12:'btn-stickman', 13:'btn-stickman', 14:'btn-gas', 15:'btn-firework', 17:'btn-enemy', 18:'btn-acid', 19:'btn-tnt', 20:'btn-car', 21:'btn-lava', 24:'btn-cow', 25:'btn-chicken', 26:'btn-nuke', 27:'btn-ice', 28:'btn-virus', 29:'btn-lightning', 30:'btn-laser'};
             const buttonClass = map[type] || map[selectedType];
             if(buttonClass) document.querySelector(`.${buttonClass}`).classList.add('active');
         }
@@ -250,6 +270,7 @@
             tntBoxes = [];
             cars = [];
             birds = [];
+            lasers = [];
             lavaRocks = [];
             // Restore Bedrock
             for(let x=0; x<width; x++) grid[(height-1)*width+x] = BEDROCK;
@@ -279,6 +300,29 @@
                 cars.push({x: pos.x - 5, y: pos.y - 3, vx: 0, vy: 0, w: 12, h: 6, waterBounce: false, driver: null});
                 isDrawing = false;
                 return;
+            }
+            if (selectedType === LIGHTNING) {
+                // Cast Lightning
+                let lx = pos.x + (Math.random()-0.5)*10;
+                for(let ly=0; ly<height; ly++) {
+                    lx += (Math.random()-0.5) * 4;
+                    if (ly < pos.y) lx += (pos.x - lx) * 0.1; // Guide to mouse
+                    const drawX = Math.floor(lx);
+                    for(let r=-1; r<=1; r++) {
+                        const idx = ly*width + (drawX+r);
+                        if (idx>=0 && idx<grid.length) {
+                            grid[idx] = Math.random()>0.5 ? FIRE : SPARK;
+                        }
+                    }
+                }
+                isDrawing = false;
+                return;
+            }
+            if (selectedType === LASER) {
+                const angle = Math.random() * Math.PI * 2;
+                lasers.push({x: pos.x, y: pos.y, vx: Math.cos(angle)*2, vy: Math.sin(angle)*2, life: 200});
+                // Continuous drawing allowed for laser
+                // return; 
             }
             
             for (let dy = -brushRadius; dy <= brushRadius; dy++) {
@@ -317,34 +361,46 @@
             if (grid[i] !== SEED) return;
 
             grid[i] = TRUNK; // Seed becomes the base of the trunk
-
-            const trunkHeight = 10 + Math.floor(Math.random() * 15);
-            for (let j = 1; j < trunkHeight; j++) {
-                const ny = y - j;
-                if (ny < 0) break;
-                const ni = ny * width + x;
-                if (grid[ni] === EMPTY) {
-                    grid[ni] = TRUNK;
-                } else {
-                    break; // Stop if blocked
-                }
-            }
-
-            const canopyRadius = 5 + Math.floor(Math.random() * 4);
-            const canopyY = y - trunkHeight;
-            for (let dy = -canopyRadius; dy <= canopyRadius; dy++) {
-                for (let dx = -canopyRadius; dx <= canopyRadius; dx++) {
-                    if (dx*dx + dy*dy > canopyRadius*canopyRadius) continue;
-                    if (Math.random() < 0.3) continue; // Make it patchy
-
-                    const nx = x + dx;
-                    const ny = canopyY + dy;
-                    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                        const ni = ny * width + nx;
-                        if (grid[ni] === EMPTY) {
-                            grid[ni] = LEAF;
+            
+            // Swirly Tree Generation
+            let growers = [{x: x, y: y, angle: -Math.PI/2, life: 25 + Math.random()*20}];
+            let count = 0;
+            
+            while(growers.length > 0 && count < 2000) {
+                count++;
+                for(let g=growers.length-1; g>=0; g--) {
+                    let gr = growers[g];
+                    gr.life--;
+                    gr.x += Math.cos(gr.angle);
+                    gr.y += Math.sin(gr.angle);
+                    gr.angle += (Math.random()-0.5)*0.4; // Swirl
+                    
+                    const gx = Math.floor(gr.x);
+                    const gy = Math.floor(gr.y);
+                    
+                    if (gx>=0 && gx<width && gy>=0 && gy<height) {
+                        const idx = gy*width+gx;
+                        if (grid[idx]===EMPTY || grid[idx]===LEAF) grid[idx] = TRUNK;
+                        // Thicken
+                        if (Math.random() < 0.5 && gx+1<width) grid[gy*width+gx+1] = TRUNK;
+                    }
+                    
+                    // Branch
+                    if (Math.random() < 0.08 && gr.life > 10) {
+                        growers.push({x: gr.x, y: gr.y, angle: gr.angle + (Math.random()<0.5?0.8:-0.8), life: gr.life * 0.6});
+                    }
+                    
+                    // Leaves
+                    if (gr.life <= 0 || Math.random() < 0.15) {
+                        const r = 2 + Math.random()*2;
+                        for(let dy=-r; dy<=r; dy++) for(let dx=-r; dx<=r; dx++) {
+                            if (dx*dx+dy*dy <= r*r) {
+                                const lx = Math.floor(gr.x+dx); const ly = Math.floor(gr.y+dy);
+                                if (lx>=0 && lx<width && ly>=0 && ly<height && grid[ly*width+lx]===EMPTY) grid[ly*width+lx] = LEAF;
+                            }
                         }
                     }
+                    if (gr.life <= 0) growers.splice(g, 1);
                 }
             }
         }
@@ -506,6 +562,7 @@
             grid2 = new Int8Array(width * height).fill(0);
             tntBoxes = [];
             cars = [];
+            lasers = [];
             lavaRocks = [];
             birds = [];
             generateTerrain();
@@ -557,6 +614,7 @@
                 -1,                1,
                  width - 1,  width,  width + 1
             ];
+            const organics = [PLANT, LEAF, TRUNK, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, COW, CHICKEN];
             const flammable = [PLANT, LEAF, TRUNK, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, GASOLINE, ACID, TNT, COW, CHICKEN];
             const stickmen = [];
             const animals = [];
@@ -764,6 +822,19 @@
                     else if (type === COW || type === CHICKEN) {
                         let dir = grid2[i];
                         if (dir === 0) { dir = Math.random() > 0.5 ? 1 : -1; grid2[i] = dir; }
+
+                        // Slow down
+                        if (Math.random() < 0.8) continue;
+
+                        // Avoid Water
+                        const nextX = x + dir;
+                        if (nextX >= 0 && nextX < width) {
+                            const nextIdx = y * width + nextX;
+                            const belowNextIdx = (y < height - 1) ? (y+1)*width+nextX : -1;
+                            if (grid[nextIdx] === WATER || grid[nextIdx] === LAVA || (belowNextIdx !== -1 && grid[belowNextIdx] === WATER)) {
+                                dir = -dir; grid2[i] = dir; continue;
+                            }
+                        }
                         
                         animals.push({x, y, type, dir});
 
@@ -782,7 +853,6 @@
                             dir = -dir; grid2[i] = dir;
                         }
                         
-                        const nextX = x + dir;
                         if (nextX >= 0 && nextX < width) {
                             const nextIdx = y * width + nextX;
                             if (grid[nextIdx] === EMPTY || grid[nextIdx] === WATER) {
@@ -931,6 +1001,61 @@
                             }
                         }
                     }
+                    else if (type === NUKE) {
+                        // Fall
+                        if (y < height - 1) {
+                            const below = (y + 1) * width + x;
+                            if (grid[below] === EMPTY || grid[below] === WATER) {
+                                grid[below] = NUKE; grid[i] = EMPTY;
+                                continue;
+                            } else if (grid[below] !== NUKE) {
+                                // Explode!
+                                const r = 40;
+                                for(let dy=-r; dy<=r; dy++) {
+                                    for(let dx=-r; dx<=r; dx++) {
+                                        if (dx*dx + dy*dy <= r*r) {
+                                            const ex = x + dx;
+                                            const ey = y + dy;
+                                            if (ex >= 0 && ex < width && ey >= 0 && ey < height) {
+                                                const idx = ey * width + ex;
+                                                if (grid[idx] !== BEDROCK) {
+                                                    if (Math.random() < 0.6) grid[idx] = EMPTY;
+                                                    else if (Math.random() < 0.5) grid[idx] = FIRE;
+                                                    else grid[idx] = SMOKE;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                grid[i] = FIRE; // Trigger
+                            }
+                        }
+                    }
+                    else if (type === ICE) {
+                        // Melt if near heat
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length) {
+                                const t = grid[ni];
+                                if (t === FIRE || t === LAVA || t === VOLCANO) {
+                                    grid[i] = WATER; break;
+                                }
+                                // Freeze water
+                                if (t === WATER && Math.random() < 0.01) {
+                                    grid[ni] = ICE;
+                                }
+                            }
+                        }
+                    }
+                    else if (type === VIRUS) {
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length && organics.includes(grid[ni])) {
+                                grid[ni] = VIRUS;
+                            }
+                        }
+                        if (Math.random() < 0.02) grid[i] = EMPTY; // Decay
+                    }
 
                     // Simple falling particles
                     else if (type === SAND) {
@@ -1021,6 +1146,32 @@
             // Update & Draw Entities
             ctxEntity.clearRect(0, 0, entityCanvas.width, entityCanvas.height);
             
+            // Lasers
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                let l = lasers[i];
+                for(let s=0; s<5; s++) {
+                    l.x += l.vx; l.y += l.vy;
+                    if (l.x<0 || l.x>=width || l.y<0 || l.y>=height) { l.life=0; break; }
+                    const idx = Math.floor(l.y)*width + Math.floor(l.x);
+                    const t = grid[idx];
+                    if (t !== EMPTY && t !== WATER && t !== LASER && t !== FIRE && t !== SPARK) {
+                        if (t === STONE || t === BEDROCK || t === ICE) {
+                            l.x -= l.vx; l.y -= l.vy;
+                            if (Math.random()<0.5) l.vx = -l.vx; else l.vy = -l.vy;
+                        } else {
+                            grid[idx] = FIRE; l.life -= 5;
+                        }
+                    }
+                }
+                l.life--;
+                if (l.life <= 0) { lasers.splice(i, 1); continue; }
+                
+                ctxEntity.fillStyle = "#ff1744";
+                ctxEntity.shadowBlur = 5; ctxEntity.shadowColor = "red";
+                ctxEntity.fillRect(l.x*scale, l.y*scale, scale, scale);
+                ctxEntity.shadowBlur = 0;
+            }
+
             // TNT
             for (let i = tntBoxes.length - 1; i >= 0; i--) {
                 let t = tntBoxes[i];
