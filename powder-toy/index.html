@@ -322,7 +322,7 @@
                 const angle = Math.random() * Math.PI * 2;
                 lasers.push({x: pos.x, y: pos.y, vx: Math.cos(angle)*2, vy: Math.sin(angle)*2, life: 200});
                 // Continuous drawing allowed for laser
-                // return; 
+                return; 
             }
             
             for (let dy = -brushRadius; dy <= brushRadius; dy++) {
@@ -823,8 +823,22 @@
                         let dir = grid2[i];
                         if (dir === 0) { dir = Math.random() > 0.5 ? 1 : -1; grid2[i] = dir; }
 
-                        // Slow down
-                        if (Math.random() < 0.8) continue;
+                        // Gravity (Always apply first)
+                        if (y < height - 1) {
+                            const below = (y + 1) * width + x;
+                            if (grid[below] === EMPTY || grid[below] === WATER) {
+                                grid[below] = type; grid[i] = EMPTY;
+                                grid2[below] = dir; grid2[i] = 0;
+                                animals.push({x, y: y+1, type, dir});
+                                continue;
+                            }
+                        }
+
+                        // Slow down (only affects horizontal movement)
+                        if (Math.random() < 0.8) {
+                            animals.push({x, y, type, dir});
+                            continue;
+                        }
 
                         // Avoid Water
                         const nextX = x + dir;
@@ -832,21 +846,13 @@
                             const nextIdx = y * width + nextX;
                             const belowNextIdx = (y < height - 1) ? (y+1)*width+nextX : -1;
                             if (grid[nextIdx] === WATER || grid[nextIdx] === LAVA || (belowNextIdx !== -1 && grid[belowNextIdx] === WATER)) {
-                                dir = -dir; grid2[i] = dir; continue;
+                                dir = -dir; grid2[i] = dir; 
+                                animals.push({x, y, type, dir});
+                                continue;
                             }
                         }
                         
                         animals.push({x, y, type, dir});
-
-                        // Gravity
-                        if (y < height - 1) {
-                            const below = (y + 1) * width + x;
-                            if (grid[below] === EMPTY || grid[below] === WATER) {
-                                grid[below] = type; grid[i] = EMPTY;
-                                grid2[below] = dir; grid2[i] = 0;
-                                continue;
-                            }
-                        }
 
                         // Move
                         if (Math.random() < 0.02) { // Change direction occasionally
