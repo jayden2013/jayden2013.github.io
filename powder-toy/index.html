@@ -689,7 +689,7 @@
                  width - 1,  width,  width + 1
             ];
             const organics = [PLANT, LEAF, TRUNK, WOOD, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, COW, CHICKEN];
-            const flammable = [PLANT, LEAF, TRUNK, WOOD, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, STICKMAN_ZOMBIE, ANIMAL_ZOMBIE, GASOLINE, ACID, TNT, COW, CHICKEN, WOOD, WAX];
+            const flammable = [PLANT, LEAF, TRUNK, WOOD, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, STICKMAN_ZOMBIE, ANIMAL_ZOMBIE, GASOLINE, ACID, TNT, COW, CHICKEN, WOOD];
             const dangerous = [FIRE, LAVA, ACID, TNT, NUKE, STICKMAN_ZOMBIE, ANIMAL_ZOMBIE, MAGMA];
             const stickmen = [];
             const animals = [];
@@ -1267,37 +1267,78 @@
                         }
                     }
                     else if (type === WAX) {
-                        // Melt if near heat
+                        // Check for heat to ignite
+                        let nearHeat = false;
                         for (const offset of neighbors) {
                             const ni = i + offset;
                             if (ni >= 0 && ni < grid.length) {
                                 const t = grid[ni];
                                 if (t === FIRE || t === LAVA || t === VOLCANO || t === MOLTEN_WAX) {
-                                    if (Math.random() < 0.01) {
-                                        grid[i] = MOLTEN_WAX;
-                                    }
+                                    nearHeat = true;
                                     break;
                                 }
                             }
                         }
+                        
+                        if (nearHeat) {
+                            grid2[i] = 100 + Math.floor(Math.random() * 20); // Ignite
+                        }
+
+                        // Burning behavior
+                        if (grid2[i] > 0) {
+                            grid2[i]--;
+                            // Sustain fire
+                            if (y > 0 && grid[i - width] === EMPTY && Math.random() < 0.1) {
+                                grid[i - width] = FIRE;
+                            }
+                            // Melt
+                            if (Math.random() < 0.005) {
+                                grid[i] = MOLTEN_WAX;
+                                // grid2[i] preserved
+                            }
+                            // Burn up completely
+                            if (Math.random() < 0.001) {
+                                grid[i] = FIRE;
+                            }
+                        }
                     }
                     else if (type === MOLTEN_WAX) {
-                        // Check for fire to burn (Fuel)
-                        let touchingFire = false;
+                        // Check for heat
+                        let nearHeat = false;
+                        let touchingWater = false;
                         for (const offset of neighbors) {
                             const ni = i + offset;
-                            if (ni >= 0 && ni < grid.length && grid[ni] === FIRE) {
-                                touchingFire = true; break;
+                            if (ni >= 0 && ni < grid.length) {
+                                const t = grid[ni];
+                                if (t === FIRE || t === LAVA || t === VOLCANO) nearHeat = true;
+                                if (grid[ni] === WATER) touchingWater = true;
                             }
                         }
 
-                        if (touchingFire) {
-                            if (Math.random() < 0.02) { // Slow burn
+                        if (touchingWater) {
+                            grid[i] = WAX; 
+                            grid2[i] = 0;
+                            continue;
+                        }
+
+                        if (nearHeat) {
+                            grid2[i] = 100 + Math.floor(Math.random() * 20);
+                        }
+
+                        // Burning behavior
+                        if (grid2[i] > 0) {
+                            grid2[i]--;
+                            // Sustain fire
+                            if (y > 0 && grid[i - width] === EMPTY && Math.random() < 0.1) {
+                                grid[i - width] = FIRE;
+                            }
+                            // Burn up
+                            if (Math.random() < 0.005) {
                                 grid[i] = FIRE; continue;
                             }
                         } else {
-                            // Solidify if away from heat
-                            if (Math.random() < 0.05) {
+                            // Solidify if not burning
+                            if (Math.random() < 0.002) {
                                 grid[i] = WAX; continue;
                             }
                         }
@@ -1307,14 +1348,22 @@
                         const below = (y + 1) * width + x;
                         if (grid[below] === EMPTY) {
                             grid[below] = MOLTEN_WAX; grid[i] = EMPTY;
+                            grid2[below] = grid2[i]; grid2[i] = 0;
                         } else if (grid[below] === WATER) {
                             grid[below] = WAX; grid[i] = WAX; // Solidify in water
+                            grid2[below] = 0; grid2[i] = 0;
                         } else {
                             const dir = Math.random() > 0.5 ? 1 : -1;
                             const belowA = (y + 1) * width + (x + dir);
                             const belowB = (y + 1) * width + (x - dir);
-                            if (x + dir >= 0 && x + dir < width && grid[belowA] === EMPTY) { grid[belowA] = MOLTEN_WAX; grid[i] = EMPTY; }
-                            else if (x - dir >= 0 && x - dir < width && grid[belowB] === EMPTY) { grid[belowB] = MOLTEN_WAX; grid[i] = EMPTY; }
+                            if (x + dir >= 0 && x + dir < width && grid[belowA] === EMPTY) { 
+                                grid[belowA] = MOLTEN_WAX; grid[i] = EMPTY; 
+                                grid2[belowA] = grid2[i]; grid2[i] = 0;
+                            }
+                            else if (x - dir >= 0 && x - dir < width && grid[belowB] === EMPTY) { 
+                                grid[belowB] = MOLTEN_WAX; grid[i] = EMPTY; 
+                                grid2[belowB] = grid2[i]; grid2[i] = 0;
+                            }
                         }
                     }
 
