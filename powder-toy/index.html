@@ -136,6 +136,7 @@
         .btn-termite.active { background-color: #d2b48c; color: #000; border-color: #d2b48c; }
         .btn-wood.active { background-color: #5d4037; color: #fff; border-color: #5d4037; }
         .btn-fungus.active { background-color: #6d4c41; color: #fff; border-color: #6d4c41; }
+        .btn-wax.active { background-color: #f0f0d0; color: #000; border-color: #f0f0d0; }
 
     </style>
 </head>
@@ -174,6 +175,7 @@
         <button class="btn-termite" onclick="selectElement(32)">Termite</button>
         <button class="btn-wood" onclick="selectElement(34)">Wood</button>
         <button class="btn-fungus" onclick="selectElement(37)">Fungus</button>
+        <button class="btn-wax" onclick="selectElement(38)">Wax</button>
         <button class="btn-eraser" onclick="selectElement(0)">Eraser</button>
         <div class="controls-break"></div> <!-- Break -->
         <button onclick="clearCanvas()">Clear Board</button>
@@ -249,6 +251,8 @@
         const STICKMAN_ZOMBIE = 35;
         const ANIMAL_ZOMBIE = 36;
         const FUNGUS = 37;
+        const WAX = 38;
+        const MOLTEN_WAX = 39;
 
         // Colors (R, G, B)
         const MAGMA = VOLCANO;
@@ -288,6 +292,8 @@
             [STICKMAN_ZOMBIE]: [100, 221, 23],
             [ANIMAL_ZOMBIE]: [100, 221, 23],
             [FUNGUS]: [141, 110, 99],
+            [WAX]: [240, 240, 220],
+            [MOLTEN_WAX]: [245, 225, 150],
         };
 
         // Input Handling
@@ -300,7 +306,7 @@
             }
             // Update UI
             document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
-            const map = {1:'btn-sand', 2:'btn-water', 3:'btn-stone', 4:'btn-fire', 5:'btn-plant', 0:'btn-eraser', 7:'btn-dirt', 8:'btn-seed', 11:'btn-stickman', 12:'btn-stickman', 13:'btn-stickman', 14:'btn-gas', 15:'btn-firework', 17:'btn-enemy', 18:'btn-acid', 19:'btn-tnt', 20:'btn-car', 21:'btn-lava', 24:'btn-cow', 25:'btn-chicken', 26:'btn-nuke', 27:'btn-ice', 28:'btn-virus', 29:'btn-lightning', 30:'btn-laser', 31:'btn-gravityrift', 32:'btn-termite', 34:'btn-wood', 37:'btn-fungus'};
+            const map = {1:'btn-sand', 2:'btn-water', 3:'btn-stone', 4:'btn-fire', 5:'btn-plant', 0:'btn-eraser', 7:'btn-dirt', 8:'btn-seed', 11:'btn-stickman', 12:'btn-stickman', 13:'btn-stickman', 14:'btn-gas', 15:'btn-firework', 17:'btn-enemy', 18:'btn-acid', 19:'btn-tnt', 20:'btn-car', 21:'btn-lava', 24:'btn-cow', 25:'btn-chicken', 26:'btn-nuke', 27:'btn-ice', 28:'btn-virus', 29:'btn-lightning', 30:'btn-laser', 31:'btn-gravityrift', 32:'btn-termite', 34:'btn-wood', 37:'btn-fungus', 38:'btn-wax'};
             const buttonClass = map[type] || map[selectedType];
             if(buttonClass) document.querySelector(`.${buttonClass}`).classList.add('active');
         }
@@ -683,7 +689,7 @@
                  width - 1,  width,  width + 1
             ];
             const organics = [PLANT, LEAF, TRUNK, WOOD, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, COW, CHICKEN];
-            const flammable = [PLANT, LEAF, TRUNK, WOOD, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, STICKMAN_ZOMBIE, ANIMAL_ZOMBIE, GASOLINE, ACID, TNT, COW, CHICKEN, WOOD];
+            const flammable = [PLANT, LEAF, TRUNK, WOOD, SEED, STICKMAN_SWIM, STICKMAN_DROWN, STICKMAN_ENEMY, STICKMAN_ZOMBIE, ANIMAL_ZOMBIE, GASOLINE, ACID, TNT, COW, CHICKEN, WOOD, WAX];
             const dangerous = [FIRE, LAVA, ACID, TNT, NUKE, STICKMAN_ZOMBIE, ANIMAL_ZOMBIE, MAGMA];
             const stickmen = [];
             const animals = [];
@@ -1260,6 +1266,57 @@
                             }
                         }
                     }
+                    else if (type === WAX) {
+                        // Melt if near heat
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length) {
+                                const t = grid[ni];
+                                if (t === FIRE || t === LAVA || t === VOLCANO || t === MOLTEN_WAX) {
+                                    if (Math.random() < 0.01) {
+                                        grid[i] = MOLTEN_WAX;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if (type === MOLTEN_WAX) {
+                        // Check for fire to burn (Fuel)
+                        let touchingFire = false;
+                        for (const offset of neighbors) {
+                            const ni = i + offset;
+                            if (ni >= 0 && ni < grid.length && grid[ni] === FIRE) {
+                                touchingFire = true; break;
+                            }
+                        }
+
+                        if (touchingFire) {
+                            if (Math.random() < 0.02) { // Slow burn
+                                grid[i] = FIRE; continue;
+                            }
+                        } else {
+                            // Solidify if away from heat
+                            if (Math.random() < 0.05) {
+                                grid[i] = WAX; continue;
+                            }
+                        }
+
+                        // Flow logic
+                        if (y === height - 1) continue;
+                        const below = (y + 1) * width + x;
+                        if (grid[below] === EMPTY) {
+                            grid[below] = MOLTEN_WAX; grid[i] = EMPTY;
+                        } else if (grid[below] === WATER) {
+                            grid[below] = WAX; grid[i] = WAX; // Solidify in water
+                        } else {
+                            const dir = Math.random() > 0.5 ? 1 : -1;
+                            const belowA = (y + 1) * width + (x + dir);
+                            const belowB = (y + 1) * width + (x - dir);
+                            if (x + dir >= 0 && x + dir < width && grid[belowA] === EMPTY) { grid[belowA] = MOLTEN_WAX; grid[i] = EMPTY; }
+                            else if (x - dir >= 0 && x - dir < width && grid[belowB] === EMPTY) { grid[belowB] = MOLTEN_WAX; grid[i] = EMPTY; }
+                        }
+                    }
 
                     // Simple falling particles
                     else if (type === SAND) {
@@ -1539,6 +1596,12 @@
                 c.y += c.vy;
                 c.vx *= 0.99;
 
+                // Ceiling Collision
+                if (c.y < 0) {
+                    c.y = 0;
+                    c.vy *= -0.5;
+                }
+
                 // Y Collision (Bottom Edge)
                 const bottomY = Math.floor(c.y + c.h);
                 const startX = Math.floor(c.x);
@@ -1666,8 +1729,9 @@
                         b.y -= 2; // Hop up
                     }
                 } else {
+                    const dy = Math.sin(Date.now() / 200) * 0.2;
                     b.x += b.vx;
-                    b.y += Math.sin(Date.now() / 200) * 0.2;
+                    b.y += dy;
                     
                     // Bounds
                     if (b.x < -20 || b.x > width + 20) { birds.splice(i, 1); continue; }
@@ -1682,7 +1746,15 @@
                             if ((t === TRUNK || t === LEAF) && Math.random() < 0.1) {
                                 b.landed = true; // Land on tree
                             } else {
-                                b.y -= 1; // Fly up over obstacles
+                                // Bounce
+                                b.x -= b.vx;
+                                b.vx *= -1;
+                                // If still stuck, undo Y
+                                const cx2 = Math.floor(b.x); const cy2 = Math.floor(b.y);
+                                if (cx2 >= 0 && cx2 < width && cy2 >= 0 && cy2 < height) {
+                                    const t2 = grid[cy2 * width + cx2];
+                                    if (t2 !== EMPTY && t2 !== SMOKE) b.y -= dy;
+                                }
                             }
                         }
                     }
