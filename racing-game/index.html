@@ -408,6 +408,9 @@
         car.lookAt(2*startPos.x - startLook.x, 0.4, 2*startPos.z - startLook.z); // Look forward along track
 
         const trackPathPoints = curve.getSpacedPoints(2000);
+        const trackLength = curve.getLength();
+
+        const baseStats = { maxSpeed: 1.8, acceleration: 0.03, turnSpeed: 0.06, jumpStrength: 0.6 };
 
         // --- Environment (Trees & Cows) ---
         function createEnvironment() {
@@ -613,14 +616,30 @@
             const aiColors = [0x0000ff, 0x00ff00, 0xffff00];
             for(let i=0; i<3; i++) {
                 const ai = createCar(aiColors[i]);
+
+                // Assign random upgrades (up to 5 credits)
+                let aiCredits = 5;
+                const aiUpgrades = { speed: 0, accel: 0, handling: 0, jump: 0 };
+                while (aiCredits > 0) {
+                    const stat = ['speed', 'accel', 'handling', 'jump'][Math.floor(Math.random() * 4)];
+                    aiUpgrades[stat]++;
+                    aiCredits--;
+                }
                 // Start at line with player (t=0), offset sideways
                 const startT = 0.0; 
                 const offset = (i === 0) ? -8 : (i === 1) ? 8 : -16; // Left, Right, Far Left
                 const { pos, tangent } = getTrackPos(startT, offset);
                 ai.position.copy(pos);
                 ai.lookAt(pos.clone().sub(tangent)); // Face forward (-Z is front)
-                ai.userData = { t: startT, lap: 1, speed: 1.4 + Math.random()*0.3, offset: offset };
+
+                 // Apply base stats and random upgrades to AI cars
+                const aiMaxSpeed = (80 + aiUpgrades.speed * 10) / 60;
+                const aiAccel = baseStats.acceleration + (aiUpgrades.accel * 0.02);
+                
+                ai.userData = { t: startT, lap: 1, currentSpeed: 0, maxSpeed: aiMaxSpeed, acceleration: aiAccel, offset: offset };
+                
                 scene.add(ai);
+
                 aiCars.push(ai);
             }
 
@@ -810,7 +829,6 @@
         let raceStats = { maxSpeed: 0, speedSum: 0, speedSamples: 0 };
         
         // Stats
-        const baseStats = { maxSpeed: 1.8, acceleration: 0.03, turnSpeed: 0.06, jumpStrength: 0.6 };
         let currentStats = { ...baseStats };
         let friction = 0.98;
 
@@ -1236,9 +1254,15 @@
             // Update AI Cars
             if (gameState === 'racing') {
                 aiCars.forEach(ai => {
-                    let currentAiSpeed = ai.userData.speed;
-                    if (aiSlowTimer > 0) currentAiSpeed *= 0.5;
-                    const step = currentAiSpeed / 2000;
+                    // Accelerate
+                    if (ai.userData.currentSpeed < ai.userData.maxSpeed) {
+                        ai.userData.currentSpeed += ai.userData.acceleration;
+                    }
+                    
+                    let effectiveSpeed = ai.userData.currentSpeed;
+                    if (aiSlowTimer > 0) effectiveSpeed *= 0.5;
+                    
+                    const step = effectiveSpeed / trackLength;
                     ai.userData.t += step;
                     if (ai.userData.t >= 1) { ai.userData.t -= 1; ai.userData.lap++; }
                     
@@ -1247,16 +1271,12 @@
                     ai.position.y = 0.4;
                     ai.lookAt(pos.clone().sub(tangent)); // Fix orientation
 
-                    // Cap the speed of the ai cars
-                    if (ai.userData.speed > 3) ai.userData.speed = 3;
-                    if (ai.userData.speed < -3) ai.userData.speed = -3;
-
                     // Simple AI: Avoid obstacles (very basic)
                     obstacles.forEach(obs => {
                         const dx = ai.position.x - obs.mesh.position.x;
                         const dz = ai.position.z - obs.mesh.position.z;
                         const distSq = dx*dx + dz*dz;
-                         if (distSq < 40 && ai.userData.speed > 0.5) ai.userData.speed *= 0.98; // Slow down near
+                         if (distSq < 40 && ai.userData.currentSpeed > 0.5) ai.userData.currentSpeed *= 0.98; // Slow down near
                     });
                 });
             }
