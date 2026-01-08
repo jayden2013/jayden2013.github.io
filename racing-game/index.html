@@ -1107,8 +1107,7 @@
                 // Physics: Pull target back, pull player forward
                 speed += 0.005; // Boost player
                 if (stickyHandTarget.userData) {
-                    stickyHandTarget.userData.currentSpeed -= 0.02; // Slow target
-                    if (stickyHandTarget.userData.currentSpeed < 0) stickyHandTarget.userData.currentSpeed = 0;
+                    stickyHandTarget.userData.currentSpeed -= 0.1; // Drag target backwards
                 }
 
                 if (stickyHandTimer === 0) {
@@ -1328,6 +1327,7 @@
                     const step = effectiveSpeed / trackLength;
                     ai.userData.t += step;
                     if (ai.userData.t >= 1) { ai.userData.t -= 1; ai.userData.lap++; }
+                    if (ai.userData.t < 0) { ai.userData.t += 1; ai.userData.lap--; }
                     
                     const { pos, tangent } = getTrackPos(ai.userData.t, ai.userData.offset);
                     ai.position.copy(pos);
