@@ -817,7 +817,7 @@
         let stickyHandTarget = null;
         let stickyHandTimer = 0;
         let stickyHandMesh = null;
-        let storedItem = null;
+        let storedItems = [];
         let pauseStartTime = 0;
         const keysPressed = {}; // Track key presses for toggle
 
@@ -924,15 +924,15 @@
             if (e.key === 'Enter') {
                 const code = cheatInput.value.toLowerCase().trim();
                 let success = false;
-                if (code === 'give invincibility') { storedItem = 'INVINCIBLE'; success = true; }
-                else if (code === 'give turbo') { storedItem = 'TURBO'; success = true; }
-                else if (code === 'give oil') { storedItem = 'OIL'; success = true; }
-                else if (code === 'give slow ai') { storedItem = 'SLOW_AI'; success = true; }
-                else if (code === 'give railroad') { storedItem = 'RAILROAD'; success = true; }
-                else if (code === 'give sticky hand') { storedItem = 'STICKY_HAND'; success = true; }
+                if (code === 'give invincibility') { storedItems.push('INVINCIBLE'); success = true; }
+                else if (code === 'give turbo') { storedItems.push('TURBO'); success = true; }
+                else if (code === 'give oil') { storedItems.push('OIL'); success = true; }
+                else if (code === 'give slow ai') { storedItems.push('SLOW_AI'); success = true; }
+                else if (code === 'give railroad') { storedItems.push('RAILROAD'); success = true; }
+                else if (code === 'give sticky hand') { storedItems.push('STICKY_HAND'); success = true; }
                 
                 if (success) {
-                    document.getElementById('storedItem').innerText = storedItem;
+                    document.getElementById('storedItem').innerText = storedItems.join(' > ');
                     gameState = 'racing';
                     lapStartTime += (Date.now() - pauseStartTime);
                     document.getElementById('cheat-console').style.display = 'none';
@@ -942,8 +942,9 @@
         });
 
         function useItem() {
-            if (!storedItem || gameState !== 'racing') return;
+            if (storedItems.length === 0 || gameState !== 'racing') return;
             
+            const storedItem = storedItems.shift();
             if (storedItem === 'TURBO') {
                 turboTimer = 120; // 2 seconds (at 60fps)
             } else if (storedItem === 'INVINCIBLE') {
@@ -974,8 +975,7 @@
                     stickyHandTimer = 180; // 3 seconds
                 }
             }
-            storedItem = null;
-            document.getElementById('storedItem').innerText = "NONE";
+            document.getElementById('storedItem').innerText = storedItems.length > 0 ? storedItems.join(' > ') : "NONE";
         }
 
         renderer.autoClear = false;
@@ -1066,7 +1066,7 @@
                 invincibleTimer = 0;
                 aiSlowTimer = 0;
                 wrongWayTimer = 0;
-                storedItem = null;
+                storedItems = [];
                 stickyHandTarget = null;
                 stickyHandTimer = 0;
                 stickyHandMesh.visible = false;
@@ -1280,10 +1280,21 @@
                     b.mesh.rotation.z += 0.02;
                     if (carPos.distanceTo(b.mesh.position) < 3) {
                         b.active = false;
+
+                            // Respawn the box after 3 seconds
+                            setTimeout(() => {
+                                const t = Math.random();
+                                const { pos } = getTrackPos(t, (Math.random()-0.5)*10);
+                                b.mesh.position.copy(pos); b.mesh.position.y = 1.5;
+                                b.active = true;
+                                b.mesh.visible = true;
+                            }, 3000)
+
                         b.mesh.visible = false;
                         const rand = Math.random();
-                        storedItem = rand > 0.85 ? 'TURBO' : (rand > 0.7 ? 'OIL' : (rand > 0.55 ? 'INVINCIBLE' : (rand > 0.4 ? 'STICKY_HAND' : (rand > 0.2 ? 'SLOW_AI' : 'RAILROAD'))));
-                        document.getElementById('storedItem').innerText = storedItem;
+                        const newItem = rand > 0.85 ? 'TURBO' : (rand > 0.7 ? 'OIL' : (rand > 0.55 ? 'INVINCIBLE' : (rand > 0.4 ? 'STICKY_HAND' : (rand > 0.2 ? 'SLOW_AI' : 'RAILROAD'))));
+                        storedItems.push(newItem);
+                        document.getElementById('storedItem').innerText = storedItems.join(' > ');
                     }
                 }
             });
