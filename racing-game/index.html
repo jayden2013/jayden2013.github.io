@@ -814,6 +814,9 @@
         let wrongWayTimer = 0;
         let resetState = 0;
         let resetTimer = 0;
+        let stickyHandTarget = null;
+        let stickyHandTimer = 0;
+        let stickyHandMesh = null;
         let storedItem = null;
         let pauseStartTime = 0;
         const keysPressed = {}; // Track key presses for toggle
@@ -926,6 +929,7 @@
                 else if (code === 'give oil') { storedItem = 'OIL'; success = true; }
                 else if (code === 'give slow ai') { storedItem = 'SLOW_AI'; success = true; }
                 else if (code === 'give railroad') { storedItem = 'RAILROAD'; success = true; }
+                else if (code === 'give sticky hand') { storedItem = 'STICKY_HAND'; success = true; }
                 
                 if (success) {
                     document.getElementById('storedItem').innerText = storedItem;
@@ -960,12 +964,36 @@
                 // Spawn railroad sign behind
                 const pos = car.position.clone().add(car.getWorldDirection(new THREE.Vector3()).multiplyScalar(12));
                 createRailroadSign(pos);
+            } else if (storedItem === 'STICKY_HAND') {
+                // Find target (car in front)
+                const allCars = [{ id: 'p', lap: laps, t: playerT, obj: car }, ...aiCars.map(ai => ({ id: 'ai', lap: ai.userData.lap, t: ai.userData.t, obj: ai }))];
+                allCars.sort((a, b) => (b.lap + b.t) - (a.lap + a.t));
+                const myIdx = allCars.findIndex(c => c.id === 'p');
+                if (myIdx > 0) {
+                    stickyHandTarget = allCars[myIdx - 1].obj;
+                    stickyHandTimer = 180; // 3 seconds
+                }
             }
             storedItem = null;
             document.getElementById('storedItem').innerText = "NONE";
         }
 
         renderer.autoClear = false;
+
+        // Sticky Hand Visuals
+        stickyHandMesh = new THREE.Group();
+        const ropeGeo = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
+        ropeGeo.rotateX(-Math.PI / 2); // Align Z
+        ropeGeo.translate(0, 0, 0.5); // Pivot at start, extend to +Z 1 unit
+        const stickyHandMat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+        const stickyRope = new THREE.Mesh(ropeGeo, stickyHandMat);
+        stickyRope.name = 'rope';
+        stickyHandMesh.add(stickyRope);
+        const hand = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), stickyHandMat);
+        hand.name = 'hand';
+        stickyHandMesh.add(hand);
+        stickyHandMesh.visible = false;
+        scene.add(stickyHandMesh);
 
         function animate() {
             requestAnimationFrame(animate);
@@ -1039,6 +1067,9 @@
                 aiSlowTimer = 0;
                 wrongWayTimer = 0;
                 storedItem = null;
+                stickyHandTarget = null;
+                stickyHandTimer = 0;
+                stickyHandMesh.visible = false;
             }
 
             // --- Physics ---
@@ -1054,6 +1085,38 @@
                     const { tangent } = getTrackPos(playerT, 0);
                     car.lookAt(car.position.clone().sub(tangent));
                 }
+            }
+
+            // Sticky Hand Logic
+            if (stickyHandTimer > 0 && stickyHandTarget) {
+                stickyHandTimer--;
+                
+                const start = car.position.clone().add(new THREE.Vector3(0, 1.5, 0));
+                const end = stickyHandTarget.position.clone().add(new THREE.Vector3(0, 1.5, 0));
+                const dist = start.distanceTo(end);
+                
+                stickyHandMesh.position.copy(start);
+                stickyHandMesh.lookAt(end);
+                
+                const rope = stickyHandMesh.getObjectByName('rope');
+                const hand = stickyHandMesh.getObjectByName('hand');
+                rope.scale.z = dist;
+                hand.position.z = dist;
+                stickyHandMesh.visible = true;
+
+                // Physics: Pull target back, pull player forward
+                speed += 0.005; // Boost player
+                if (stickyHandTarget.userData) {
+                    stickyHandTarget.userData.currentSpeed -= 0.02; // Slow target
+                    if (stickyHandTarget.userData.currentSpeed < 0) stickyHandTarget.userData.currentSpeed = 0;
+                }
+
+                if (stickyHandTimer === 0) {
+                    stickyHandMesh.visible = false;
+                    stickyHandTarget = null;
+                }
+            } else {
+                stickyHandMesh.visible = false;
             }
             
             if (invincibleTimer > 0) {
@@ -1220,7 +1283,7 @@
                         b.active = false;
                         b.mesh.visible = false;
                         const rand = Math.random();
-                        storedItem = rand > 0.8 ? 'TURBO' : (rand > 0.6 ? 'OIL' : (rand > 0.4 ? 'INVINCIBLE' : (rand > 0.2 ? 'SLOW_AI' : 'RAILROAD')));
+                        storedItem = rand > 0.85 ? 'TURBO' : (rand > 0.7 ? 'OIL' : (rand > 0.55 ? 'INVINCIBLE' : (rand > 0.4 ? 'STICKY_HAND' : (rand > 0.2 ? 'SLOW_AI' : 'RAILROAD'))));
                         document.getElementById('storedItem').innerText = storedItem;
                     }
                 }
