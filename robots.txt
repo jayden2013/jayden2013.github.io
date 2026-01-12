@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://www.carsandcollectibles.com/sitemap.xml
+Sitemap: https://www.carsandcollectibles.com/bolt-patterns/sitemap.xml
