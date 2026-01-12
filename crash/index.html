@@ -163,6 +163,7 @@ function getTerrainHeight(x) {
   
   // Ramp (Quadratic curve up)
   if (x < RAMP_START + RAMP_LENGTH) {
+  if (x <= RAMP_START + RAMP_LENGTH) {
     const progress = (x - RAMP_START) / RAMP_LENGTH;
     // y = x^2 curve
     const rise = progress * progress * RAMP_HEIGHT;
@@ -181,6 +182,7 @@ function getTerrainHeight(x) {
 function getRampAngle(x) {
   if (x < RAMP_START) return 0;
   if (x < RAMP_START + RAMP_LENGTH) {
+  if (x <= RAMP_START + RAMP_LENGTH) {
     const progress = (x - RAMP_START) / RAMP_LENGTH;
     // Derivative of quadratic curve
     const slope = -2 * RAMP_HEIGHT * progress / RAMP_LENGTH;
@@ -211,6 +213,10 @@ function update() {
       const speed = car.vx;
       car.vx = speed * Math.cos(launchAngle);
       car.vy = speed * Math.sin(launchAngle);
+      car.y = (height - GROUND_Y_OFFSET - RAMP_HEIGHT) - car.h/2;
+    } else {
+      car.y = getTerrainHeight(car.x) - car.h/2;
+      car.angle = getRampAngle(car.x);
     }
   }
   
@@ -274,6 +280,13 @@ function update() {
 function handleLanding(groundY) {
   car.y = groundY - car.h/2; // Snap to ground
   
+  if (groundY > height + 100) {
+    state = 'CRASHED';
+    car.vx = 0;
+    showEndScreen("OOPS!", "You fell in the pit.");
+    return;
+  }
+
   // Normalize angle (-PI to PI)
   let normAngle = car.angle % (Math.PI * 2);
   if (normAngle > Math.PI) normAngle -= Math.PI * 2;
