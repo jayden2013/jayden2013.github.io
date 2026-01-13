@@ -5,7 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Factory Tire Size Finder - Free Lookup Tool</title>
   <meta name="description" content="Find your vehicle's factory tire size, load index, and speed rating instantly. Free lookup tool for original equipment tire specifications.">
+  <meta name="keywords" content="tire size, factory tires, vehicle specs, load index, speed rating, tire lookup, car tires">
+  <meta name="author" content="Cars & Collectibles">
+  <meta property="og:title" content="Factory Tire Size Finder">
+  <meta property="og:description" content="Find your vehicle's factory tire size, load index, and speed rating instantly.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Factory Tire Size Finder">
+  <meta name="twitter:description" content="Find your vehicle's factory tire size, load index, and speed rating instantly.">
   
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5978349780180432" crossorigin="anonymous"></script>
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -84,7 +95,7 @@
     
     <!-- Title Section -->
     <div class="text-center mb-12 mt-10">
-      <h1 class="text-5xl md:text-7xl font-black tracking-tighter bg-gradient-to-b from-slate-800 to-slate-400 dark:from-white dark:to-slate-500 bg-clip-text text-transparent mb-4 select-none">TIRE SIZE</h1>
+      <h1 class="text-5xl md:text-7xl font-black tracking-tighter bg-gradient-to-b from-slate-800 to-slate-400 dark:from-white dark:to-slate-500 bg-clip-text text-transparent mb-4 select-none">TIRE</h1>
       <h2 class="text-xl md:text-2xl font-medium text-slate-500 dark:text-slate-400 tracking-wide">Factory Tire Size Finder</h2>
     </div>
     
@@ -132,6 +143,41 @@
       </div>
     </div>
 
+    <!-- Background Info & Explanation Section -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- About Card -->
+      <div class="p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3 flex items-center">
+          <svg class="w-5 h-5 text-emerald-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          About Factory Specs
+        </h3>
+        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+          This database contains original equipment (OE) tire specifications. 
+          <br><br>
+          <strong>Note:</strong> Always verify the tire size listed on your vehicle's door placard (usually on the driver's side door jamb) before purchasing, as options may vary by region or specific vehicle configuration.
+        </p>
+      </div>
+
+      <!-- Explainer Card -->
+      <div class="p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3 flex items-center">
+          <svg class="w-5 h-5 text-emerald-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          Reading Tire Sizes
+        </h3>
+        <div class="text-sm text-slate-600 dark:text-slate-400">
+          <div class="font-mono text-xs bg-slate-100 dark:bg-slate-900/50 p-2 rounded border border-slate-200 dark:border-slate-700 mb-3 text-center">
+            245/40R19 98Y
+          </div>
+          <ul class="space-y-1 ml-1">
+            <li><span class="font-semibold text-slate-700 dark:text-slate-300">245:</span> Section Width (millimeters)</li>
+            <li><span class="font-semibold text-slate-700 dark:text-slate-300">40:</span> Aspect Ratio (height is 40% of width)</li>
+            <li><span class="font-semibold text-slate-700 dark:text-slate-300">19:</span> Wheel Diameter (inches)</li>
+            <li><span class="font-semibold text-slate-700 dark:text-slate-300">98Y:</span> Load Index & Speed Rating</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Reverse Lookup Modal -->
@@ -153,7 +199,7 @@
   </div>
 
   <footer class="py-6 text-center text-sm text-slate-400 dark:text-slate-600">
-    &copy; <script>document.write(new Date().getFullYear())</script> Tire Size Finder
+    &copy; <script>document.write(new Date().getFullYear())</script> Cars & Collectibles
   </footer>
 
   <script>
