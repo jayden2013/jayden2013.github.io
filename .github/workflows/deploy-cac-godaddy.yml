@@ -1,0 +1,37 @@
+name: Deploy cac to GoDaddy (SFTP)
+
+on:
+  push:
+    branches: ["main", "master"]
+    paths:
+      - "cac/**"
+      - ".github/workflows/deploy-cac-godaddy.yml"
+      - "scripts/deploy_cac_to_godaddy_sftp.sh"
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-cac-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install lftp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
+
+      - name: Deploy ./cac via SFTP
+        env:
+          GODADDY_SFTP_HOST: ${{ secrets.GODADDY_SFTP_HOST }}
+          GODADDY_SFTP_USER: ${{ secrets.GODADDY_SFTP_USER }}
+          GODADDY_SFTP_PASS: ${{ secrets.GODADDY_SFTP_PASS }}
+          GODADDY_SFTP_PORT: ${{ secrets.GODADDY_SFTP_PORT }}
+          GODADDY_SFTP_REMOTE_PATH: ${{ secrets.GODADDY_SFTP_REMOTE_PATH }}
+        run: |
+          bash scripts/deploy_cac_to_godaddy_sftp.sh
