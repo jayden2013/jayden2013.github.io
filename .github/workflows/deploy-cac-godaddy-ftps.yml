@@ -6,7 +6,6 @@ on:
     paths:
       - "cac/**"
       - ".github/workflows/deploy-cac-godaddy-ftps.yml"
-      - "scripts/deploy_cac_to_godaddy_ftps.sh"
   workflow_dispatch: {}
 
 concurrency:
@@ -20,17 +19,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install lftp
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lftp
-
-      - name: Deploy ./cac via FTPS
-        env:
-          GODADDY_FTP_HOST: ${{ secrets.GODADDY_FTP_HOST }}
-          GODADDY_FTP_USER: ${{ secrets.GODADDY_FTP_USER }}
-          GODADDY_FTP_PASS: ${{ secrets.GODADDY_FTP_PASS }}
-          GODADDY_FTP_PORT: ${{ secrets.GODADDY_FTP_PORT }}
-          GODADDY_FTP_REMOTE_PATH: ${{ secrets.GODADDY_FTP_REMOTE_PATH }}
-        run: |
-          bash scripts/deploy_cac_to_godaddy_ftps.sh
+      - name: Deploy via FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.GODADDY_FTP_HOST }}
+          username: ${{ secrets.GODADDY_FTP_USER }}
+          password: ${{ secrets.GODADDY_FTP_PASS }}
+          port: ${{ secrets.GODADDY_FTP_PORT }}
+          protocol: ftps
+          local-dir: cac/
+          server-dir: ${{ secrets.GODADDY_FTP_REMOTE_PATH }}
+          # Keeps the server folder matching your cac/ folder:
+          dangerous-clean-slate: true
