@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factory Tire Size Finder - Free Lookup Tool</title>
+  <meta name="description" content="Find your vehicle's factory tire size, load index, and speed rating instantly. Free lookup tool for original equipment tire specifications.">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            emerald: { 400: '#34d399', 500: '#10b981', 600: '#059669' },
+            slate: { 850: '#151f32', 900: '#0f172a' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for a polished feel */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background-color: #475569; }
+    
+    /* Fade in animation for results */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .result-item { animation: fadeIn 0.2s ease-out forwards; }
+    
+    /* Background pattern */
+    .bg-dot-pattern {
+      background-image: radial-gradient(currentColor 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* Modal styles */
+    #modal.open {
+      opacity: 1;
+    }
+    #modal.open #modal-box {
+      transform: scale(1);
+      opacity: 1;
+    }
+    /* Custom scrollbar for modal content */
+    #modal-content::-webkit-scrollbar { width: 8px; }
+    #modal-content::-webkit-scrollbar-track { background: transparent; }
+    #modal-content::-webkit-scrollbar-thumb { background-color: #d1d5db; border-radius: 4px; }
+    .dark #modal-content::-webkit-scrollbar-thumb { background-color: #4b5563; }
+
+    /* Multi-column layout for vehicle list */
+    .vehicle-list {
+      column-count: 1;
+    }
+    @media (min-width: 640px) {
+      .vehicle-list {
+        column-count: 2;
+        column-gap: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30">
+
+  <!-- Background Texture -->
+  <div class="fixed inset-0 z-0 pointer-events-none text-slate-200 dark:text-slate-900 bg-dot-pattern [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)]"></div>
+
+  <!-- Theme Toggle (Absolute) -->
+  <div class="absolute top-6 right-6 z-50">
+    <button id="themeToggle" class="p-3 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 active:scale-95 shadow-sm" aria-label="Toggle Theme">
+      <!-- Sun Icon -->
+      <svg id="sunIcon" class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
+      <!-- Moon Icon -->
+      <svg id="moonIcon" class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-12 z-10 flex flex-col justify-start min-h-[80vh]">
+    
+    <!-- Title Section -->
+    <div class="text-center mb-12 mt-10">
+      <h1 class="text-5xl md:text-7xl font-black tracking-tighter bg-gradient-to-b from-slate-800 to-slate-400 dark:from-white dark:to-slate-500 bg-clip-text text-transparent mb-4 select-none">TIRE SIZE</h1>
+      <h2 class="text-xl md:text-2xl font-medium text-slate-500 dark:text-slate-400 tracking-wide">Factory Tire Size Finder</h2>
+    </div>
+    
+    <!-- Search Box -->
+    <div class="relative mb-8 group z-10">
+      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <svg class="w-6 h-6 text-slate-400 group-focus-within:text-emerald-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      </div>
+      <input type="text" id="searchInput" 
+        class="w-full pl-12 pr-12 py-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-200/40 dark:shadow-black/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-300 text-lg placeholder:text-slate-400 dark:placeholder:text-slate-500"
+        placeholder="Search Year, Make, Model (e.g. '2024 BMW X5')"
+        autocomplete="off" spellcheck="false" disabled>
+      
+      <!-- Loading Spinner -->
+      <div id="loading" class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+        <svg class="animate-spin h-5 w-5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Results Area -->
+    <div id="results" class="space-y-3">
+      <!-- Initial State -->
+      <div class="text-center py-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto text-left text-sm text-slate-600 dark:text-slate-400">
+          <div class="p-3 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-1">Search by Vehicle</div>
+            "2024 BMW X5"
+          </div>
+          <div class="p-3 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-1">Search by Size</div>
+            "275/40R21"
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Reverse Lookup Modal -->
+  <div id="modal" class="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div id="modal-box" class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col transform scale-95 opacity-0 transition-all duration-300">
+      <header class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-start justify-between flex-shrink-0">
+        <div>
+          <h2 id="modal-title" class="text-xl font-bold">Vehicles with this Tire</h2>
+          <p id="modal-subtitle" class="text-sm text-slate-500 dark:text-slate-400 mt-1"></p>
+        </div>
+        <button id="modal-close" class="p-2 -mt-1 -mr-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </header>
+      <div id="modal-content" class="p-6 overflow-y-auto">
+        <!-- Content will be injected here -->
+      </div>
+    </div>
+  </div>
+
+  <footer class="py-6 text-center text-sm text-slate-400 dark:text-slate-600">
+    &copy; <script>document.write(new Date().getFullYear())</script> Tire Size Finder
+  </footer>
+
+  <script>
+    // --- Theme Logic ---
+    const html = document.documentElement;
+    const toggle = document.getElementById('themeToggle');
+    
+    // Default to light, check storage
+    const savedTheme = localStorage.getItem('ts_theme');
+    if (savedTheme === 'dark') {
+      html.classList.add('dark');
+    }
+
+    toggle.addEventListener('click', () => {
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        localStorage.setItem('ts_theme', 'light');
+      } else {
+        html.classList.add('dark');
+        localStorage.setItem('ts_theme', 'dark');
+      }
+    });
+
+    // --- Modal Logic ---
+    const modal = document.getElementById('modal');
+    const modalBox = document.getElementById('modal-box');
+    const modalClose = document.getElementById('modal-close');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    const modalSubtitle = document.getElementById('modal-subtitle');
+
+    function openModal() {
+      modal.classList.remove('hidden');
+      setTimeout(() => modal.classList.add('open'), 10);
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      // Only close if clicking the backdrop, not the content box
+      if (e.target === modal) closeModal();
+    });
+
+    // --- Data & Search Logic ---
+    let db = [];
+    const searchInput = document.getElementById('searchInput');
+    const resultsContainer = document.getElementById('results');
+    const loadingEl = document.getElementById('loading');
+
+    // Fetch CSV
+    async function init() {
+      try {
+        const res = await fetch('factory_tire_sizes.csv');
+        if (!res.ok) throw new Error('Failed to load data');
+        const text = await res.text();
+        db = parseCSV(text);
+        searchInput.disabled = false;
+        loadingEl.classList.add('hidden');
+        searchInput.focus();
+      } catch (err) {
+        resultsContainer.innerHTML = `<div class="text-center text-red-500 py-8">Error loading database. Please try refreshing.</div>`;
+        console.error(err);
+      }
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const values = line.split(',');
+        const obj = headers.reduce((acc, header, i) => {
+          acc[header] = values[i] ? values[i].trim() : '';
+          return acc;
+        }, {});
+        // Pre-compute search string for fast filtering
+        obj.searchStr = `${obj.year} ${obj.make} ${obj.model} ${obj.trim} ${obj.tireSize}`.toLowerCase();
+        return obj;
+      }).filter(row => row.year); // Filter out empty rows
+    }
+
+    function renderResults(matches) {
+      if (matches.length === 0) {
+        resultsContainer.innerHTML = `<div class="text-center py-12 text-slate-500">No vehicles found matching your search.</div>`;
+        return;
+      }
+
+      // Limit results for performance
+      const displayMatches = matches.slice(0, 100);
+
+      const html = displayMatches.map(item => {
+        const isStd = item.stdOrOpt === '1';
+        const badgeText = isStd ? 'Standard' : 'Optional';
+        const badgeColor = isStd ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
+        
+        const positionText = item.tirePosition && item.tirePosition !== 'Both' ? `(${item.tirePosition})` : '';
+
+        return `
+        <div class="result-item group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider ${badgeColor} px-2 py-0.5 rounded-md">${badgeText}</span>
+              <span class="text-xs text-slate-400">${item.year}</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+              ${item.make} ${item.model} <span class="font-normal text-slate-500 dark:text-slate-400">${item.trim}</span>
+            </h3>
+          </div>
+          
+          <div class="flex flex-wrap gap-3 text-sm">
+            <button onclick="showReverseLookup('${item.tireSize}')" class="text-left px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 group-hover:border-emerald-200 dark:group-hover:border-emerald-900/50 transition-all hover:!border-emerald-400 dark:hover:!border-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer min-w-[140px]">
+              <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tire Size ${positionText}</span>
+              <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base">${item.tireSize}</span>
+            </button>
+            
+            <div class="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
+               <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Specs</span>
+               <span class="font-mono font-bold text-slate-700 dark:text-slate-200">${item.loadIndex}${item.speedRating}</span>
+            </div>
+
+            <div class="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
+               <span class="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rim</span>
+               <span class="font-mono font-bold text-slate-700 dark:text-slate-200">${item.rim_size}"</span>
+            </div>
+          </div>
+        </div>
+      `}).join('');
+      
+      resultsContainer.innerHTML = html;
+    }
+
+    function renderEmptyState() {
+      resultsContainer.innerHTML = `
+        <div class="text-center py-10 animate-fadeIn">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto text-left text-sm text-slate-600 dark:text-slate-400">
+            <div class="p-3 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 shadow-sm">
+              <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-1">Search by Vehicle</div>
+              "2024 BMW X5"
+            </div>
+            <div class="p-3 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 shadow-sm">
+              <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-1">Search by Size</div>
+              "275/40R21"
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- Reverse Lookup Modal Function ---
+    window.showReverseLookup = (tireSize) => {
+      if (!tireSize) return;
+
+      modalTitle.textContent = `Vehicles with ${tireSize}`;
+      modalSubtitle.textContent = ''; // Clear subtitle
+      modalContent.innerHTML = `
+        <div class="text-center p-8 flex flex-col items-center justify-center">
+          <svg class="animate-spin h-8 w-8 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="mt-4 text-slate-500">Finding compatible vehicles...</p>
+        </div>
+      `;
+      openModal();
+
+      // Find all vehicles with this tire size
+      const matches = db.filter(v => v.tireSize === tireSize);
+
+      // Group by make and model
+      const grouped = matches.reduce((acc, vehicle) => {
+        const key = `${vehicle.make}|${vehicle.model}`;
+        if (!acc[key]) {
+          acc[key] = { make: vehicle.make, model: vehicle.model, years: new Set() };
+        }
+        const year = parseInt(vehicle.year, 10);
+        if (!isNaN(year)) {
+          acc[key].years.add(year);
+        }
+        return acc;
+      }, {});
+
+      // Process years into ranges
+      const processed = Object.values(grouped).map(group => {
+        const sortedYears = Array.from(group.years).sort((a, b) => a - b);
+        const ranges = [];
+        if (sortedYears.length > 0) {
+            let start = sortedYears[0];
+            let end = sortedYears[0];
+            for(let i=1; i<sortedYears.length; i++) {
+                if(sortedYears[i] === end + 1) {
+                    end = sortedYears[i];
+                } else {
+                    ranges.push(start === end ? `${start}` : `${start}-${end}`);
+                    start = sortedYears[i];
+                    end = sortedYears[i];
+                }
+            }
+            ranges.push(start === end ? `${start}` : `${start}-${end}`);
+        }
+        group.yearStr = ranges.join(', ');
+        return group;
+      });
+      
+      // Sort alphabetically by make then model
+      processed.sort((a, b) => a.make.localeCompare(b.make) || a.model.localeCompare(b.model));
+
+      modalSubtitle.textContent = `Found ${processed.length} matching vehicle models.`;
+
+      if (processed.length === 0) {
+        modalContent.innerHTML = '<div class="text-center p-8 text-slate-500">No other vehicles found with this tire size.</div>';
+        return;
+      }
+
+      const listHtml = processed.map(group => `
+        <div class="py-3 border-b border-slate-100 dark:border-slate-700 last:border-b-0 break-inside-avoid">
+          <span class="font-bold text-slate-800 dark:text-slate-100">${group.make} ${group.model}</span>
+          <span class="ml-2 text-slate-500 dark:text-slate-400">(${group.yearStr})</span>
+        </div>`).join('');
+
+      modalContent.innerHTML = `<div class="vehicle-list">${listHtml}</div>`;
+    };
+
+    // Search Handler
+    let debounceTimer;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        let query = e.target.value.toLowerCase().trim();
+        
+        if (!query) {
+          renderEmptyState();
+          return;
+        }
+
+        // --- Year Range Parsing ---
+        let minYear = null;
+        let maxYear = null;
+        
+        // 1. Check for a complete range (e.g., "1990-1995" or "90-95")
+        const completeRangeRegex = /\b(\d{4})\s*-\s*(\d{4})\b/;
+        const completeRangeMatch = query.match(completeRangeRegex);
+
+        if (completeRangeMatch) {
+          minYear = parseInt(completeRangeMatch[1], 10);
+          maxYear = parseInt(completeRangeMatch[2], 10);
+          
+          // Remove range from query text to allow other text searches
+          query = query.replace(completeRangeMatch[0], '').trim();
+        } else {
+          // 2. Handle incomplete range (e.g., "1990-") to prevent results from disappearing
+          if (/\b\d{4}\s*-\s*$/.test(query)) {
+            query = query.replace(/-\s*$/, '').trim();
+          }
+        }
+
+        const tokens = query.split(/\s+/).filter(t => t.length > 0);
+        
+        // Filter: All tokens must exist in the search string (AND logic)
+        const matches = db.filter(item => {
+          // 1. Text Match
+          const textMatch = tokens.every(token => item.searchStr.includes(token));
+          if (!textMatch) return false;
+
+          // 2. Year Range Match
+          if (minYear !== null) {
+            const itemYear = parseInt(item.year, 10);
+            if (isNaN(itemYear)) return false;
+            if (itemYear < minYear || itemYear > maxYear) return false;
+          }
+
+          return true;
+        });
+
+        renderResults(matches);
+      }, 300);
+    });
+
+    // Start
+    init();
+  </script>
+</body>
+</html>
