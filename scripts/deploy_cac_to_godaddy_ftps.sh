@@ -29,6 +29,19 @@ case "${REMOTE_PATH}" in
     ;;
 esac
 
+echo "==================== FTPS DEPLOY CONFIG ===================="
+echo "Local dir:            ./${LOCAL_DIR}/"
+echo "Remote host:          ${HOST}"
+echo "Remote port:          ${PORT}"
+echo "Remote path:          ${REMOTE_PATH}"
+echo "Username:             ${USER}"
+echo "Password:             (hidden) len=${#PASS}"
+echo "Connection string:    ftps://${HOST}:${PORT}${REMOTE_PATH}"
+echo "Host hex:             $(printf '%s' "$HOST" | od -An -tx1 | tr -s ' ' | sed 's/^ //')"
+echo "User hex:             $(printf '%s' "$USER" | od -An -tx1 | tr -s ' ' | sed 's/^ //')"
+echo "Remote path hex:      $(printf '%s' "$REMOTE_PATH" | od -An -tx1 | tr -s ' ' | sed 's/^ //')"
+echo "============================================================"
+
 echo "Deploying './${LOCAL_DIR}/' -> ftps://${HOST}:${PORT}${REMOTE_PATH}"
 
 # Explicit FTPS settings:
