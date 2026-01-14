@@ -1171,7 +1171,13 @@
     <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-trax.html</loc>
   </url>
   <url>
-    <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-ss.html</loc>
+    <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-impala.html</loc>
+  </url>
+  <url>
+    <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-sonic.html</loc>
+  </url>
+  <url>
+    <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-cruze.html</loc>
   </url>
   <url>
     <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-volt.html</loc>
@@ -1180,10 +1186,7 @@
     <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-city-express.html</loc>
   </url>
   <url>
-    <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-sonic.html</loc>
-  </url>
-  <url>
-    <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-cruze.html</loc>
+    <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-ss.html</loc>
   </url>
   <url>
     <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/chevrolet-caprice.html</loc>
@@ -4720,19 +4723,22 @@
     <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-q3.html</loc>
   </url>
   <url>
-    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-r8.html</loc>
-  </url>
-  <url>
-    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-rs-q8.html</loc>
-  </url>
-  <url>
-    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-q8.html</loc>
+    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-q4-e-tron.html</loc>
   </url>
   <url>
     <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-q5.html</loc>
   </url>
   <url>
     <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-q7.html</loc>
+  </url>
+  <url>
+    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-q8.html</loc>
+  </url>
+  <url>
+    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-r8.html</loc>
+  </url>
+  <url>
+    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-rs-q8.html</loc>
   </url>
   <url>
     <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/audi-rs3.html</loc>
