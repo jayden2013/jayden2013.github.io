@@ -432,20 +432,41 @@ body.printing #pickListPrintRoot { display: block; }
           <h5 class="modal-title" id="serialGateBrand">PROFIT Access</h5>
         </div>
         <div class="modal-body">
-          <p class="text-muted mb-3">Enter your serial key and email to unlock all features.</p>
-          <div class="mb-2">
-            <label class="form-label">Serial Key</label>
-            <input id="serialInput" class="form-control form-control-lg" placeholder="e.g. ABC-123-XYZ">
+          <ul class="nav nav-pills nav-fill mb-3" id="authTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#pills-login" type="button" role="tab">Login</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="signup-tab" data-bs-toggle="pill" data-bs-target="#pills-signup" type="button" role="tab">Sign Up</button>
+            </li>
+          </ul>
+          <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-login" role="tabpanel">
+              <div class="mb-2"><label class="form-label">Email</label><input id="loginEmail" type="email" class="form-control form-control-lg" placeholder="you@example.com"></div>
+              <div class="mb-2"><label class="form-label">Password</label><input id="loginPassword" type="password" class="form-control form-control-lg" placeholder="Password"></div>
+              <div id="loginFeedback" class="text-danger small mt-1" style="display:none;"></div>
+              <button class="btn btn-primary w-100 mt-3" id="btnLogin">Log In</button>
+            </div>
+            <div class="tab-pane fade" id="pills-signup" role="tabpanel">
+              <div class="mb-2"><label class="form-label">Email</label><input id="signupEmail" type="email" class="form-control form-control-lg" placeholder="you@example.com"></div>
+              <div class="mb-2"><label class="form-label">Password</label><input id="signupPassword" type="password" class="form-control form-control-lg" placeholder="Create Password"></div>
+              <div id="signupFeedback" class="text-danger small mt-1" style="display:none;"></div>
+              <button class="btn btn-success w-100 mt-3" id="btnSignup">Create Account</button>
+            </div>
           </div>
-          <div class="mb-2">
-            <label class="form-label">Email</label>
-            <input id="emailInput" type="email" class="form-control form-control-lg" placeholder="you@example.com">
+          <!-- Subscription Gate UI -->
+          <div id="subscriptionGate" style="display:none;" class="text-center py-3">
+            <i class="bi bi-cart-x display-1 text-warning"></i>
+            <h4 class="mt-3">Subscription Required</h4>
+            <p class="text-muted mb-4">
+              You are logged in as <strong id="subGateEmail"></strong>,<br>
+              but your account does not have an active subscription.
+            </p>
+            <a href="https://carsandcollectibles.com" target="_blank" class="btn btn-primary w-100 mb-2">Purchase Subscription</a>
+            <button class="btn btn-outline-secondary w-100" id="btnLogoutGate">Log Out</button>
           </div>
-          <div id="serialFeedback" class="text-danger small mt-1" style="display:none;">Invalid serial key or missing email.</div>
         </div>
-        <div class="modal-footer border-0 pt-0">
-          <button class="btn btn-primary w-100" id="submitSerial">Unlock</button>
-        </div>
+        <div class="modal-footer border-0 pt-0"></div>
         <div class="text-center text-muted small mt-2">
           Need help? Contact <a href="https://carsandcollectibles.com" target="_blank">Cars &amp; Collectibles LLC</a>
         </div>
@@ -462,7 +483,11 @@ body.printing #pickListPrintRoot { display: block; }
           <div class="display-1 mb-1">PROFIT</div>
           <div class="h5">Parts Resale Optimization &amp; Field Inventory Tool</div>
           <div class="small">Cars and Collectibles LLC • <a href="https://carsandcollectibles.com" target="_blank">carsandcollectibles.com</a></div>
-          <div class="small text-muted" id="signedInEmail" style="display:none;">Signed in as: <span id="signedInEmailValue"></span></div>
+          <div class="small text-muted" id="signedInEmail" style="display:none;">
+            Signed in as: <span id="signedInEmailValue"></span>
+            <span id="lastLoginInfo" class="ms-2 fst-italic"></span>
+            <a href="#" id="headerLogoutBtn" class="ms-2 text-danger text-decoration-none fw-bold" style="font-size: .85em;">(Log Out)</a>
+          </div>
         </div>
         <div class="text-end">
           <div id="currentThemeDisplay" class="small text-muted mb-1"></div>
@@ -1145,7 +1170,6 @@ body.printing #pickListPrintRoot { display: block; }
    * Premium / Serial Gate
    ***********************/
   let isPremium = false, premiumName = '';
-  let serialData = []; // from json/serial-keys.json
 
   function getGateInstance() {
     return bootstrap.Modal.getOrCreateInstance(
@@ -1154,81 +1178,192 @@ body.printing #pickListPrintRoot { display: block; }
     );
   }
   function showGate() {
+    // Reset gate UI to login/signup
+    if(document.getElementById('authTabs')) document.getElementById('authTabs').style.display = 'flex';
+    if(document.getElementById('pills-tabContent')) document.getElementById('pills-tabContent').style.display = 'block';
+    if(document.getElementById('subscriptionGate')) document.getElementById('subscriptionGate').style.display = 'none';
+
     document.body.classList.add('serial-locked');
     try {
       const inst = getGateInstance();
+      console.log('showGate called, showing modal.');
       inst.show();
       document.getElementById('serialGate')
         .addEventListener('shown.bs.modal', () => {
-          const input = document.getElementById('serialInput');
+          const input = document.getElementById('loginEmail');
           if (input) input.focus();
           // prefill saved values if any
-          const savedKey = localStorage.getItem('premiumKey') || '';
           const savedEmail = localStorage.getItem('premiumEmail') || '';
-          if (savedKey) document.getElementById('serialInput').value = savedKey;
-          if (savedEmail) document.getElementById('emailInput').value = savedEmail;
+          if (savedEmail && input) input.value = savedEmail;
         }, { once:true });
       setTimeout(() => {
         const gateEl = document.getElementById('serialGate');
-        if (!gateEl.classList.contains('show')) {
+        if (gateEl && !gateEl.classList.contains('show')) {
           document.body.classList.add('force-show-modal');
+          console.log('Force-showing modal as it did not appear.');
         }
       }, 100);
     } catch {
       document.body.classList.add('force-show-modal');
+      console.error('Error showing Bootstrap modal, force-showing gate.');
     }
   }
   function unlockApp(name) {
+    console.log('unlockApp called for:', name);
     isPremium = true; premiumName = name || '';
     document.body.classList.remove('serial-locked','force-show-modal');
     const inst = bootstrap.Modal.getInstance(document.getElementById('serialGate'));
     if (inst) inst.hide();
     updateSignedInEmailUI();
-    initApp();
-  }
-  async function validateStoredKey() {
-    try {
-      const r = await fetch('json/serial-keys.json');
-      serialData = await r.json();
-    } catch (e) {
-      console.warn('Could not load serial-keys.json:', e);
-      serialData = [];
+    // Ensure initApp is only called once after successful unlock
+    if (!window._appInitialized) {
+      window._appInitialized = true;
+      initApp();
     }
-    const savedKey = localStorage.getItem('premiumKey');
-    const savedEmail = localStorage.getItem('premiumEmail');
-    const entry = serialData.find(e => e.key === savedKey);
-    if (entry && savedEmail) { unlockApp(entry.name); } else { showGate(); }
+  }
 
-    const submitBtn = document.getElementById('submitSerial');
-    const keyInput   = document.getElementById('serialInput');
-    const emailInput = document.getElementById('emailInput');
-    submitBtn.onclick = () => {
-      const key = keyInput.value.trim();
-      const email = emailInput.value.trim();
-      const match = serialData.find(e => e.key === key);
-      if (match && email) {
-        localStorage.setItem('premiumKey', key);
-        localStorage.setItem('premiumEmail', email);
-        document.getElementById('serialFeedback').style.display = 'none';
-        unlockApp(match.name);
-      } else {
-        document.getElementById('serialFeedback').style.display = 'block';
+  async function initAuth() {
+    // Setup handlers first so they are always active
+    const handleAuth = async (url, emailId, passId, feedbackId, btnId) => {
+      const email = document.getElementById(emailId).value.trim();
+      const password = document.getElementById(passId).value.trim();
+      const feedback = document.getElementById(feedbackId);
+      const btn = document.getElementById(btnId);
+
+      if (!email || !password) {
+        feedback.textContent = 'Please enter email and password.';
+        feedback.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      feedback.style.display = 'none';
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('profitUser', JSON.stringify(data.user));
+          localStorage.setItem('premiumEmail', data.user.email);
+          if (data.user.is_premium) {
+            unlockApp(data.user.email);
+          } else {
+            showSubscriptionUI(data.user.email);
+          }
+        } else {
+          feedback.textContent = data.message || 'Authentication failed.';
+          feedback.style.display = 'block';
+        }
+      } catch (e) {
+        feedback.textContent = 'Network error. Please try again.';
+        feedback.style.display = 'block';
+      } finally {
+        btn.disabled = false;
       }
     };
-    // Enter to submit
-    [keyInput, emailInput].forEach(el => {
-      el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); submitBtn.click(); }
-      });
-    });
+
+    document.getElementById('btnLogin').onclick = () => 
+      handleAuth('api/login.php', 'loginEmail', 'loginPassword', 'loginFeedback', 'btnLogin');
+      
+    document.getElementById('btnSignup').onclick = () => 
+      handleAuth('api/signup.php', 'signupEmail', 'signupPassword', 'signupFeedback', 'btnSignup');
+
+    // Logout from subscription gate
+    document.getElementById('btnLogoutGate').onclick = () => {
+      localStorage.removeItem('profitUser');
+      showGate();
+    };
+
+    // Logout from header
+    const headerLogout = document.getElementById('headerLogoutBtn');
+    if (headerLogout) {
+      headerLogout.onclick = (e) => {
+        e.preventDefault();
+        localStorage.removeItem('profitUser');
+        localStorage.removeItem('premiumEmail');
+        location.reload();
+      };
+    }
+
+    if (window._initAuthRun) return;
+    window._initAuthRun = true;
+
+    // 1. Check for existing session
+    const storedUser = localStorage.getItem('profitUser');
+    console.log('initAuth: storedUser from localStorage:', storedUser);
+    let isAuthenticated = false;
+
+    if (storedUser) {
+      let user = null;
+      try {
+        user = JSON.parse(storedUser);
+      } catch(e) {
+        console.error('Error parsing stored user:', e);
+        localStorage.removeItem('profitUser');
+      }
+
+      if (user && user.email) {
+        // Ensure UI email is synced if missing
+        if (!localStorage.getItem('premiumEmail')) {
+          localStorage.setItem('premiumEmail', user.email);
+          console.log('initAuth: premiumEmail was missing, set to:', user.email);
+        }
+        if (user.is_premium) {
+          console.log('initAuth: User is premium. Calling unlockApp.');
+          try {
+            unlockApp(user.email);
+            isAuthenticated = true;
+          } catch (err) { console.error("Error during app unlock/init:", err); }
+        } else {
+          // Logged in but not premium
+          console.log('initAuth: User is NOT premium. Showing gate and subscription UI.');
+          showGate();
+          showSubscriptionUI(user.email);
+          isAuthenticated = true;
+        }
+      }
+    }
+    
+    if (!isAuthenticated) {
+      console.log('initAuth: No stored user or invalid user. Calling showGate.');
+      showGate();
+    }
+  }
+
+  function showSubscriptionUI(email) {
+    document.getElementById('authTabs').style.display = 'none';
+    document.getElementById('pills-tabContent').style.display = 'none';
+    const subGate = document.getElementById('subscriptionGate');
+    subGate.style.display = 'block';
+    const emailDisplay = document.getElementById('subGateEmail');
+    if (emailDisplay) emailDisplay.textContent = email;
   }
 
   function updateSignedInEmailUI() {
     const email = localStorage.getItem('premiumEmail') || '';
     const wrap = document.getElementById('signedInEmail');
     const val  = document.getElementById('signedInEmailValue');
+    const lastLoginEl = document.getElementById('lastLoginInfo');
+
     if (email && wrap && val) {
       val.textContent = email;
+      
+      if (lastLoginEl) {
+        try {
+          const user = JSON.parse(localStorage.getItem('profitUser') || '{}');
+          if (user.last_login) {
+            lastLoginEl.textContent = `(Last: ${user.last_login})`;
+            lastLoginEl.style.display = 'inline';
+          } else {
+            lastLoginEl.style.display = 'none';
+          }
+        } catch(e) { lastLoginEl.style.display = 'none'; }
+      }
+
       wrap.style.display = '';
     } else if (wrap) {
       wrap.style.display = 'none';
@@ -2771,42 +2906,6 @@ body.printing #pickListPrintRoot { display: block; }
     });
     return allPartRows;
   }
-  function gatherPickListRowsForPartCentricExport() {
-    const pickList = JSON.parse(localStorage.getItem('myPickList') || '[]');
-    const notesMap = JSON.parse(localStorage.getItem('jalopyNotes') || '{}');
-    const allPartRows = [];
-
-    pickList.forEach(vehicle => {
-      // Use the more specific key to find notes
-      const originalKeyForNotes = [vehicle.Year, vehicle.Make, vehicle.Model, vehicle.Row, vehicle.Date, vehicle.Yard].join('|');
-      const vehicleNotes = (notesMap[originalKeyForNotes] || '').replace(/\r?\n/g, ' ');
-
-      if (vehicle.parts && vehicle.parts.length > 0) {
-        vehicle.parts.forEach(part => {
-          allPartRows.push({
-            Year: vehicle.Year || '',
-            Make: vehicle.Make || '',
-            Model: vehicle.Model || '',
-            Row: vehicle.Row || '',
-            Yard: vehicle.Yard || '',
-            Notes: vehicleNotes,
-            PartSection: part.section || '',
-            Part: part.part || '',
-            PartPrice: part.carPriceNum || 0,
-            Core: part.coreNum || 0,
-          });
-        });
-      } else {
-        // Include vehicles that are on the list but have no parts selected yet
-        allPartRows.push({
-          Year: vehicle.Year || '', Make: vehicle.Make || '', Model: vehicle.Model || '',
-          Row: vehicle.Row || '', Yard: vehicle.Yard || '', Notes: vehicleNotes,
-          PartSection: '', Part: '', PartPrice: '', Core: '',
-        });
-      }
-    });
-    return allPartRows;
-  }
   function downloadCSV(rows, filename, contextLabel = 'Pick List Export') {
     const headers = ['Year', 'Make', 'Model', 'Row', 'Yard', 'Notes', 'Parts']; // Ensure Parts is here
     const lines = [
@@ -2967,6 +3066,80 @@ body.printing #pickListPrintRoot { display: block; }
       }
     });
   })();
+  
+  // ---------- QR Sync Tab Logic ----------
+  let html5QrCode = null;
+  let qrCodeInstance = null;
+
+  function initQrSyncTab() {
+    const generateBtn = document.getElementById('generateQrBtn');
+    const qrTabBtn = document.querySelector('button[data-bs-target="#qrSyncTab"]');
+
+    if (generateBtn) {
+      generateBtn.addEventListener('click', generateAndShowQrCode);
+    }
+
+    if (qrTabBtn) {
+      qrTabBtn.addEventListener('shown.bs.tab', () => {
+        // When tab is shown, generate the QR code and start the scanner
+        generateAndShowQrCode();
+        startQrScanner();
+      });
+      qrTabBtn.addEventListener('hidden.bs.tab', stopQrScanner);
+    }
+  }
+
+  function generateAndShowQrCode() {
+    const container = document.getElementById('qrCodeContainer');
+    if (!container) return;
+
+    const dataCode = getDataCode();
+    container.innerHTML = ''; // Clear previous QR code
+
+    if (qrCodeInstance) {
+      qrCodeInstance.clear();
+      qrCodeInstance.makeCode(dataCode);
+    } else {
+      qrCodeInstance = new QRCode(container, {
+        text: dataCode,
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M // Medium correction for density
+      });
+    }
+  }
+
+  function startQrScanner() {
+    const statusEl = document.getElementById('qrScanStatus');
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode("qrScannerContainer");
+    }
+
+    const onScanSuccess = (decodedText, decodedResult) => {
+      stopQrScanner();
+      statusEl.textContent = `✅ Scan successful! Importing data...`;
+      applyDataCode(decodedText); // Use existing function to apply data
+    };
+
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess)
+      .then(() => statusEl.textContent = "Scanner started. Point camera at a QR code.")
+      .catch(err => statusEl.textContent = `❌ Error starting scanner: ${err}`);
+  }
+
+  function stopQrScanner() {
+    if (html5QrCode && html5QrCode.isScanning) {
+      html5QrCode.stop().then(() => {
+        document.getElementById('qrScanStatus').textContent = 'Scanner stopped.';
+      }).catch(err => console.warn("QR scanner stop error:", err));
+    }
+    // Also reset the QR code instance to ensure it's recreated on next view
+    if (qrCodeInstance) {
+      document.getElementById('qrCodeContainer').innerHTML = '';
+      qrCodeInstance = null;
+    }
+  }
 
   /****************
    * App init     *
@@ -3030,7 +3203,7 @@ body.printing #pickListPrintRoot { display: block; }
   }
 
   // Start the serial gate flow
-  validateStoredKey();
+  document.addEventListener('DOMContentLoaded', initAuth);
 
   </script>
   
@@ -4580,81 +4753,6 @@ document.getElementById('modalPricingSectionFilter')?.addEventListener('change',
 document.getElementById('modalPricingAsIsFilter')?.addEventListener('change', applyModalPricingFilters);
 document.getElementById('modalPricingSearch')?.addEventListener('input', debounce(applyModalPricingFilters, 250)); // This one is OK as it's in a one-time setup
 document.getElementById('confirmAddPartsFromPickList')?.addEventListener('click', confirmAddPartsFromPickList);
-</script>
-<script>
-  // ---------- QR Sync Tab Logic ----------
-  let html5QrCode = null;
-  let qrCodeInstance = null;
-
-  function initQrSyncTab() {
-    const generateBtn = document.getElementById('generateQrBtn');
-    const qrTabBtn = document.querySelector('button[data-bs-target="#qrSyncTab"]');
-
-    if (generateBtn) {
-      generateBtn.addEventListener('click', generateAndShowQrCode);
-    }
-
-    if (qrTabBtn) {
-      qrTabBtn.addEventListener('shown.bs.tab', () => {
-        // When tab is shown, generate the QR code and start the scanner
-        generateAndShowQrCode();
-        startQrScanner();
-      });
-      qrTabBtn.addEventListener('hidden.bs.tab', stopQrScanner);
-    }
-  }
-
-  function generateAndShowQrCode() {
-    const container = document.getElementById('qrCodeContainer');
-    if (!container) return;
-
-    const dataCode = getDataCode();
-    container.innerHTML = ''; // Clear previous QR code
-
-    if (qrCodeInstance) {
-      qrCodeInstance.clear();
-      qrCodeInstance.makeCode(dataCode);
-    } else {
-      qrCodeInstance = new QRCode(container, {
-        text: dataCode,
-        width: 256,
-        height: 256,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M // Medium correction for density
-      });
-    }
-  }
-
-  function startQrScanner() {
-    const statusEl = document.getElementById('qrScanStatus');
-    if (!html5QrCode) {
-      html5QrCode = new Html5Qrcode("qrScannerContainer");
-    }
-
-    const onScanSuccess = (decodedText, decodedResult) => {
-      stopQrScanner();
-      statusEl.textContent = `✅ Scan successful! Importing data...`;
-      applyDataCode(decodedText); // Use existing function to apply data
-    };
-
-    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess)
-      .then(() => statusEl.textContent = "Scanner started. Point camera at a QR code.")
-      .catch(err => statusEl.textContent = `❌ Error starting scanner: ${err}`);
-  }
-
-  function stopQrScanner() {
-    if (html5QrCode && html5QrCode.isScanning) {
-      html5QrCode.stop().then(() => {
-        document.getElementById('qrScanStatus').textContent = 'Scanner stopped.';
-      }).catch(err => console.warn("QR scanner stop error:", err));
-    }
-    // Also reset the QR code instance to ensure it's recreated on next view
-    if (qrCodeInstance) {
-      document.getElementById('qrCodeContainer').innerHTML = '';
-      qrCodeInstance = null;
-    }
-  }
 </script>
 
 </body>
