@@ -28,17 +28,17 @@ jobs:
 
       - name: Run scraping script
         run: |
-          python jalopy-jungle/scripts/jalopy_scraper.py
+          python cac/jalopy-jungle/scripts/jalopy_scraper.py
 
       - name: Replace old CSVs with new scrape
         run: |
-          mkdir -p jalopy-jungle/inventory-csvs
-          rm -f jalopy-jungle/inventory-csvs/*.csv  # remove old CSVs
-          mv *.csv jalopy-jungle/inventory-csvs/
+          mkdir -p cac/jalopy-jungle/inventory-csvs
+          rm -f cac/jalopy-jungle/inventory-csvs/*.csv  # remove old CSVs
+          mv *.csv cac/jalopy-jungle/inventory-csvs/
 
       - name: Generate index.json
         run: |
-          cd jalopy-jungle/inventory-csvs
+          cd cac/jalopy-jungle/inventory-csvs
           ls *.csv | jq -R -s -c 'split("\n")[:-1]' > index.json
 
       - name: Commit and push CSVs and index
