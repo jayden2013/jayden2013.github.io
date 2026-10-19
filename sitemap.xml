@@ -58,6 +58,9 @@
     <loc>https://www.carsandcollectibles.com/mn12kb/</loc>
   </url>
   <url>
+    <loc>https://www.carsandcollectibles.com/obd/index.html</loc>
+  </url>
+  <url>
     <loc>https://www.carsandcollectibles.com/shop/thunderbird/94-96-bezel/</loc>
   </url>
   <url>
@@ -341,6 +344,9 @@
   </url>
   <url>
     <loc>https://carsandcollectibles.com/mn12kb/</loc>
+  </url>
+  <url>
+    <loc>https://carsandcollectibles.com/obd/index.html</loc>
   </url>
   <url>
     <loc>https://www.carsandcollectibles.com/bolt-patterns/vehicles/acura-integra.html</loc>
@@ -4432,10 +4438,10 @@
     <loc>https://carsandcollectibles.com/shop/thunderbird/94-96-bezel/</loc>
   </url>
   <url>
-    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/index.html</loc>
+    <loc>https://carsandcollectibles.com/shop/gauge-faces/thunderbird-89-96/</loc>
   </url>
   <url>
-    <loc>https://carsandcollectibles.com/shop/gauge-faces/thunderbird-89-96/</loc>
+    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/index.html</loc>
   </url>
   <url>
     <loc>https://carsandcollectibles.com/tire-sizes/vehicle-pages/all-vehicles.html</loc>
@@ -8461,10 +8467,10 @@
     <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/toyota-corolla.html</loc>
   </url>
   <url>
-    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/toyota-crown.html</loc>
+    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/toyota-corolla-cross.html</loc>
   </url>
   <url>
-    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/toyota-corolla-cross.html</loc>
+    <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/toyota-crown.html</loc>
   </url>
   <url>
     <loc>https://carsandcollectibles.com/bolt-patterns/vehicles/toyota-gr-corolla.html</loc>
